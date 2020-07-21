@@ -1,7 +1,7 @@
 #include "RobGARCH_header_classes.h"
 #include <cstdlib> // std::exit
 //#include <numeric> 
-#include <cmath> // std::sqrt(double), std::pow
+#include <cmath> // std::sqrt(double), std::pow, std::abs
 
 using std::cout;
 using std::endl;
@@ -11,9 +11,12 @@ using std::array;
 using std::sqrt;
 using std::pow;
 using std::accumulate;
+using std::abs;
 
 RobGarch11::RobGarch11(const vector<double>& x): x_(x)
 {
+  n_ = x.size();
+  nDouble_ = n_ + 0.0;
   
   // get v_, vini_; normalize the data to be stored in y_.
   vX_ = tausq_(x);
@@ -22,13 +25,19 @@ RobGarch11::RobGarch11(const vector<double>& x): x_(x)
 
 }
 
-void RobGarch11::sEst_(const vector<double>& x)
+void RobGarch11::sEst_(const vector<double> x)
 {
+  s_ = 1.0;
+  double eps = 1.0;
+  int nn = 1;
   
-  // More to come.
+  Division xEmed(x, sEstEmed_);
+  Division m(xEmed.abs());
+  Division xDiv(x, m.mean());
+  
 }
 
-vector<double> RobGarch11::rho_(const vector<double>& x)
+vector<double> RobGarch11::rho_(const vector<double> x)
 {
   
   // More to come.
@@ -41,20 +50,20 @@ double RobGarch11::tausq_(const vector<double>& x)
   // Here s_ is private member variable could be accessed.
   Division xS(x, s_);
   Division r(rho_(xS.vecDiv()));
-  double t = r.mean() * std::pow(s_, 2) / tausqConst_;
-
+  double t = r.mean() * pow(s_, 2) / tausqConst_;
+  return t;
 }
 
 void RobGarch11::normalize_(){
   
   double sqrtVX = sqrt(vX_);
-  double meanNX = accumulate(x_.begin(), x_.end(), 0.0)/(x_.size()*sqrtVX);
+  double meanNX = accumulate(x_.begin(), x_.end(), 0.0)/(nDouble_*sqrtVX);
   
-  for(int i = 0; i < x_.size(); ++i){
+  for(int i = 0; i < n_; ++i){
     normX_[i] = x_[i]/sqrtVX - meanNX; // Since there is an extra operation,
                                        // Division is not used.
     if(normX_[i] == 0){
-      normX_[i] = 10.0e-10;
+      normX_[i] = zero_;
     }
   }
 }
@@ -64,7 +73,10 @@ void RobGarch11::normalize_(){
 
 Division::Division(const vector<double> vecN): vecNumer_(vecN), denom_(1.0)
 {
+  n_ = vecN.size();
+  nDouble_ = n_ + 0.0;
   getMean_();
+  getAbs_();
 }
 
 Division::Division(const vector<double> vecN, const double d): vecNumer_(vecN), denom_(d)
@@ -72,6 +84,7 @@ Division::Division(const vector<double> vecN, const double d): vecNumer_(vecN), 
   checkForZero_(d);
   getVecDiv_();
   getMean_();
+  getAbs_();
 }
 
 vector<double> Division::vecDiv() const
@@ -82,6 +95,11 @@ vector<double> Division::vecDiv() const
 double Division::mean() const
 {
   return mean_;
+}
+
+vector<double> Division::abs() const
+{
+  return vecDivAbs_
 }
 
 vector<double> Division::vecNumer() const
@@ -117,7 +135,7 @@ void Division::checkForZero_(double denom) const
 
 void Division::getVecDiv_()
 {
-  for(int i = 0; i < vecNumer_.size(); ++i)
+  for(int i = 0; i < n_; ++i)
   {
     vecDiv_[i] = vecNumer_[i] / denom_;
   }
@@ -125,18 +143,52 @@ void Division::getVecDiv_()
 
 void Division::getMean_()
 {
-  double n = vecNumer_.size() + 0.0;
-  if(n == 0.0)
+
+  if(nDouble_ == 0.0)
   { 
     std::exit(EXIT_FAILURE);
   }
   
   mean_ = 0.0;
-  for(int i = 0; i < vecNumer_.size(); ++i)
+  for(int i = 0; i < n_; ++i)
   {
     mean_ += vecNumer_[i];
   }
-  mean_ /= n;
+  mean_ /= nDouble_;
 }
 
+void Division::getAbs_()
+{
+  for(int i = 0; i < n_; ++i)
+  {
+    vecDiv_[i] = std::abs(vecDiv_[i]);
+  }
+}
 
+/* // Under development.
+Division Division::operator / (const double rhs) const
+{
+  Division divDiv(vecDiv_, rhs);
+  
+  return divDiv.vecDiv();
+}
+
+void Division::operator /= (const double rhs)
+{
+  *this = *this / rhs;
+}
+
+Division Division::operator - (const double rhs) const
+{
+  Division 
+  
+  
+}
+
+void Division::operator -= (const double rhs)
+{
+  
+  
+  
+  
+}*/
