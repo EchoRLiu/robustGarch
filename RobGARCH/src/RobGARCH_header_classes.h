@@ -62,7 +62,7 @@ public:
   void setVecNumer(const std::vector<double> vecNumer);
   void setDenom(const double denom);
   
-  std::vector<double> operator / (const double rhs) const;
+  Division operator / (const double rhs) const;
   void operator /= (const double rhs);
   Division operator - (const double rhs) const;
   void operator -= (const double rhs);

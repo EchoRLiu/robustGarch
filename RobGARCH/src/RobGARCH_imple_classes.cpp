@@ -71,6 +71,7 @@ void RobGarch11::normalize_(){
 /////////////////////////////////////////////////////////
 ////////////////// Division Class ///////////////////////
 
+// Constructors.
 Division::Division(const vector<double> vecN): vecNumer_(vecN), denom_(1.0)
 {
   n_ = vecN.size();
@@ -81,12 +82,15 @@ Division::Division(const vector<double> vecN): vecNumer_(vecN), denom_(1.0)
 
 Division::Division(const vector<double> vecN, const double d): vecNumer_(vecN), denom_(d)
 {
+  n_ = vecN.size();
+  nDouble_ = n_ + 0.0;
   checkForZero_(d);
   getVecDiv_();
   getMean_();
   getAbs_();
 }
 
+// Accessors.
 vector<double> Division::vecDiv() const
 {
   return vecDiv_;
@@ -99,7 +103,7 @@ double Division::mean() const
 
 vector<double> Division::abs() const
 {
-  return vecDivAbs_
+  return vecDivAbs_;
 }
 
 vector<double> Division::vecNumer() const
@@ -112,10 +116,18 @@ double Division::denom() const
   return denom_;
 }
 
+// Mutators.
+
 void Division::setVecNumer(const vector<double> vecNumer)
 {
   vecNumer_ = vecNumer;
+  
+  n_ = vecNumer.size();
+  nDouble_ = n_ + 0.0;
+
   getVecDiv_();
+  getMean_();
+  getAbs_();
 }
 
 void Division::setDenom(const double denom)
@@ -123,7 +135,11 @@ void Division::setDenom(const double denom)
   checkForZero_(denom);
   denom_ = denom;
   getVecDiv_();
+  getMean_();
+  getAbs_();
 }
+
+// Private Member functions.
 
 void Division::checkForZero_(double denom) const
 {
@@ -144,7 +160,7 @@ void Division::getVecDiv_()
 void Division::getMean_()
 {
 
-  if(nDouble_ == 0.0)
+  if(n_ == 0)
   { 
     std::exit(EXIT_FAILURE);
   }
@@ -165,12 +181,12 @@ void Division::getAbs_()
   }
 }
 
-/* // Under development.
 Division Division::operator / (const double rhs) const
 {
-  Division divDiv(vecDiv_, rhs);
+  Division div(vecDiv_, rhs);
+  Division divDiv(div.vecDiv());
   
-  return divDiv.vecDiv();
+  return divDiv;
 }
 
 void Division::operator /= (const double rhs)
@@ -180,15 +196,19 @@ void Division::operator /= (const double rhs)
 
 Division Division::operator - (const double rhs) const
 {
-  Division 
+  std::vector<double> vecDiff = vecDiv_;
   
+  for(int i = 0; i < n_; i++)
+  {
+    vecDiff[i] -= rhs;
+  }
   
+  Division diff(vecDiff);
+  
+  return diff;
 }
 
 void Division::operator -= (const double rhs)
 {
-  
-  
-  
-  
-}*/
+  *this = *this - rhs;
+}
