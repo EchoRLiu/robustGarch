@@ -18,8 +18,8 @@ public:
   void optBM2();
   
   // Accessors: parameters estimations of BM1 and BM2.
-  std::array<double, 3> BM1() const;
-  std::array<double, 3> BM2() const;
+  std::array<double, 3> getBM1() const;
+  std::array<double, 3> getBM2() const;
   
 private:
   
@@ -34,51 +34,51 @@ private:
   double vX_, vNX_, s_;
   int n_;
   double nDouble_;
-  double zero_ = 10e-10;
-  double tausqConst_ = 0.4797;
-  double sEstB_ = 1.625;
-  double sEstEmed_ = 0.675;
+  
+  const double zero_ = 10e-10;
+
   
   // More to come.
 };
 
 
 
-class Division
+class NewVector
 {
 public:
 
-  Division(const std::vector<double> vecN, const double d);
-  Division(const std::vector<double> vecN);
+  NewVector(const std::vector<double> vecN, const double d);
+  NewVector(const std::vector<double> vecN);
   // Vector x is strongly preferred -> required?.
-  // Division();
+  // NewVector();
   
-  // Access the division result.
-  std::vector<double> vecDiv() const;
-  double mean() const; // mean of vecNumer_.
-  std::vector<double> abs() const; //absolute value of vecDiv();
-  std::vector<double> vecNumer() const;
-  double denom() const;
+  // Access the NewVector result.
+  std::vector<double> getVecDiv() const;
+  double getMeanNumer() const; // mean of vecNumer_.
+  std::vector<double> getAbs() const; //absolute value of vecDiv();
+  std::vector<double> getVecNumer() const;
+  double getDenom() const;
+  // Mutators.
   void setVecNumer(const std::vector<double> vecNumer);
   void setDenom(const double denom);
   
-  Division operator / (const double rhs) const;
+  NewVector operator / (const double rhs) const;
   void operator /= (const double rhs);
-  Division operator - (const double rhs) const;
+  NewVector operator - (const double rhs) const;
   void operator -= (const double rhs);
 
 private:
   
   std::vector<double> vecNumer_, vecDiv_, vecDivAbs_;
   double denom_;
-  double mean_;
+  double meanNumer_;
   int n_;
   double nDouble_;
   
   void checkForZero_(double d) const;
-  void getVecDiv_();
-  void getMean_(); // mean of vecNumer_.
-  void getAbs_();
+  void calcVecDiv_();
+  void calcMeanNumer_(); // mean of vecNumer_.
+  void calcAbs_();
   
 };
 

@@ -18,22 +18,25 @@ RobGarch11::RobGarch11(const vector<double>& x): x_(x)
   n_ = x.size();
   nDouble_ = n_ + 0.0;
   
-  // get v_, vini_; normalize the data to be stored in y_.
+  // calculate v_, vini_; normalize the data to be stored in y_.
   vX_ = tausq_(x);
-  normalize_(); // Get normX_.
+  normalize_(); // calculate normX_.
   vNX_ = tausq_(normX_);
 
 }
 
 void RobGarch11::sEst_(const vector<double> x)
 {
+  const double sEstB = 1.625;
+  const double sEstEmed = 0.675;
+  
   s_ = 1.0;
   double eps = 1.0;
   int nn = 1;
   
-  Division xEmed(x, sEstEmed_);
-  Division m(xEmed.abs());
-  Division xDiv(x, m.mean());
+  NewVector xEmed(x, sEstEmed);
+  NewVector m(xEmed.getAbs());
+  NewVector xDiv(x, m.getMeanNumer());
   
 }
 
@@ -45,15 +48,19 @@ vector<double> RobGarch11::rho_(const vector<double> x)
 
 double RobGarch11::tausq_(const vector<double>& x)
 {
+  const double tausqConst = 0.4797;
+  
   sEst_(x);
   // In R code, s is set as global variable as "Sestim".
   // Here s_ is private member variable could be accessed.
-  Division xS(x, s_);
-  Division r(rho_(xS.vecDiv()));
-  double t = r.mean() * pow(s_, 2) / tausqConst_;
+  NewVector xS(x, s_);
+  NewVector r(rho_(xS.getVecDiv()));
+  double t = r.getMeanNumer() * pow(s_, 2) / tausqConst;
   return t;
 }
 
+
+// Done.
 void RobGarch11::normalize_(){
   
   double sqrtVX = sqrt(vX_);
@@ -61,7 +68,7 @@ void RobGarch11::normalize_(){
   
   for(int i = 0; i < n_; ++i){
     normX_[i] = x_[i]/sqrtVX - meanNX; // Since there is an extra operation,
-                                       // Division is not used.
+                                       // NewVector is not used.
     if(normX_[i] == 0){
       normX_[i] = zero_;
     }
@@ -69,79 +76,79 @@ void RobGarch11::normalize_(){
 }
 
 /////////////////////////////////////////////////////////
-////////////////// Division Class ///////////////////////
+////////////////// NewVector Class ///////////////////////
 
 // Constructors.
-Division::Division(const vector<double> vecN): vecNumer_(vecN), denom_(1.0)
+NewVector::NewVector(const vector<double> vecN): vecNumer_(vecN), denom_(1.0)
 {
   n_ = vecN.size();
   nDouble_ = n_ + 0.0;
-  getMean_();
-  getAbs_();
+  calcMeanNumer_();
+  calcAbs_();
 }
 
-Division::Division(const vector<double> vecN, const double d): vecNumer_(vecN), denom_(d)
+NewVector::NewVector(const vector<double> vecN, const double d): vecNumer_(vecN), denom_(d)
 {
   n_ = vecN.size();
   nDouble_ = n_ + 0.0;
   checkForZero_(d);
-  getVecDiv_();
-  getMean_();
-  getAbs_();
+  calcVecDiv_();
+  calcMeanNumer_();
+  calcAbs_();
 }
 
 // Accessors.
-vector<double> Division::vecDiv() const
+vector<double> NewVector::getVecDiv() const
 {
   return vecDiv_;
 }
 
-double Division::mean() const
+double NewVector::getMeanNumer() const
 {
-  return mean_;
+  return meanNumer_;
 }
 
-vector<double> Division::abs() const
+vector<double> NewVector::getAbs() const
 {
   return vecDivAbs_;
 }
 
-vector<double> Division::vecNumer() const
+vector<double> NewVector::getVecNumer() const
 {
   return vecNumer_;
 }
 
-double Division::denom() const
+double NewVector::getDenom() const
 {
   return denom_;
 }
 
 // Mutators.
 
-void Division::setVecNumer(const vector<double> vecNumer)
+void NewVector::setVecNumer(const vector<double> vecNumer)
 {
   vecNumer_ = vecNumer;
   
   n_ = vecNumer.size();
   nDouble_ = n_ + 0.0;
 
-  getVecDiv_();
-  getMean_();
-  getAbs_();
+  calcVecDiv_();
+  calcMeanNumer_();
+  calcAbs_();
 }
 
-void Division::setDenom(const double denom)
+void NewVector::setDenom(const double denom)
 {
   checkForZero_(denom);
   denom_ = denom;
-  getVecDiv_();
-  getMean_();
-  getAbs_();
+  calcVecDiv_();
+  calcMeanNumer_();
+  calcAbs_();
 }
 
 // Private Member functions.
 
-void Division::checkForZero_(double denom) const
+void NewVector::checkForZero_(double denom) const
 {
   if(denom == 0.0)
   {
@@ -149,7 +156,7 @@ void Division::checkForZero_(double denom) const
   }
 }
 
-void Division::getVecDiv_()
+void NewVector::calcVecDiv_()
 {
   for(int i = 0; i < n_; ++i)
   {
@@ -157,7 +164,7 @@ void Division::getVecDiv_()
   }
 }
 
-void Division::getMean_()
+void NewVector::calcMeanNumer_()
 {
 
   if(n_ == 0)
@@ -165,15 +172,15 @@ void Division::getMean_()
     std::exit(EXIT_FAILURE);
   }
   
-  mean_ = 0.0;
+  meanNumer_ = 0.0;
   for(int i = 0; i < n_; ++i)
   {
-    mean_ += vecNumer_[i];
+    meanNumer_ += vecNumer_[i];
   }
-  mean_ /= nDouble_;
+  meanNumer_ /= nDouble_;
 }
 
-void Division::getAbs_()
+void NewVector::calcAbs_()
 {
   for(int i = 0; i < n_; ++i)
   {
@@ -181,20 +188,20 @@ void Division::getAbs_()
   }
 }
 
-Division Division::operator / (const double rhs) const
+NewVector NewVector::operator / (const double rhs) const
 {
-  Division div(vecDiv_, rhs);
-  Division divDiv(div.vecDiv());
+  NewVector div(vecDiv_, rhs);
+  NewVector divDiv(div.getVecDiv());
   
   return divDiv;
 }
 
-void Division::operator /= (const double rhs)
+void NewVector::operator /= (const double rhs)
 {
   *this = *this / rhs;
 }
 
-Division Division::operator - (const double rhs) const
+NewVector NewVector::operator - (const double rhs) const
 {
   std::vector<double> vecDiff = vecDiv_;
   
@@ -203,12 +210,12 @@ Division Division::operator - (const double rhs) const
     vecDiff[i] -= rhs;
   }
   
-  Division diff(vecDiff);
+  NewVector diff(vecDiff);
   
   return diff;
 }
 
-void Division::operator -= (const double rhs)
+void NewVector::operator -= (const double rhs)
 {
   *this = *this - rhs;
 }
