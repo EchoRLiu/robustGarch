@@ -1,12 +1,4 @@
-
-# Main function of Robust GARCH.
-# It computes parameter estimates of BM1 and BM2 for GARCH(1,1).
-# The function takes time series x_t, which should be the
-# log return of price series.
-
-library(pracma)
-
-bgarch11 <- function(x){
+robGarch11 <- function(x){
 
   n <- prod(length(x))
   v <- varin(x)
@@ -44,12 +36,12 @@ varin <- function(x){
     i <- i+1
     v <- x[i]^2
   }
+
   if(i==30){
     error <- 1
   }
-
   v <- a
-  return(v)
+  v
 }
 
 tausq <- function(x){
@@ -193,9 +185,9 @@ nnest1 <- function(y, vini){
             }
           }
         }
-  }}}
+      }}}
   # we now optimize
-  alfar <- fminsearch(Fnue, c(vi,vini))
+  alfar <- nloptr(c(vi, vini), Fnue) # fminsearch(Fnue,vi,vini)
   nes <- alfar$xmin # c(alfar[1],alfar[1,2],alfar[1,3])
 
   return(nes)
@@ -325,7 +317,7 @@ nnest2 <- function(y, vini){
     }
   }
 
-  alfar <- fminsearch(Fnue2,vi,vini)
+  alfar <- nloptr(c(vi, vini), Fnue2) #fminsearch(Fnue2,vi,vini)
   nes <- alfar$xmin # c(alfar[1,1],alfar[1,2],alfar[1,3])
 }
 
@@ -372,10 +364,5 @@ Fnue2 <- function(vi, vini){
   return(nml)
 }
 
-df <- read.csv("/Users/yuhongliu/Downloads/^GSPC.csv", header = TRUE)
-p <- df[,6]
-rtn <- diff(log(p))
 
-plot(rtn)
 
-bms<- bgarch11(t(rtn))
