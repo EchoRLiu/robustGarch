@@ -1,7 +1,7 @@
- -[ ] function for fitting with arguments
+ - [ ] function for fitting with arguments
  
- -[ ] fitted object class
+ - [ ] fitted object class
  
- -[ ] print method
+ - [ ] print method
  
- -[ ] ...
+ - [ ] ...
