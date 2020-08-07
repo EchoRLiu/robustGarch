@@ -6,7 +6,7 @@
 
 The package can be installed as following:
 
-```
+```ruby
 devtools::install_github("EchoRLiu/robGarch")
 library(robGarch)
 ```
