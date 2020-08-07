@@ -16,7 +16,13 @@ library(robGarch)
 This is a basic example which shows you how to fit your daily return time series data into robust Garch(1,1) model.
 
 ```js
+df <- read.csv("/Users/yuhongliu/Downloads/^GSPC.csv", header = TRUE)
+p <- df[,6]
+rtn <- diff(log(p))
 
+plot(rtn)
+
+bms<- bgarch11(t(sim1[1:1000]))
 
 
 ```
