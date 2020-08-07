@@ -1,1 +1,1 @@
-# RobustGARCH
+# robGarch

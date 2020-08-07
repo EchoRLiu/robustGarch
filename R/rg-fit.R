@@ -1,4 +1,25 @@
-robGarch11 <- function(x){
+#' @title Robust GARCH(1,1) Model Estimation
+#'
+#' @name rg
+#' @aliases fit
+#' @aliases nnest1
+#' @aliases nnest2
+#' @aliases varin
+#' @aliases tausq
+#' @aliases sest
+#' @aliases rho
+#' @aliases gk
+#' @aliases freg
+#' @aliases Fnue
+#' @aliases Fnue2
+#' @aliases nfun
+#' @aliases nfun2
+#'
+#' @description
+#'
+#' @rdname rg
+#' @export
+fit <- function(x, bms = 1){
 
   n <- prod(length(x))
   v <- varin(x)
@@ -46,14 +67,14 @@ varin <- function(x){
 
 tausq <- function(x){
   m <- prod(length(x))
-  s <- SEST2(x) # Global declaration.
+  s <- sest(x) # Global declaration.
   assign("Sestim", s, envir = .GlobalEnv)
-  r <- RHO2(x/s)
+  r <- rho(x/s)
   t <- mean(r)*s^2/0.4797
   return(t)
 }
 
-SEST2 <- function(x){
+sest <- function(x){
 
   b <- 1.625
   emed <- 0.675
@@ -63,11 +84,11 @@ SEST2 <- function(x){
 
   m <- median(abs(x))/emed
   x <- x/m
-  rho1 <- RHO2(x/0.405)
+  rho1 <- rho(x/0.405)
   a <- mean(rho1)/b
   v <- 1-a # Starting value
   si <- a # Starting value
-  rho1 <- RHO2(x/(0.405*si)) # Starting value
+  rho1 <- rho(x/(0.405*si)) # Starting value
   a<- mean(rho1)/b # Starting value
   vi <- 1-a # Starting value
   AUX <- v * vi # Starting value
@@ -77,7 +98,7 @@ SEST2 <- function(x){
     s <- si
     v <- vi
     si <- a*s
-    rho1 <- RHO2(x/(0.405 * si))
+    rho1 <- rho(x/(0.405 * si))
     a <- mean(rho1)/b
     vi <- 1-a
     AUX <- v*vi
@@ -87,7 +108,7 @@ SEST2 <- function(x){
   nsec <- 0
   while(eps>0.005){
     ns <- (s+si)/2
-    rho1 <- RHO2(x/(0.405*ns))
+    rho1 <- rho(x/(0.405*ns))
     a <- mean(rho1)/b
     nv <- 1-a
     AUX <- nv * vi
@@ -111,7 +132,7 @@ SEST2 <- function(x){
 }
 
 # A continous rho function.
-RHO2 <- function(x){
+rho <- function(x){
 
   n <- prod(length(x))
   G1 <- -1.944

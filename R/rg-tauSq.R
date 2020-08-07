@@ -20,8 +20,8 @@ varin <- function(x)
   }
 
   v <- a
-  v
 
+  v
 }
 
 tausq <- function(x)
