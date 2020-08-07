@@ -22,7 +22,7 @@ summary(bm)
 plot(bm)
 ```
 
-For more examples and explanation, please refer to the vignette [robGarch-Vignette](https://github.com/EchoRLiu/robGarch/blob/master/vignettes/robGarch_Vignette.pdf).
+For more examples and explanation, please refer to the  [robGarch-Vignette](https://github.com/EchoRLiu/robGarch/blob/master/vignettes/robGarch_Vignette.pdf).
 
 ## Future Development
 
