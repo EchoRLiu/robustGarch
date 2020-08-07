@@ -17,6 +17,4 @@ Suggests:
 Imports:
     pracma,
     nloptr
-VignetteBuilder: 
-    knitr,
-    kableExtra
+VignetteBuilder: knitr

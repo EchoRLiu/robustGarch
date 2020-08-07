@@ -1,4 +1,5 @@
 ~%2FDownloads%2FrobGarch%2F.Rbuildignore="8E7896D5"
+~%2FDownloads%2FrobGarch%2F.gitignore="1F812F69"
 ~%2FDownloads%2FrobGarch%2FDESCRIPTION="D108D6C9"
 ~%2FDownloads%2FrobGarch%2FNAMESPACE="F430DFBC"
 ~%2FDownloads%2FrobGarch%2FR%2Frg-bm1.R="D48C17DF"
@@ -14,3 +15,6 @@
 ~%2FDownloads%2FrobGarch%2FR%2Ftausq.R="889F8849"
 ~%2FDownloads%2FrobGarch%2FREADME.md="5D57D12F"
 ~%2FDownloads%2FrobGarch%2Fman%2FrobGarch11.Rd="0C0C9F0C"
+~%2FDownloads%2FrobGarch%2Fvignettes%2F.gitignore="F80EB0EB"
+~%2FDownloads%2FrobGarch%2Fvignettes%2FrobGarch-vignette.Rmd="8F8A576D"
+~%2FDownloads%2FrobGarch%2Fvignettes%2FrobGarch_Vignette.lyx="73A9059E"

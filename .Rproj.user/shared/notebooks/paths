@@ -1,4 +1,5 @@
 /Users/yuhongliu/Downloads/robGarch/.Rbuildignore="38B393AC"
+/Users/yuhongliu/Downloads/robGarch/.gitignore="8F9633C7"
 /Users/yuhongliu/Downloads/robGarch/DESCRIPTION="D7FCD4C8"
 /Users/yuhongliu/Downloads/robGarch/NAMESPACE="CF673FAA"
 /Users/yuhongliu/Downloads/robGarch/R/rg-bm1.R="50EE434A"
@@ -9,3 +10,6 @@
 /Users/yuhongliu/Downloads/robGarch/R/rg-tauSq.R="0AFF676D"
 /Users/yuhongliu/Downloads/robGarch/README.md="210FC1EA"
 /Users/yuhongliu/Downloads/robGarch/man/robGarch11.Rd="E28A94DE"
+/Users/yuhongliu/Downloads/robGarch/vignettes/.gitignore="AA791B79"
+/Users/yuhongliu/Downloads/robGarch/vignettes/robGarch-vignette.Rmd="6B3115E7"
+/Users/yuhongliu/Downloads/robGarch/vignettes/robGarch_Vignette.lyx="10DC11D5"
