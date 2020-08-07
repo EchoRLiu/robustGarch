@@ -1,0 +1,777 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass extarticle
+\begin_preamble
+%%%%%%%%%%%%%%%%%%%% book.tex %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% sample root file for the chapters of your "monograph"
+%
+% Use this file as a template for your own input.
+%
+%%%%%%%%%%%%%%%% Springer-Verlag %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% RECOMMENDED %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% choose options for [] as required from the list
+% in the Reference Guide
+
+
+\usepackage[bottom]{footmisc}% places footnotes at page bottom
+
+% see the list of further useful packages
+% in the Reference Guide
+
+
+%\usepackage[style=authoryear,natbib=true,firstinits=true,backend=biber]{biblatex}
+%\addbibresource{C:/Rprojects/bookportopt/msybook.bib}
+
+%\renewcommand*{\nameyeardelim}{\addspace}
+%\renewbibmacro{in:}{}
+
+\usepackage{txfonts}
+\usepackage{upgreek}
+\usepackage{booktabs}
+
+\usepackage[style=authoryear,natbib=true,firstinits=true,backend=biber]{biblatex}
+
+\setlength{\bibitemsep}{0.5\baselineskip}
+\DeclareNameAlias{sortname}{last-first}
+
+\addbibresource{RobGARCH1.bib}
+\addbibresource{Huber1981.bib}
+\addbibresource{robGarch_Vignette.bib}
+\renewcommand\cite{\citet}
+
+%\renewcommand*{\nameyeardelim}{\addspace}
+%\renewbibmacro{in:}{}
+\end_preamble
+\use_default_options true
+\begin_modules
+theorems-ams
+knitr
+\end_modules
+\maintain_unincluded_children false
+\begin_local_layout
+Provides natbib 1
+\end_local_layout
+\language english
+\language_package none
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command biber
+\index_command default
+\float_placement H
+\paperfontsize 12
+\spacing onehalf
+\use_hyperref true
+\pdf_bookmarks true
+\pdf_bookmarksnumbered true
+\pdf_bookmarksopen false
+\pdf_bookmarksopenlevel 2
+\pdf_breaklinks false
+\pdf_pdfborder false
+\pdf_colorlinks false
+\pdf_backref false
+\pdf_pdfusetitle true
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine natbib
+\cite_engine_type authoryear
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 1in
+\topmargin 1in
+\rightmargin 1in
+\bottommargin 1in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\listings_params "mathescape=true"
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<include=FALSE>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+library(knitr)
+\end_layout
+
+\begin_layout Plain Layout
+
+library(kableExtra)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+opts_chunk$set(keep.source=TRUE,
+\end_layout
+
+\begin_layout Plain Layout
+
+	tidy=TRUE,
+\end_layout
+
+\begin_layout Plain Layout
+
+	message=FALSE, 
+\end_layout
+
+\begin_layout Plain Layout
+
+	fig.path='Plots/', 
+\end_layout
+
+\begin_layout Plain Layout
+
+	fig.align='center', 
+\end_layout
+
+\begin_layout Plain Layout
+
+	fig.width=4.5, 
+\end_layout
+
+\begin_layout Plain Layout
+
+	fig.height=3.0, 
+\end_layout
+
+\begin_layout Plain Layout
+
+	fig.keep='last',
+\end_layout
+
+\begin_layout Plain Layout
+
+	fig.show='hide',
+\end_layout
+
+\begin_layout Plain Layout
+
+	dev.args=list(pointsize=10),
+\end_layout
+
+\begin_layout Plain Layout
+
+	tidy.opts=list(width.cutoff=50),
+\end_layout
+
+\begin_layout Plain Layout
+
+	cache=FALSE)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Title
+Introduction to the robGarch package (Version 0.0.1)
+\end_layout
+
+\begin_layout Author
+Echo Liu
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Mentors: R.
+ Douglas Martin, Dan Hanson, and Alexios Galanos
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\align center
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+August 05, 2020
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+AutoRegressive Conditional Heteroscedasticity (ARCH) was introduced by 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "engle"
+literal "false"
+
+\end_inset
+
+ and extended to Generalized Autoregressive Conditional Heteroscedasticity
+ (GARCH) models by 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "Bollerslev"
+literal "false"
+
+\end_inset
+
+, the latter proven very popular in many applications as they provide a
+ rich statistical framework for non-constant variance and their ability
+ to capture observed empirical phenomena such as volatility clustering.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "chou"
+literal "false"
+
+\end_inset
+
+ showed the ability of GARCH to estimate risk premium valuation of a stock.
+ In 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "duan"
+literal "false"
+
+\end_inset
+
+, GARCH is applied to pricing options, where volatility plays a crucial
+ role in the Black-Scholes option pricing model, thereby adding a new perspectiv
+e in comparison to stochastic volatility model.
+ Bias caused by outliers has been studied in some literature.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "huber"
+literal "false"
+
+\end_inset
+
+ established two properties for a good robust model fitting method.
+ The first is that a robust estimate needs to be efficient and should be
+ efficient in the sense of having a variance that is not much larger than
+ that of a maximum likelihood estimate typically based on a normal distribution.
+ The second property, introduced by later researchers is that replacing
+ a small fraction of the data by outliers should not cause big difference
+ as measured by estimator bias.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "mendes"
+literal "false"
+
+\end_inset
+
+ showed how outliers create asymptotic bias in Quasi Maximum Likelihood
+ Estimate of the GARCH parameters.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "yohaimuler"
+literal "false"
+
+\end_inset
+
+ showed that QML parameter estimation based on normal likelihood is very
+ sensitive to outliers in financial returns, and even a single outlier can
+ have a huge influence on the QML parameter estimates.
+\end_layout
+
+\begin_layout Standard
+The 
+\noun on
+robGarch
+\noun default
+ package aims to provide a method for modelling robust GARCH processes,
+ addressing the issue of robustness toward additive outliers, rather than
+ innovations outliers.
+ It contains fitting, forecasting, simulation with diagnostic tools including
+ plots and tests.
+ This document discusses the details of the included models and how they
+ are implemented in the package with some examples.
+\end_layout
+
+\begin_layout Standard
+The 
+\noun on
+robGarch
+\noun default
+ package can be installed as following:
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<echo=TRUE, eval=FALSE>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+devtools::install_github(
+\begin_inset Quotes eld
+\end_inset
+
+EchoRLiu/robGarch
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+library(robGarch)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and the development version on github (
+\begin_inset CommandInset href
+LatexCommand href
+target "https://github.com/EchoRLiu/robGarch"
+literal "false"
+
+\end_inset
+
+) with examples and and demons.
+\end_layout
+
+\begin_layout Section
+Robust Garch Model
+\end_layout
+
+\begin_layout Subsection*
+2.1 robust Garch
+\end_layout
+
+\begin_layout Standard
+Robust Garch is first introduced by 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "yohaimuler"
+literal "false"
+
+\end_inset
+
+ with the foundation work of 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "huber"
+literal "false"
+
+\end_inset
+
+.
+ The following content focuses on how the two robust GARCH model in 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "yohaimuler"
+literal "false"
+
+\end_inset
+
+ work.
+\end_layout
+
+\begin_layout Standard
+Defined as 
+\begin_inset Formula $x_{t}=\sigma_{t}z_{t}$
+\end_inset
+
+, where 
+\begin_inset Formula $z_{t}$
+\end_inset
+
+ is i.i.d random variables with continuous density 
+\begin_inset Formula $f$
+\end_inset
+
+ such that 
+\begin_inset Formula $E(z_{t})=0$
+\end_inset
+
+, 
+\begin_inset Formula $Var(z_{t})=1$
+\end_inset
+
+, and where the conditional variance 
+\begin_inset Formula $\sigma_{t}^{2}$
+\end_inset
+
+ are given by 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\sigma_{t}^{2}=\alpha_{0}+\sum_{i=1}^{p}\alpha_{i}x_{t-i}^{2}+\sum_{j=1}^{q}\beta_{j}\sigma_{t-j}^{2}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+the robust parameters estimation is based on M-estimate with more flavors.
+ Two special things are done for BM1 and BM2 models: (1) for the BM1, the
+ M-estimates has bounded 
+\begin_inset Formula $\rho'$
+\end_inset
+
+ and unbounded 
+\begin_inset Formula $\rho$
+\end_inset
+
+, such as 
+\begin_inset Formula $\rho=m_{1}(\rho_{0})$
+\end_inset
+
+, where 
+\begin_inset Formula $\rho_{0}$
+\end_inset
+
+ is defined as follows 
+\begin_inset Formula $\rho_{0}=-log(\frac{1}{\sqrt{2\pi}}e^{-(e^{w}-w)/2}))$
+\end_inset
+
+, where 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $w=log(z_{t}^{2}$
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\xout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+ and 
+\begin_inset Formula $m_{1}$
+\end_inset
+
+ is a non-decreasing, bounded function 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+m_{1}(x)=\begin{cases}
+x, & x\leq4\\
+P(x), & 4<x\leq4.34.15,x>4.3
+\end{cases}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{multline}
+P(x)=\frac{2}{(b-a)^{3}}(\frac{1}{4}(x^{4}-a^{4})-\frac{1}{3}(2a+b)(x^{3}-a^{3})+\frac{1}{2}(a^{2}+2ab)(x^{2}-a^{2}))\\
+-\frac{2a^{2}b}{(b-a)^{3}}(x-a)-\frac{1}{3(b-a)^{2}}(x-a)^{3}+x,a=4,b=4.3\label{eq:ps}
+\end{multline}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+which satisfies constraints 
+\begin_inset Formula $P(a)=a,P'(a)=1,P'(b)=P''(a)=P''(b)=0$
+\end_inset
+
+ this model is robust when 
+\begin_inset Formula $z_{t}$
+\end_inset
+
+ is heavy-tail distribution and may be affected by additive outliers, in
+ the Monte-Carlo section, 
+\begin_inset Formula $k=5.02$
+\end_inset
+
+ for the testing; (2) for BM2, 
+\begin_inset Formula $\rho$
+\end_inset
+
+ is bounded as well, thus more robust, defined as 
+\begin_inset Formula 
+\begin{equation}
+m_{2}(\rho_{0})=0.8m_{1}(\rho_{0}/0.8)\label{eq:rho2}
+\end{equation}
+
+\end_inset
+
+ and 
+\begin_inset Formula $k$
+\end_inset
+
+ is chosen to be 3 for the testing.
+ However, BM2 unfortunately would still be influenced by large outliers.
+\end_layout
+
+\begin_layout Standard
+The main structure of parameter estimation is 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\hat{\gamma_{T}}^{B}=\begin{cases}
+\hat{\gamma_{1,T}}, & M_{T}(\hat{\gamma_{1,T}})\leq M_{Tk}^{*}(\hat{\gamma_{2,T}})\\
+\hat{\gamma_{2,T}}, & M_{T}(\hat{\gamma_{1,T}})>M_{Tk}^{*}(\hat{\gamma_{2,T}})
+\end{cases}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\begin{split}\hat{\gamma_{1,T}} & =arg\min_{\textbf{c}}M_{T}(\textbf{c})\\
+ & =arg\min_{\alpha_{i},\beta_{j}}\frac{1}{T-p}\sum_{t=p+1}^{T}\rho(log(x_{t}^{2})-log(\alpha_{0}+\sum_{i=1}^{p}\alpha_{i}x_{t-i}^{2}+\sum_{j=1}^{q}\beta_{j}\sigma_{t-j}^{2}))
+\end{split}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and 
+\begin_inset Formula 
+\begin{equation}
+\begin{split}\hat{\gamma_{2,T}} & =arg\min_{\textbf{c}}M_{Tk}^{*}(\textbf{c})\\
+ & =arg\min_{\alpha_{i},\beta_{j}}\frac{1}{T-p}\sum_{t=p+1}^{T}\rho(log(x_{t}^{2})\\
+ & -log(\alpha_{0}+\sum_{i=1}^{p}\alpha_{i}\sigma_{t-i,k}^{2}(\alpha_{i},\beta_{j})r_{k}(\frac{x_{t-i}^{2}}{\sigma_{t-i,k}^{2}})+\sum_{j=1}^{q}\beta_{j}\sigma_{t-j}^{2}))
+\end{split}
+\label{eq:optimize}
+\end{equation}
+
+\end_inset
+
+ where 
+\begin_inset Formula 
+\begin{equation}
+r_{k}(u)=\begin{cases}
+u, & u\leq k\\
+k, & u>k
+\end{cases}\label{eq:gk}
+\end{equation}
+
+\end_inset
+
+ the use of function 
+\begin_inset Formula $r_{k}(u)$
+\end_inset
+
+ is to restrict the propagation of the outlier effect.
+ If k is large, then 
+\begin_inset Formula $\sum_{i=1}^{p}\alpha_{i}\sigma_{t-i,k}^{2}(\alpha_{i},\beta_{j})r_{k}(\frac{x_{t-i}^{2}}{\sigma_{t-i,k}^{2}})$
+\end_inset
+
+ becomes the normal form 
+\begin_inset Formula $\sum_{i=1}^{p}\alpha_{i}x_{t-i}^{2}$
+\end_inset
+
+.
+ The different optimization under different cases makes sure that the model
+ has robustness with outliers and maintains consistency when the series
+ follows a GARCH without outliers.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+btprint "btPrintCited"
+bibfiles "RobGARCH1,Huber1981,robGarch_Vignette"
+options "bibtotoc,plainnat"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+printbibliography
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
