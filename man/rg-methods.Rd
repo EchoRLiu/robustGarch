@@ -2,10 +2,15 @@
 % Please edit documentation in R/rg-methods.R
 \name{summary.rg}
 \alias{summary.rg}
-\title{Methods for robGarch class}
+\title{Methods for rg class}
 \usage{
-\method{summary}{rg}(fit)
+\method{summary}{rg}(fit, std_err = "numDeriv")
+}
+\arguments{
+\item{fit}{A RG fit object of class \code{\link{rg}}}
+
+\item{model}{one of robust garch "1" or "2" model,}
 }
 \description{
-Methods fro robGarch S3 class
+Methods fro rg S3 class
 }
