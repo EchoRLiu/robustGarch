@@ -35,7 +35,7 @@
 #' @details
 #' The \code{rgMEst} function fits a Garch(1, 1) model to a time series of log return data, using one of the two classes of robust extended M-Estimates with certain parameters specified by the user, with guidance and examples from the vignette. The user can also specify the optimizer used during optimization procesure, and the method used to calculate standard error for the fitted parameters.
 #'
-#' For details of the list of control arguments, please refer to \code{fminsearch}, \code{nloptr::nloptr}, \code{Rsolnp::solnp}
+#' For details of the list of control arguments, please refer to \code{pracma::fminsearch}, \code{nloptr::nloptr}, \code{Rsolnp::solnp}
 #'
 #' @references Muler, Nora & Yohai, Victor. (2008). Robust estimates for GARCH models. Journal of Statistical Planning and Inference. 138. 2918-2940.
 #'
@@ -138,11 +138,22 @@ rgFit_local <- function(data, classes, class_pars, optimizer, optimizer_control)
     k <- class_pars[2]
     res <- nnest(data_normalized, vini, div, k, optimizer, optimizer_control)
     optimizer_result <- res
-    fitted_pars <- res$pars[1:3]
-    fitted_pars[1] <- fitted_pars[1]*v_data
-    names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1")
-    objective <- res$objective
-    message <- res$message
+    if(optimizer == "fminsearch"){
+      stop("This feature is under active development, please use Rsolnp.")
+      fitted_pars <- res$fmin[1:3]
+      fitted_pars[1] <- fitted_pars[1]*v_data
+      names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1")
+      objective <- res$xopt
+      message <- NULL
+    } else if(optimizer == "Rsolnp" || optimizer == "nloptr"){
+      fitted_pars <- res$pars[1:3]
+      fitted_pars[1] <- fitted_pars[1]*v_data
+      names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1")
+      objective <- res$objective
+      message <- res$message
+    } else{
+      NA
+    }
 
   }
   time_elapsed <- Sys.time() - start_time
@@ -222,10 +233,10 @@ nnest <- function(y, vini, div, k, optimizer, optimizer_control){
   ub = c( 1.0, 1.0, 1.0, 1.0, div, k)
   # Limits for optimization, needs to be added. TBD.
   if (optimizer == "fminsearch"){
-    stop("This feature is under development, please use Rsolnp instead.")
-    # Fnue2 has 4 parameters, needs to be updated to fix div and k.
-    alfar <- fminsearch(Fnue,vi,vini, div, k)
-    nes <- alfar$xmin # c(alfar[1,1],alfar[1,2],alfar[1,3])
+
+    res <- pracma::fminsearch(Fnue,c(vi,vini, div, k),lower=lb,upper=ub, method="Hooke-Jeeves")
+    return(res)
+
   } else if (optimizer == "nloptr"){
 
     stop("This feature is under development, please use Rsolnp instead.")
