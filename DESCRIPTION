@@ -13,7 +13,8 @@ BugReports: https://github.com/EchoRLiu/robGarch/issues
 RoxygenNote: 7.1.1
 Suggests:
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat
 Imports:
     pracma,
     nloptr,

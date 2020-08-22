@@ -7,37 +7,39 @@
 \usage{
 rgMEst(
   data,
-  classes = c("bounded MEst", "modified MEst"),
-  class_pars = c(0.85, 3),
-  optimizer = c("fminsearch", "nloptr", "Rsolnp"),
+  methods = c("bounded MEst", "modified MEst", "QML"),
+  fixed_pars = c(0.85, 3),
+  optimizer = c("Rsolnp", "nloptr", "nlminb"),
   optimizer_control = list(),
-  stdErr_method = c("finite difference hessian estimator",
-    "outer product of gradients", "sandwich estimator")
+  stdErr_method = c("numDeriv", "optim", "sandwich")
 )
 }
 \arguments{
 \item{data}{a time series of log returns}
 
-\item{class_pars}{a named numeric vector of parameters of the class. For the "modified MEst" class, the parameter should be "div", which is used in m(rho0(x)) = div * m(rho0(x)/div) and defined as 0 <= div <= 1.0, default is div = 0.85; for the "bounded MEst" class, the parameter should be "div" and "k", which also influences the robustness and defined as k >= 0, default is div = 0.85, k = 3. The smaller div or k is, the more robust the moddel is.}
+\item{methods}{robust M-Estimate method used for Garch(1,1) model, one of "modified MEst", "bounded MEst", default is "bounded MEst"}
 
-\item{optimizer}{optimizer used for optimization, one of "fminsearch", "nloptr", "Rsolnp", default is "fminsearch"}
+\item{fixed_pars}{a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "modified MEst", the parameter should be c, which controls the modified loss function, user can use default c = .85; for "bounded MEst", the parameters should be c(c, k), where c is the same as in "modified MEst", user can use default c = 0.85,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.}
+
+\item{optimizer}{optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".}
 
 \item{optimizer_control}{list of control arguments passed to the optimizer}
 
-\item{stdErr_method}{method used to calculate standard error, one of "finite difference hessian estimator", "outer product of gradients", "sandwich estimator", default is "finite difference hessian estimator" using hessian from numDeriv}
+\item{stdErr_method}{method used to calculate standard error, one of "numDerive", "optim", "sandwich", default is "numDeriv" using hessian from numDeriv}
 
-\item{class}{robust M-Estimate class used for Garch(1,1) model, one of "modified MEst", "bounded MEst", default is "bounded MEst"}
+\item{QML}{a logical argument, when TRUE, the function will use QML method instead of robust Garch model method, default to FALSE.}
 }
 \value{
 A \code{rg} object(S3), the components of the object are:
     \item{data}{the log returns data object for the rg model to be fitted}
-    \item{classes}{the class called}
-    \item{class_pars}{named numeric vector of parameters for the class}
+    \item{methods}{the method called}
+    \item{fixed_pars}{named numeric vector of fixed parameters used}
     \item{optimizer}{the optimizer called}
     \item{optimizer_control}{the list of control arguments passed to the optimizer}
     \item{optimizer_result}{output of the called optimizer}
     \item{stdErr_method}{the method called to calculate standard error}
-    \item{fitted_pars}{Garch(1,1) parameter estimations output of the called class}
+    \item{QML}{logical argument controlling the non-robustness of the fitting method}
+    \item{fitted_pars}{Garch(1,1) parameter estimations output of the called method}
     \item{objective}{the optimal likihood value obtained by the optimizer}
     \item{time_elapsed}{the time used for the optimization routine}
     \item{message}{the message of the convergence status produced by the called solver}
@@ -46,15 +48,15 @@ A \code{rg} object(S3), the components of the object are:
     \item{p_value}{p-values of alpha_0, alpha_1, beta_1}
 }
 \description{
-Methods for fitting a Garch(1,1) model with daily log return time series, using two classes of robust extended M-Estimates:
+Methods for fitting a Garch(1,1) model with daily log return time series, using two methods of robust extended M-Estimates:
 (1) maximizing modified likelihood function;
 (2) M-Estimates with bounds to the propagation of the effect of one outlier on the subsequent predictors of the conditional variances.
 returns a \code{rg} object
 }
 \details{
-The \code{rgMEst} function fits a Garch(1, 1) model to a time series of log return data, using one of the two classes of robust extended M-Estimates with certain parameters specified by the user, with guidance and examples from the vignette. The user can also specify the optimizer used during optimization procesure, and the method used to calculate standard error for the fitted parameters.
+The \code{rgMEst} function fits a Garch(1, 1) model to a time series of log return data, using one of the two methods of robust extended M-Estimates with certain parameters specified by the user, with guidance and examples from the vignette. The user can also specify the optimizer used during optimization procesure, and the method used to calculate standard error for the fitted parameters.
 
-For details of the list of control arguments, please refer to \code{fminsearch}, \code{nloptr::nloptr}, \code{Rsolnp::solnp}
+For details of the list of control arguments, please refer to \code{nloptr::nloptr}, \code{Rsolnp::solnp}, \code{nlminb}.
 }
 \examples{
 # TBD.

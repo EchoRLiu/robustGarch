@@ -3,9 +3,9 @@
 \docType{data}
 \name{rtn}
 \alias{rtn}
-\title{Daily log return of the GSPC from 2000-02-01 to 2002-06-28}
+\title{Daily log return of the GSPC from 2000-02-01 to 2006-01-31}
 \format{
-A vector with length 604.
+A vector with length 5029.
 \describe{
   \item{log return}{log return}
   ...
@@ -15,7 +15,7 @@ A vector with length 604.
 
 }
 \usage{
-rtn
+data(rtn)
 }
 \description{
 This is processed from the original ^GSPC.csv dataframe.

@@ -3,28 +3,30 @@
 #' @name rgMEst
 #' @aliases rgmest
 #'
-#' @description Methods for fitting a Garch(1,1) model with daily log return time series, using two classes of robust extended M-Estimates:
+#' @description Methods for fitting a Garch(1,1) model with daily log return time series, using two methods of robust extended M-Estimates:
 #' (1) maximizing modified likelihood function;
 #' (2) M-Estimates with bounds to the propagation of the effect of one outlier on the subsequent predictors of the conditional variances.
 #' returns a \code{rg} object
 #'
 #' @param data a time series of log returns
-#' @param class robust M-Estimate class used for Garch(1,1) model, one of "modified MEst", "bounded MEst", default is "bounded MEst"
-#' @param class_pars a named numeric vector of parameters of the class. For the "modified MEst" class, the parameter should be "div", which is used in m(rho0(x)) = div * m(rho0(x)/div) and defined as 0 <= div <= 1.0, default is div = 0.85; for the "bounded MEst" class, the parameter should be "div" and "k", which also influences the robustness and defined as k >= 0, default is div = 0.85, k = 3. The smaller div or k is, the more robust the moddel is.
-#' @param optimizer optimizer used for optimization, one of "fminsearch", "nloptr", "Rsolnp", default is "fminsearch"
+#' @param methods robust M-Estimate method used for Garch(1,1) model, one of "modified MEst", "bounded MEst", default is "bounded MEst"
+#' @param fixed_pars a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "modified MEst", the parameter should be c, which controls the modified loss function, user can use default c = .85; for "bounded MEst", the parameters should be c(c, k), where c is the same as in "modified MEst", user can use default c = 0.85,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.
+#' @param optimizer optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".
 #' @param optimizer_control list of control arguments passed to the optimizer
 #' @param stdErr_method method used to calculate standard error, one of "numDerive", "optim", "sandwich", default is "numDeriv" using hessian from numDeriv
+#' @param QML a logical argument, when TRUE, the function will use QML method instead of robust Garch model method, default to FALSE.
 #'
 #' @return
 #' A \code{rg} object(S3), the components of the object are:
 #'     \item{data}{the log returns data object for the rg model to be fitted}
-#'     \item{classes}{the class called}
-#'     \item{class_pars}{named numeric vector of parameters for the class}
+#'     \item{methods}{the method called}
+#'     \item{fixed_pars}{named numeric vector of fixed parameters used}
 #'     \item{optimizer}{the optimizer called}
 #'     \item{optimizer_control}{the list of control arguments passed to the optimizer}
 #'     \item{optimizer_result}{output of the called optimizer}
 #'     \item{stdErr_method}{the method called to calculate standard error}
-#'     \item{fitted_pars}{Garch(1,1) parameter estimations output of the called class}
+#'     \item{QML}{logical argument controlling the non-robustness of the fitting method}
+#'     \item{fitted_pars}{Garch(1,1) parameter estimations output of the called method}
 #'     \item{objective}{the optimal likihood value obtained by the optimizer}
 #'     \item{time_elapsed}{the time used for the optimization routine}
 #'     \item{message}{the message of the convergence status produced by the called solver}
@@ -33,9 +35,9 @@
 #'     \item{p_value}{p-values of alpha_0, alpha_1, beta_1}
 #'
 #' @details
-#' The \code{rgMEst} function fits a Garch(1, 1) model to a time series of log return data, using one of the two classes of robust extended M-Estimates with certain parameters specified by the user, with guidance and examples from the vignette. The user can also specify the optimizer used during optimization procesure, and the method used to calculate standard error for the fitted parameters.
+#' The \code{rgMEst} function fits a Garch(1, 1) model to a time series of log return data, using one of the two methods of robust extended M-Estimates with certain parameters specified by the user, with guidance and examples from the vignette. The user can also specify the optimizer used during optimization procesure, and the method used to calculate standard error for the fitted parameters.
 #'
-#' For details of the list of control arguments, please refer to \code{pracma::fminsearch}, \code{nloptr::nloptr}, \code{Rsolnp::solnp}
+#' For details of the list of control arguments, please refer to \code{nloptr::nloptr}, \code{Rsolnp::solnp}, \code{nlminb}.
 #'
 #' @references Muler, Nora & Yohai, Victor. (2008). Robust estimates for GARCH models. Journal of Statistical Planning and Inference. 138. 2918-2940.
 #'
@@ -52,31 +54,46 @@
 #' @rdname rgMEst
 #' @export
 # Garch(1,1) model fit function
-rgMEst <- function(data, classes = c("bounded MEst", "modified MEst" ), class_pars = c(0.85, 3) , optimizer = c("fminsearch", "nloptr", "Rsolnp"), optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich")){
+rgMEst <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), fixed_pars = c(0.85, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich")){
 
   if(!is.numeric(data) || length(data)==0)
     stop("Data must be a numeric vector of non-zero length")
 
-  classes = match.arg(classes)
+  methods = match.arg(methods)
   optimizer = match.arg(optimizer)
   stdErr_method = match.arg(stdErr_method)
-  fit <- rgFit_local(data, classes, class_pars, optimizer, optimizer_control)
+  assign("method", methods, envir = .GlobalEnv)
+  assign("k", fixed_pars[2], envir = .GlobalEnv)
+  assign("div", fixed_pars[1], envir = .GlobalEnv)
+  if(method == "QML"){
+    assign("div", 1.0, envir = .GlobalEnv)
+  }
+
+  fit <- rgFit_local(data, optimizer, optimizer_control)
+
   # std_err calculation
   if(stdErr_method == "numDeriv")
   {
-
-    H <- numDeriv::hessian(Fnue, x = fit$optimizer_result$pars)/length(data)
+    if(optimizer == "Rsolnp"){
+      solution <- fit$optimizer_result$pars
+    } else if(optimizer == "nloptr"){
+      solution <- fit$optimizer_result$solution
+    } else if(optimizer == "nlminb"){
+      solution <- fit$optimizer_result$par
+    }
+    H <- numDeriv::hessian(Fnue, x = solution)/length(data)
     standard_error <- sqrt(diag(abs(solve(H)/length(data))))[1:3]
-    t_value <- fit$fitted_pars / standard_error
+    t_value <- solution[1:3] / standard_error
     p_value <- 2*(1-pnorm(abs(t_value)))
 
   }
   if(stdErr_method == "optim")
   {
+    stop("under development")
     H <- optim(par = fit$optimizer_result$pars, fn = Fnue,
                method="L-BFGS-B",
-               lower=c(-1, -1, -1, 0, class_pars),
-               upper=c(1, 1, 1, 2, class_pars+0.00001),
+               lower=c(-1, -1, -1, 0),
+               upper=c(1, 1, 1, 2),
                hessian=TRUE)$hessian/length(data)
     standard_error <- sqrt(diag(abs(solve(H)/length(data))))[1:3]
     t_value <- fit$fitted_pars / standard_error
@@ -85,6 +102,7 @@ rgMEst <- function(data, classes = c("bounded MEst", "modified MEst" ), class_pa
   }
   if(stdErr_method == "sandwich")
   {
+    stop("under development")
     Scores <- matrix(numDeriv::grad(Fnue, x = fit$optimizer_result$pars), nrow = 1)
     V <- (t(Scores) %*% Scores)/length(data)
     H <- optim(par = fit$optimizer_result$pars, fn = Fnue,
@@ -105,48 +123,52 @@ rgMEst <- function(data, classes = c("bounded MEst", "modified MEst" ), class_pa
   fit$standard_error <- standard_error
   fit$t_value <- t_value
   fit$p_value <- p_value
+  fit$fixed_pars <- fixed_pars
 
   structure(fit, class="rg")
 }
 
 
-rgFit_local <- function(data, classes, class_pars, optimizer, optimizer_control){
+rgFit_local <- function(data, optimizer, optimizer_control){
 
   start_time <- Sys.time()
   # optimizer/optimizer_control
 
-  # Robust Modified M-Estimates Class.
-  if(classes == "modified MEst"){
-    div <- class_pars[1]
-    stop("Modified MEst usage is under development, please use bounded MEst instead.")
-  }
-  # Robust Bounded M-Estimates Class.
-  if(classes == "bounded MEst"){
-
-    n <- length(data)
-    v_data <- varin(data)
-    data_normalized <- data/sqrt(v_data)
-    data_normalized <- data_normalized-median(data_normalized)
-    for(i in 1:n){
-      if(data_normalized[i] == 0){
-        data_normalized[i] <- 10^(-10)
-      }
+  n <- length(data)
+  v_data <- new_var(data)
+  data_normalized <- data/sqrt(v_data)
+  data_normalized <- data_normalized-median(data_normalized)
+  for(i in 1:n){
+    if(data_normalized[i] == 0){
+      data_normalized[i] <- 10^(-10)
     }
-    vini <- varin(data_normalized)
+  }
+  vini <- new_var(data_normalized)
 
-    div <- class_pars[1]
-    k <- class_pars[2]
-    res <- nnest(data_normalized, vini, div, k, optimizer, optimizer_control)
-    optimizer_result <- res
-    if(optimizer == "fminsearch"){
-      stop("This feature is under active development, please use Rsolnp.")
-      fitted_pars <- res$fmin[1:3]
+  res <- nEst(data_normalized, vini, optimizer, optimizer_control)
+  optimizer_result <- res
+    #if(optimizer == "fminsearch"){
+      #stop("This feature is under active development, please use Rsolnp.")
+      #fitted_pars <- res$fmin[1:3]
+      #fitted_pars[1] <- fitted_pars[1]*v_data
+      #names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1")
+      #objective <- res$xopt
+      #message <- NULL
+    #} else
+    if(optimizer == "Rsolnp"){
+      fitted_pars <- res$pars[1:3]
       fitted_pars[1] <- fitted_pars[1]*v_data
       names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1")
-      objective <- res$xopt
-      message <- NULL
-    } else if(optimizer == "Rsolnp" || optimizer == "nloptr"){
-      fitted_pars <- res$pars[1:3]
+      objective <- res$values[length(res$values)]
+      message <- res$convergence
+    } else if (optimizer == "nloptr"){
+      fitted_pars <- res$solution[1:3]
+      fitted_pars[1] <- fitted_pars[1]*v_data
+      names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1")
+      objective <- res$objective
+      message <- res$message
+    } else if (optimizer == "nlminb"){
+      fitted_pars <- res$par[1:3]
       fitted_pars[1] <- fitted_pars[1]*v_data
       names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1")
       objective <- res$objective
@@ -155,12 +177,10 @@ rgFit_local <- function(data, classes, class_pars, optimizer, optimizer_control)
       NA
     }
 
-  }
   time_elapsed <- Sys.time() - start_time
 
   list(data=data,
-       classes = classes,
-       class_pars=class_pars,
+       methods = method,
        optimizer=optimizer,
        optimizer_control=optimizer_control,
        optimizer_result=optimizer_result,
@@ -170,7 +190,7 @@ rgFit_local <- function(data, classes, class_pars, optimizer, optimizer_control)
        message=message)
 }
 
-nnest <- function(y, vini, div, k, optimizer, optimizer_control){
+nEst <- function(y, vini, optimizer, optimizer_control){
 
   rm(Muestray)
   rm(Muestram)
@@ -213,10 +233,10 @@ nnest <- function(y, vini, div, k, optimizer, optimizer_control){
           for(ki in c(k, 20)){
             l <- ki+1
             for(i in 2:n){
-              var[i] <- alfa0+(alfa1*gk(yc[i-1]/var[i-1],ki,l)+beta1)*var[i-1]
+              var[i] <- alfa0+(alfa1*rk(yc[i-1]/var[i-1],ki,l)+beta1)*var[i-1]
             }
 
-            nml <- mean(nfun(y2[2:n]-log(var[2:n]), div))
+            nml <- mean(nfun(y2[2:n]-log(var[2:n])))
 
             if(nml < ml){
               flag <- 1
@@ -229,18 +249,18 @@ nnest <- function(y, vini, div, k, optimizer, optimizer_control){
     }
   }
 
-  lb = c( -1.0, -1.0, -1.0, 0.0, div, k)
-  ub = c( 1.0, 1.0, 1.0, 1.0, div, k)
-  # Limits for optimization, needs to be added. TBD.
-  if (optimizer == "fminsearch"){
+  lb = c( -1.0, -1.0, -1.0, 0.0)
+  ub = c( 1.0, 1.0, 1.0, Inf)
+  #if (optimizer == "fminsearch"){
 
-    res <- pracma::fminsearch(Fnue,c(vi,vini, div, k),lower=lb,upper=ub, method="Hooke-Jeeves")
-    return(res)
+    #res <- pracma::fminsearch(Fnue,c(vi,vini),lower=lb,upper=ub, method="Hooke-Jeeves")
+    #return(res)
 
-  } else if (optimizer == "nloptr"){
+  #} else
+  if (optimizer == "nloptr"){
 
     stop("This feature is under development, please use Rsolnp instead.")
-    res <- nloptr::nloptr(x0 = c(vi, vini, div, k),
+    res <- nloptr::nloptr(x0 = c(vi, vini),
                           eval_f = Fnue,
                           lb = lb,
                           ub = ub,
@@ -250,7 +270,7 @@ nnest <- function(y, vini, div, k, optimizer, optimizer_control){
 
   } else if (optimizer == "Rsolnp"){
 
-    res <- Rsolnp::solnp(pars = c(vi, vini, div, k),
+    res <- Rsolnp::solnp(pars = c(vi, vini),
                          fun = Fnue,
                          LB = lb,
                          UB = ub,
@@ -258,17 +278,27 @@ nnest <- function(y, vini, div, k, optimizer, optimizer_control){
 
     return(res)
 
-  } else{
+  } else if (optimizer == "nlminb"){
+
+    res <- nlminb(start = c(vi, vini),
+                  objective = Fnue,
+                  control = optimizer_control,
+                  lower = lb,
+                  upper = ub)
+
+    return(res)
+
+  } else {
     NA
   }
 }
 
-varin <- function(x){
+new_var <- function(x){
 
   n <- length(x)
-  tausq_x <- tausq(x)
+  tausq_x <- tau_sq(x)
   x_square <- x^2
-  tausq_xsquare <- tausq(x_square-1)
+  tausq_xsquare <- tau_sq(x_square-1)
 
   i <- 1
   v <- x[1]^2
@@ -286,9 +316,9 @@ varin <- function(x){
   v
 }
 
-tausq <- function(x){
+tau_sq <- function(x){
 
-  s <- sest(x)
+  s <- s_est(x)
   # Global declaration.
   assign("Sestim", s, envir = .GlobalEnv)
   r <- rho(x/s)
@@ -298,7 +328,7 @@ tausq <- function(x){
 }
 
 
-sest <- function(x){
+s_est <- function(x){
 
   b <- 1.625
   emed <- 0.675
@@ -359,26 +389,33 @@ sest <- function(x){
 # A continous rho function.
 rho <- function(x){
 
-  G1 <- -1.944
-  G2 <- 1.728
-  G3 <- -0.312
-  G4 <- 0.016
+  if(method == "QML"){
 
-  ax <- abs(x)
-  u <- as.numeric(ax>3.0)
-  v <- as.numeric(ax<2.0)
-  w <- (1-u)*(1-v)
-  ps <- v*x^2/2 + w*(G4*x^8/8 + G3*x^6/6 + G2*x^4/4 + G1*x^2/2 + 1.792) + 3.25*u
+    ps <- x^2/2
+
+  } else{
+
+    G1 <- -1.944
+    G2 <- 1.728
+    G3 <- -0.312
+    G4 <- 0.016
+
+    ax <- abs(x)
+    u <- as.numeric(ax>3.0)
+    v <- as.numeric(ax<2.0)
+    w <- (1-u)*(1-v)
+    ps <- v*x^2/2 + w*(G4*x^8/8 + G3*x^6/6 + G2*x^4/4 + G1*x^2/2 + 1.792) + 3.25*u
+  }
 
   ps
 }
 
-nfun <- function(x, div){
+nfun <- function(x){
 
   b <- 6.7428
   b1 <- b-0.5
   x <- exp(x/div)-x/div
-  ps <- freg(x,b1,b)
+  ps <- freg(x, b1, b)
 
   ps
 }
@@ -391,8 +428,6 @@ Fnue <- function(start_pars){
 
   vi <- start_pars[1:3]
   vini <- start_pars[4]
-  div <- start_pars[5]
-  k <- start_pars[6]
 
   var <- rep(0.0, n)
   var[1] <- vini
@@ -401,11 +436,12 @@ Fnue <- function(start_pars){
 
   if(vi[1] >0 & vi[2] >=0 & vi[3] >=0){
     for(ki in c(k,30)){
+
       l <- ki+1
       for(i in 2:n){
-        var[i]<-vi[1]+(vi[2]*gk(yc[i-1]/var[i-1],ki,l)+vi[3])*var[i-1]
+        var[i]<-vi[1]+(vi[2]*rk(yc[i-1]/var[i-1],ki,l)+vi[3])*var[i-1]
       }
-      ml <- mean(nfun(y2[2:n]-log(var[2:n]), div))
+      ml <- mean(nfun(y2[2:n]-log(var[2:n])))
       if(ml<nml){
         nml <- ml
         if(ki==3){
@@ -421,30 +457,43 @@ Fnue <- function(start_pars){
   nml
 }
 
-freg <- function(x, a,b){
+freg <- function(x, a, b){
 
-  u <- as.numeric(x>b)
-  v <- as.numeric(x<a)
+  if(method == "QML" || a == b){
 
-  c1 <- a-(2/(b-a)^3)*((-1/4)*a^4+(1/3)*(2*a+b)*a^3+(1/2)*(-a^2-2*a*b)*a^2+a^2*b*a)
-  c2 <- (-1/(3*(b-a)^2))*(b-a)^3+b-(2/(b-a)^3)*((-1/4)*b^4+(1/3)*(2*a+b)*b^3+(1/2)*(-a^2-2*a*b)*b^2+a^2*b*b)
+    g <- x
 
-  g=x*v+(1-u-v)*((-1/(3*(b-a)^2))*(x-a)^3+x-(2/(b-a)^3)*((-1/4)*x^4+(1/3)*(2*a+b)*x^3+(1/2)*(-a^2-2*a*b)*x^2+a^2*b*x)+a-c1)+(c2+a-c1)*u
+  } else{
+
+    u <- as.numeric(x>b)
+    v <- as.numeric(x<a)
+
+    c1 <- a-(2/(b-a)^3)*((-1/4)*a^4+(1/3)*(2*a+b)*a^3+(1/2)*(-a^2-2*a*b)*a^2+a^2*b*a)
+    c2 <- (-1/(3*(b-a)^2))*(b-a)^3+b-(2/(b-a)^3)*((-1/4)*b^4+(1/3)*(2*a+b)*b^3+(1/2)*(-a^2-2*a*b)*b^2+a^2*b*b)
+
+    g <- x*v+(1-u-v)*((-1/(3*(b-a)^2))*(x-a)^3+x-(2/(b-a)^3)*((-1/4)*x^4+(1/3)*(2*a+b)*x^3+(1/2)*(-a^2-2*a*b)*x^2+a^2*b*x)+a-c1)+(c2+a-c1)*u
+  }
 
   g
 }
 
-gk <- function(x, k, l){
+rk <- function(x, k, l){
 
-  bot <- 2*k-2*l
-  a <- 1/bot
-  b <- -2*l/bot
-  c <- k^2/bot
+  if(method == "QML" || method == "modified MEst" || k == l){
 
-  u <- as.numeric(x>l)
-  v <- as.numeric(x<k)
+    g <- x
 
-  g<- x*v + (1-u-v)*(a*x^2 + b*x + c) + u*(a*l^2+b*l+c)
+  } else{
+    bot <- 2*k-2*l
+    a <- 1/bot
+    b <- -2*l/bot
+    c <- k^2/bot
+
+    u <- as.numeric(x>l)
+    v <- as.numeric(x<k)
+
+    g<- x*v + (1-u-v)*(a*x^2 + b*x + c) + u*(a*l^2+b*l+c)
+  }
 
   g
 }
