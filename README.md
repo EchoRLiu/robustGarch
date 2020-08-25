@@ -17,9 +17,8 @@ This is a basic example which shows you how to fit your daily return time series
 
 ```js
 data(rtn)
-bm <- robGarch(rtn, bms=1)
-summary(bm)
-plot(bm)
+fit <- rgMEst(rtn, methods = "bounded MEst", fixed_pars = c(0.8, 3.0), optimizer="Rsolnp", stdErr_method = "numDeriv")
+summary(fit)
 ```
 
 For more examples and explanation, please refer to the  [robGarch-Vignette](https://github.com/EchoRLiu/robGarch/blob/master/vignettes/robGarch_Vignette.pdf).
