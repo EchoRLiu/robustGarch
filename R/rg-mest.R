@@ -177,6 +177,10 @@ rgFit_local <- function(data, optimizer, optimizer_control){
       NA
     }
 
+  ######### DELETE BEFORE SUBMIT ##########
+  print(fitted_pars)
+  ######### DELETE BEFORE SUBMIT ##########
+
   time_elapsed <- Sys.time() - start_time
 
   list(data=data,
@@ -259,7 +263,7 @@ nEst <- function(y, vini, optimizer, optimizer_control){
   #} else
   if (optimizer == "nloptr"){
 
-    stop("This feature is under development, please use Rsolnp instead.")
+    #stop("This feature is under development, please use Rsolnp instead.")
     res <- nloptr::nloptr(x0 = c(vi, vini),
                           eval_f = Fnue,
                           lb = lb,

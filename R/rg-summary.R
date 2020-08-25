@@ -34,7 +34,7 @@ summary.rg <- function(fit){
     cat("with div = ", fit$fixed_pars[1], ", k = ", fit$fixed_pars[2], "\n")
   }
   if (fit$methods == "modified MEst"){
-    cat("with div = ", fit$fixed_pars[1])
+    cat("with div = ", fit$fixed_pars[1], "\n")
   }
   cat("Observations: ", length(fit$data), "\n")
   cat("\nResult:\n")
