@@ -59,6 +59,9 @@ rgMEst <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), fi
   if(!is.numeric(data) || length(data)==0)
     stop("Data must be a numeric vector of non-zero length")
 
+  # dscale <- sd(data)
+  # zdata <- data / dscale
+
   methods = match.arg(methods)
   optimizer = match.arg(optimizer)
   stdErr_method = match.arg(stdErr_method)
@@ -119,6 +122,10 @@ rgMEst <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), fi
   names(standard_error) <- c("alpha_0", "alpha_1", "beta_1")
   names(t_value) <- c("alpha_0", "alpha_1", "beta_1")
   names(p_value) <- c("alpha_0", "alpha_1", "beta_1")
+
+  #rescale back.
+  #fit$data <- data
+  #fit$fitted_pars[1] <- fit$fitted_pars[1] * dscale
 
   fit$standard_error <- standard_error
   fit$t_value <- t_value
