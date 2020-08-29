@@ -33,5 +33,6 @@
                                 bquote(alpha[1]~'='~.(signif(a1, 2))),
                                 bquote(beta[1]~'='~.(signif(b1, 2))))))
 
-  x
+  #x
+
 }

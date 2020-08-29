@@ -8,7 +8,7 @@
 #' (2) M-Estimates with bounds to the propagation of the effect of one outlier on the subsequent predictors of the conditional variances.
 #' returns a \code{rg} object
 #'
-#' @param data a time series of log returns
+#' @param data a time series of log returns, need to be numeric value.
 #' @param methods robust M-Estimate method used for Garch(1,1) model, one of "modified MEst", "bounded MEst", default is "bounded MEst"
 #' @param fixed_pars a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "modified MEst", the parameter should be c, which controls the modified loss function, user can use default c = .85; for "bounded MEst", the parameters should be c(c, k), where c is the same as in "modified MEst", user can use default c = 0.85,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.
 #' @param optimizer optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".
@@ -65,10 +65,17 @@ rGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), fi
   optimizer = match.arg(optimizer)
   stdErr_method = match.arg(stdErr_method)
   assign("method", methods, envir = .GlobalEnv)
-  assign("k", fixed_pars[2], envir = .GlobalEnv)
-  assign("div", fixed_pars[1], envir = .GlobalEnv)
   if(method == "QML"){
     assign("div", 1.0, envir = .GlobalEnv)
+  }
+  else{
+    assign("div", fixed_pars[1], envir = .GlobalEnv)
+  }
+  if(method == "bounded MEst"){
+    assign("k", fixed_pars[2], envir = .GlobalEnv)
+  }
+  else{
+    assign("k", 3, envir = .GlobalEnv)
   }
 
   fit <- rgFit_local(data, optimizer, optimizer_control)

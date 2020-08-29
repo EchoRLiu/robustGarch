@@ -14,7 +14,7 @@ rGarch(
 )
 }
 \arguments{
-\item{data}{a time series of log returns}
+\item{data}{a time series of log returns, need to be numeric value.}
 
 \item{methods}{robust M-Estimate method used for Garch(1,1) model, one of "modified MEst", "bounded MEst", default is "bounded MEst"}
 
