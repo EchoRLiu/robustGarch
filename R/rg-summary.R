@@ -68,10 +68,9 @@ print.rg <- function(fit){
 
 #' @rdname rg-summary
 #' @export
-plot.rg <- function(fit){
+plot.rg <- function(fit, seed = 42, main_name = "Conditional SD (vs returns)", abs_ = TRUE){
 
-
-  #TBD.
+  .plot.garchsim(fit, seed, main_name, abs_)
 
 }
 
