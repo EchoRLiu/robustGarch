@@ -28,7 +28,7 @@ Summary for rg S3 class
 \examples{
 
 data("rtn")
-fit <- robGarch(rtn, methods="bounded MEst", fixed_pars = c(0.8, 3.0), optimizer="Rsolnp", stdErr_method = "numDeriv")
+fit <- rGarch(rtn, methods="bounded MEst", fixed_pars = c(0.8, 3.0), optimizer="Rsolnp", stdErr_method = "numDeriv")
 summary(fit)
 print(fit)
 plot(fit)
