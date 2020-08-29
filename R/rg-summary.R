@@ -3,10 +3,10 @@
 #' @description Summary for rg S3 class
 #'
 #' @param fit A RG fit object of class \code{\link{rg}}
+#' @param seed a number to be used for setting the seed of random number generator, default is 42
+#' @param main_name the title of the plot, default is "Conditional SD (vs returns)"
+#' @param abs_ a logical argument, when TRUE, the plot function will plot abs(returns) with conditional standard deviation instead of returns, default to TRUE.
 #'
-#'
-#'
-#' @details
 #'
 #' @name rg-summary
 #' @aliases summary.rg
@@ -16,7 +16,7 @@
 #' @examples
 #'
 #' data("rtn")
-#' fit <- rgMEst(rtn, methods="bounded MEst", fixed_pars = c(0.8, 3.0), optimizer="Rsolnp", stdErr_method = "numDeriv")
+#' fit <- rGarch(rtn, methods="bounded MEst", fixed_pars = c(0.8, 3.0), optimizer="Rsolnp", stdErr_method = "numDeriv")
 #' summary(fit)
 #' print(fit)
 #' plot(fit)

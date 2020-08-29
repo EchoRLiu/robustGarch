@@ -1,7 +1,7 @@
 #' @title Robust Estimates for GARCH(1,1) Model
 #'
-#' @name rgMEst
-#' @aliases rgmest
+#' @name rGarch
+#' @aliases rGarch
 #'
 #' @description Methods for fitting a Garch(1,1) model with daily log return time series, using two methods of robust extended M-Estimates:
 #' (1) maximizing modified likelihood function;
@@ -14,7 +14,6 @@
 #' @param optimizer optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".
 #' @param optimizer_control list of control arguments passed to the optimizer
 #' @param stdErr_method method used to calculate standard error, one of "numDerive", "optim", "sandwich", default is "numDeriv" using hessian from numDeriv
-#' @param QML a logical argument, when TRUE, the function will use QML method instead of robust Garch model method, default to FALSE.
 #'
 #' @return
 #' A \code{rg} object(S3), the components of the object are:
@@ -35,7 +34,7 @@
 #'     \item{p_value}{p-values of alpha_0, alpha_1, beta_1}
 #'
 #' @details
-#' The \code{rgMEst} function fits a Garch(1, 1) model to a time series of log return data, using one of the two methods of robust extended M-Estimates with certain parameters specified by the user, with guidance and examples from the vignette. The user can also specify the optimizer used during optimization procesure, and the method used to calculate standard error for the fitted parameters.
+#' The \code{rGarch} function fits a Garch(1, 1) model to a time series of log return data, using one of the two methods of robust extended M-Estimates with certain parameters specified by the user, with guidance and examples from the vignette. The user can also specify the optimizer used during optimization procesure, and the method used to calculate standard error for the fitted parameters.
 #'
 #' For details of the list of control arguments, please refer to \code{nloptr::nloptr}, \code{Rsolnp::solnp}, \code{nlminb}.
 #'
@@ -51,10 +50,10 @@
 #'
 #'
 #'
-#' @rdname rgMEst
+#' @rdname rGarch
 #' @export
 # Garch(1,1) model fit function
-rgMEst <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), fixed_pars = c(0.85, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich")){
+rGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), fixed_pars = c(0.85, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich")){
 
   if(!is.numeric(data) || length(data)==0)
     stop("Data must be a numeric vector of non-zero length")

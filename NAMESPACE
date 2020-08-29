@@ -3,4 +3,4 @@
 S3method(plot,rg)
 S3method(print,rg)
 S3method(summary,rg)
-export(rgMEst)
+export(robGarch)
