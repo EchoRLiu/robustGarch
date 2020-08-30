@@ -94,7 +94,7 @@ Provides natbib 1
 \pdf_colorlinks false
 \pdf_backref false
 \pdf_pdfusetitle true
-\papersize default
+\papersize a4paper
 \use_geometry true
 \use_package amsmath 1
 \use_package amssymb 1
@@ -151,7 +151,11 @@ status open
 
 \begin_layout Plain Layout
 
-<<include=FALSE>>=
+<<include=FALSE, echo=FALSE>>=
+\end_layout
+
+\begin_layout Plain Layout
+
 \end_layout
 
 \begin_layout Plain Layout
@@ -162,6 +166,11 @@ library(knitr)
 \begin_layout Plain Layout
 
 library(kableExtra)
+\end_layout
+
+\begin_layout Plain Layout
+
+options(knitr.table.format = "latex")
 \end_layout
 
 \begin_layout Plain Layout
@@ -210,7 +219,7 @@ opts_chunk$set(keep.source=TRUE,
 
 \begin_layout Plain Layout
 
-	fig.show='hide',
+	fig.show='hold',
 \end_layout
 
 \begin_layout Plain Layout
@@ -247,7 +256,11 @@ opts_chunk$set(keep.source=TRUE,
 \end_layout
 
 \begin_layout Title
-Introduction to the robGarch package (Version 0.0.1)
+Introduction to the 
+\family typewriter
+robGarch
+\family default
+ package (Version 0.1.0)
 \end_layout
 
 \begin_layout Author
@@ -274,7 +287,7 @@ status open
 \begin_layout Plain Layout
 \noindent
 \align center
-August 05, 2020
+August 24, 2020
 \end_layout
 
 \end_inset
@@ -312,7 +325,7 @@ literal "false"
 \end_inset
 
  and extended to Generalized Autoregressive Conditional Heteroscedasticity
- (GARCH) models by 
+ (Garch) models by 
 \begin_inset CommandInset citation
 LatexCommand citet
 key "Bollerslev"
@@ -331,7 +344,7 @@ literal "false"
 
 \end_inset
 
- showed the ability of GARCH to estimate risk premium valuation of a stock.
+ showed the ability of Garch to estimate risk premium valuation of a stock.
  In 
 \begin_inset CommandInset citation
 LatexCommand citet
@@ -340,7 +353,7 @@ literal "false"
 
 \end_inset
 
-, GARCH is applied to pricing options, where volatility plays a crucial
+, Garch is applied to pricing options, where volatility plays a crucial
  role in the Black-Scholes option pricing model, thereby adding a new perspectiv
 e in comparison to stochastic volatility model.
  Bias caused by outliers has been studied in some literature.
@@ -368,7 +381,7 @@ literal "false"
 \end_inset
 
  showed how outliers create asymptotic bias in Quasi Maximum Likelihood
- Estimate of the GARCH parameters.
+ Estimate of the Garch parameters.
  
 \begin_inset CommandInset citation
 LatexCommand citet
@@ -377,9 +390,21 @@ literal "false"
 
 \end_inset
 
+
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+We reference the paper as MY2008 in the following content
+\end_layout
+
+\end_inset
+
  showed that QML parameter estimation based on normal likelihood is very
  sensitive to outliers in financial returns, and even a single outlier can
  have a huge influence on the QML parameter estimates.
+ Thus, it is very crucial to build accurate robust parameter estimation
+ methods.
 \end_layout
 
 \begin_layout Standard
@@ -387,12 +412,50 @@ The
 \noun on
 robGarch
 \noun default
- package aims to provide a method for modelling robust GARCH processes,
- addressing the issue of robustness toward additive outliers, rather than
- innovations outliers.
- It contains fitting, forecasting, simulation with diagnostic tools including
- plots and tests.
- This document discusses the details of the included models and how they
+ package aims to provide two main methods for modelling robust Garch processes,
+ modified M-Estimate method providing M model family and bounded M-Estimate
+ method 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Not sure if we should say M models are robust
+\end_layout
+
+\end_inset
+
+providing BM model family, addressing the issue of robustness toward additive
+ outliers, rather than innovations outliers
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Not sure if we should still say that
+\end_layout
+
+\end_inset
+
+.
+ The package also contains quasi maximum likelihood (QML) method as an option
+ for the user.
+ It currently contains fitting and plotting ready for users to use.
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+, and a set of stats testing is under active development, which should be
+ available for users around the end of September 2020.
+ A few more features would also be added, such as forecasting, simulation,
+ more plotting and the running time will be reduced by future C++ development.
+\end_layout
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+This document discusses the details of the included models and how they
  are implemented in the package with some examples.
 \end_layout
 
@@ -410,7 +473,7 @@ status open
 
 \begin_layout Plain Layout
 
-<<echo=TRUE, eval=FALSE>>=
+<<echo=TRUE, eval=TRUE>>=
 \end_layout
 
 \begin_layout Plain Layout
@@ -458,15 +521,73 @@ literal "false"
 
 \end_inset
 
-) with examples and and demons.
+) with examples and and demos.
 \end_layout
 
 \begin_layout Section
-Robust Garch Model
+Model Specification
 \end_layout
 
-\begin_layout Subsection*
-2.1 robust Garch
+\begin_layout Standard
+This section discusses the model specification in the modelling process.
+ This is done via specifying 
+\family typewriter
+methods
+\family default
+ and 
+\family typewriter
+fixed_pars
+\family default
+ parameters by the user for the main fitting function
+\family typewriter
+ rGarch
+\family default
+,
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<echo=TRUE, eval=TRUE, tidy = TRUE>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+args(rGarch)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The following sub-sections outline the background and details of the methods
+ implemented in 
+\family typewriter
+robGarch
+\family default
+.
+\end_layout
+
+\begin_layout Subsection
+BM Models
 \end_layout
 
 \begin_layout Standard
@@ -487,19 +608,7 @@ literal "false"
 \end_inset
 
 .
- The following content focuses on how the two robust GARCH model in 
-\begin_inset CommandInset citation
-LatexCommand citet
-key "yohaimuler"
-literal "false"
-
-\end_inset
-
- work.
-\end_layout
-
-\begin_layout Standard
-Defined as 
+ Defined as 
 \begin_inset Formula $x_{t}=\sigma_{t}z_{t}$
 \end_inset
 
@@ -539,122 +648,6 @@ Defined as
 
 \begin_layout Standard
 the robust parameters estimation is based on M-estimate with more flavors.
- Two special things are done for BM1 and BM2 models: (1) for the BM1, the
- M-estimates has bounded 
-\begin_inset Formula $\rho'$
-\end_inset
-
- and unbounded 
-\begin_inset Formula $\rho$
-\end_inset
-
-, such as 
-\begin_inset Formula $\rho=m_{1}(\rho_{0})$
-\end_inset
-
-, where 
-\begin_inset Formula $\rho_{0}$
-\end_inset
-
- is defined as follows 
-\begin_inset Formula $\rho_{0}=-log(\frac{1}{\sqrt{2\pi}}e^{-(e^{w}-w)/2}))$
-\end_inset
-
-, where 
-\family roman
-\series medium
-\shape up
-\size normal
-\emph off
-\bar no
-\strikeout off
-\xout off
-\uuline off
-\uwave off
-\noun off
-\color none
-
-\begin_inset Formula $w=log(z_{t}^{2}$
-\end_inset
-
-
-\family default
-\series default
-\shape default
-\size default
-\emph default
-\bar default
-\strikeout default
-\xout default
-\uuline default
-\uwave default
-\noun default
-\color inherit
- and 
-\begin_inset Formula $m_{1}$
-\end_inset
-
- is a non-decreasing, bounded function 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{equation}
-m_{1}(x)=\begin{cases}
-x, & x\leq4\\
-P(x), & 4<x\leq4.34.15,x>4.3
-\end{cases}
-\end{equation}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{multline}
-P(x)=\frac{2}{(b-a)^{3}}(\frac{1}{4}(x^{4}-a^{4})-\frac{1}{3}(2a+b)(x^{3}-a^{3})+\frac{1}{2}(a^{2}+2ab)(x^{2}-a^{2}))\\
--\frac{2a^{2}b}{(b-a)^{3}}(x-a)-\frac{1}{3(b-a)^{2}}(x-a)^{3}+x,a=4,b=4.3\label{eq:ps}
-\end{multline}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-which satisfies constraints 
-\begin_inset Formula $P(a)=a,P'(a)=1,P'(b)=P''(a)=P''(b)=0$
-\end_inset
-
- this model is robust when 
-\begin_inset Formula $z_{t}$
-\end_inset
-
- is heavy-tail distribution and may be affected by additive outliers, in
- the Monte-Carlo section, 
-\begin_inset Formula $k=5.02$
-\end_inset
-
- for the testing; (2) for BM2, 
-\begin_inset Formula $\rho$
-\end_inset
-
- is bounded as well, thus more robust, defined as 
-\begin_inset Formula 
-\begin{equation}
-m_{2}(\rho_{0})=0.8m_{1}(\rho_{0}/0.8)\label{eq:rho2}
-\end{equation}
-
-\end_inset
-
- and 
-\begin_inset Formula $k$
-\end_inset
-
- is chosen to be 3 for the testing.
- However, BM2 unfortunately would still be influenced by large outliers.
 \end_layout
 
 \begin_layout Standard
@@ -711,17 +704,201 @@ and
 r_{k}(u)=\begin{cases}
 u, & u\leq k\\
 k, & u>k
-\end{cases}\label{eq:gk}
+\end{cases}\label{eq:rk}
 \end{equation}
 
 \end_inset
 
- the use of function 
-\begin_inset Formula $r_{k}(u)$
+ The use of Equation 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:rk"
+plural "false"
+caps "false"
+noprefix "false"
+
 \end_inset
 
- is to restrict the propagation of the outlier effect.
- If k is large, then 
+ is to restrict the propagation of the outlier effect, and thus small 
+\family typewriter
+k
+\family default
+ can provide a robust model.
+ The different optimization under different cases makes sure that the model
+ has robustness with outliers and maintains consistency when the series
+ follows a Garch without outliers.
+\end_layout
+
+\begin_layout Standard
+BM models are also controlled by 
+\begin_inset Formula $\rho=m_{1}(\rho_{0})$
+\end_inset
+
+, where 
+\begin_inset Formula $\rho_{0}=-log(\frac{1}{\sqrt{2\pi}}e^{-(e^{w}-w)/2}))$
+\end_inset
+
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+, 
+\begin_inset Formula $w=log(z_{t}^{2})$
+\end_inset
+
+, and 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\xout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+
+\begin_inset Formula $m_{1}$
+\end_inset
+
+ is a non-decreasing, bounded function, defined as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+m_{1}(x)=\begin{cases}
+x, & x\leq4\\
+P(x), & 4<x\leq4.34.15,x>4.3
+\end{cases}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{multline}
+P(x)=\frac{2}{(b-a)^{3}}(\frac{1}{4}(x^{4}-a^{4})-\frac{1}{3}(2a+b)(x^{3}-a^{3})+\frac{1}{2}(a^{2}+2ab)(x^{2}-a^{2}))\\
+-\frac{2a^{2}b}{(b-a)^{3}}(x-a)-\frac{1}{3(b-a)^{2}}(x-a)^{3}+x,a=4,b=4.3\label{eq:ps}
+\end{multline}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+satisfying constraints 
+\begin_inset Formula $P(a)=a,P'(a)=1,P'(b)=P''(a)=P''(b)=0$
+\end_inset
+
+.
+ To have different level of robustness, BM model can use 
+\begin_inset Formula $\rho=div*m_{1}(\rho_{0}/div)$
+\end_inset
+
+, where 
+\begin_inset Formula $0<div<=1$
+\end_inset
+
+.
+ The smaller 
+\begin_inset Formula $div$
+\end_inset
+
+ is, the larger 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $\rho_{0}/div$
+\end_inset
+
+ would be, thus obtaining more control and gaining more robustness.
+\end_layout
+
+\begin_layout Standard
+To use BM models, the user needs to choose 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+bounded MEst
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+ as 
+\family typewriter
+methods
+\family default
+, and to control the robustness, 
+\family typewriter
+fixed_pars = c(div, k)
+\family default
+ (default c(0.8, 3.0)) need to be specified.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+However, BM2 unfortunately would still be influenced by large outliers.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+M Models
+\end_layout
+
+\begin_layout Standard
+M models are similar to BM models without the restriction on the propagation
+ of the outlier effect.
+ If k in Equation 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:rk"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ is large, then 
 \begin_inset Formula $\sum_{i=1}^{p}\alpha_{i}\sigma_{t-i,k}^{2}(\alpha_{i},\beta_{j})r_{k}(\frac{x_{t-i}^{2}}{\sigma_{t-i,k}^{2}})$
 \end_inset
 
@@ -729,11 +906,3212 @@ k, & u>k
 \begin_inset Formula $\sum_{i=1}^{p}\alpha_{i}x_{t-i}^{2}$
 \end_inset
 
+, and thus lose the robustness of BM models.
+ When the 
+\family typewriter
+methods
+\family default
+ parameter of 
+\family typewriter
+rGarch
+\family default
+ is specified as 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+modified MEst
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+, only
+\family typewriter
+ div
+\family default
+ (default = 0.8) controls the robustness of M models.
+ To use M models, the user needs to specify the 
+\family typewriter
+methods
+\family default
+ as 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+modified MEst
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+ and 
+\family typewriter
+fixed_pars = div
+\family default
 .
- The different optimization under different cases makes sure that the model
- has robustness with outliers and maintains consistency when the series
- follows a GARCH without outliers.
+\end_layout
+
+\begin_layout Subsection
+QML
+\end_layout
+
+\begin_layout Standard
+QML is obtained without any restriction or control over the outlier effect.
+ Thus it is a simple M-Estimate.
+ The user only needs to choose the 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+QML
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+ as 
+\family typewriter
+methods
+\family default
+ to specify the model.
+\end_layout
+
+\begin_layout Section
+Fitting
+\end_layout
+
+\begin_layout Standard
+With the 
+\family typewriter
+methods
+\family default
+ and 
+\family typewriter
+fixed_pars
+\family default
+ parameters specified, the 
+\family typewriter
+rGarch
+\family default
+ function can take in the 
+\family typewriter
+data
+\family default
+, and output the parameter estimations.
+ The following is an example using the internal data in 
+\family typewriter
+robGarch
+\family default
+ package.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<echo=TRUE, eval=TRUE, tidy = TRUE, warning = FALSE, fig.width=10>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+data(rtn)
+\end_layout
+
+\begin_layout Plain Layout
+
+fit <- rGarch(rtn[1:604], methods=
+\begin_inset Quotes erd
+\end_inset
+
+bounded MEst
+\begin_inset Quotes erd
+\end_inset
+
+, fixed_pars=c(0.8, 3.0))
+\end_layout
+
+\begin_layout Plain Layout
+
+summary(fit)
+\end_layout
+
+\begin_layout Plain Layout
+
+plot(fit)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The following sub-sections provide the results of testing 
+\family typewriter
+robGarch
+\family default
+ package function 
+\family typewriter
+rGarch
+\family default
+ and comparing the results with those obtained using the 
+\family typewriter
+rugarch
+\family default
+ package function 
+\family typewriter
+ugarchfit
+\family default
+ for the following five data sets:
+\end_layout
+
+\begin_layout Itemize
+SP500 daily returns from February 1, 2000 through June 30, 2002, a total
+ of n = 604 observations
+\end_layout
+
+\begin_layout Itemize
+5 artificially generated Garch11 returns, a total of n = 500 observations,
+ using the five models in Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab: 5garch11Parameters"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ that were provided by Doug Martin
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="6" columns="7">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\mu_{e}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\sigma$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\alpha_{0}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\alpha_{1}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\beta_{1}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\alpha_{1}+\beta_{1}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.01
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.07
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+8.76e-04
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.135
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.686
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.821
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.01
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.07
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3.90e-04
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.144
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.776
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.920
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.01
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.07
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.43e-04
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.117
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.833
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.950
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.01
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.07
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.45e-04
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.103
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.867
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.971
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.01
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.07
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.01e-4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.083
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.909
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.992
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Garch(1,1) Parameter Values Used for robGarch Test
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab: 5garch11Parameters"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We are testing the following three Garch11 fitting methods from the 
+\family typewriter
+robGarch
+\family default
+ package:
+\end_layout
+
+\begin_layout Enumerate
+The QML method: quasi-maximum likelihood method (MLE for normal distribution
+ Garch11 innovations)
+\end_layout
+
+\begin_layout Enumerate
+M1 model: a bounded loss function M-estimator, as described in MY2008, with
+ tuning parameter 
+\begin_inset Formula $c=1.0$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+BM1 model: M1 with robust filter added, with 
+\begin_inset Formula $c=1.0$
+\end_inset
+
+ and filter tuning parameter 
+\begin_inset Formula $k=5.02$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+The QML method uses some of the same code as the M1 and BM1 methods, and
+ as such provides a test of that part of the M1 and BM1 code.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In further testing we will also include M2 and BM2, which are more robust
+ versions of M and BM, obtained by using smaller values of 
+\begin_inset Formula $c$
+\end_inset
+
+ and 
+\begin_inset Formula $k$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+Test Result with SP500 Returns
+\end_layout
+
+\begin_layout Standard
+For the SP500 returns we also compare our 
+\family typewriter
+robGarch
+\family default
+ results with those in MY2008, and refer to their results as the MY results.
+ Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:SP500garchFits"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ below contains the results of testing our QML, M1, BM1 methods, along witth
+ the MY results labeled QML-MY, BM1-MY (MY results did not provide M1 result),
+ in comparison with the 
+\family typewriter
+rugarch
+\family default
+ results (in the first row) using the SP500 data.
  
+\end_layout
+
+\begin_layout Standard
+The main conclusion of Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:SP500garchFits"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ for our estimators QML, M1 and BM1 is that the point estimates seem reasonable.
+ We are currently working on the standard error, t stats and p stats, which
+ would be available for the users in the future.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Analysis for Garch(1,1) models with SP500 data (02/01/2000-06/30/2002)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<results=
+\begin_inset Quotes erd
+\end_inset
+
+asis
+\begin_inset Quotes erd
+\end_inset
+
+, echo=F, warning = FALSE, tidy=FALSE>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+options(knitr.kable.NA = '')
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+est_a0 <- c( 1.1e-05, 8.951032e-06, 3.9e-06, 7.239778e-06, 7.239803e-06, 4.5e-06)
+\end_layout
+
+\begin_layout Plain Layout
+
+#std_a0 <- c( 1.0e-06, 2.699686e-01, NA, 1.494247e-01, NA, 2.199500e-01, NA)
+\end_layout
+
+\begin_layout Plain Layout
+
+#tv_a0 <- c( 8.7551, 1.457461e-01, NA, 2.381393e-01, NA, 1.617823e-01, NA)
+\end_layout
+
+\begin_layout Plain Layout
+
+#pv_a0 <- c( 0.0, 8.841219e-01, NA, 8.117731e-01, NA, 8.714773e-01, NA)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+est_a1 <- c( 0.111924, 0.09502305, 0.11, 0.0865369, 0.08653593, 0.10)
+\end_layout
+
+\begin_layout Plain Layout
+
+#std_a1 <- c( 0.015130, 0.44275546, NA, 0.1956800, NA, 0.30845187, NA)
+\end_layout
+
+\begin_layout Plain Layout
+
+#tv_a1 <- c( 7.3976,0.21461745, NA, 0.4422367, NA, 0.28054920, NA)
+\end_layout
+
+\begin_layout Plain Layout
+
+#pv_a1 <- c( 0.0, 0.83006559, NA, 0.6583179, NA, 0.77905619, NA)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+est_b1 <- c( 0.838766, 0.8654481, 0.86, 0.87510611, 0.87510770, 0.84)
+\end_layout
+
+\begin_layout Plain Layout
+
+#std_b1 <- c( 0.021425, 0.5724234, NA, 0.36317187, NA, 0.40652119, NA)
+\end_layout
+
+\begin_layout Plain Layout
+
+#tv_b1 <- c( 39.1492, 1.5119021, NA, 2.40961972, NA, 2.15267427, NA)
+\end_layout
+
+\begin_layout Plain Layout
+
+#pv_b1 <- c( 0, 0.1305588, NA, 0.01596916, NA, 0.03134429, NA)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+a1_b1 <- est_a1 + est_b1
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+dt2 <- data.frame(cbind(est_a0, est_a1, est_b1, a1_b1))
+\end_layout
+
+\begin_layout Plain Layout
+
+dt2 <- signif(dt2, 2)
+\end_layout
+
+\begin_layout Plain Layout
+
+names(dt2) <- c(
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_0$
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_1$
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+beta_1$
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes erd
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_1+
+\backslash
+
+\backslash
+beta_1$
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+row.names(dt2) <- c(
+\begin_inset Quotes eld
+\end_inset
+
+rugarch
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes erd
+\end_inset
+
+QML
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes erd
+\end_inset
+
+QML-MY
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes erd
+\end_inset
+
+M1
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes erd
+\end_inset
+
+BM1
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes erd
+\end_inset
+
+BM1-MY
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+kable(dt2, format=
+\begin_inset Quotes erd
+\end_inset
+
+latex
+\begin_inset Quotes erd
+\end_inset
+
+, escape = FALSE, booktabs=TRUE) %>%
+\end_layout
+
+\begin_layout Plain Layout
+
+	kable_styling
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:SP500garchFits"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Comparing 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:robGarchBM1SP500plot"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ with 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:rugarchSP500plot"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, we can notice that the BM1 captains the main dynamics of the SP500 series,
+ but has smaller lagging, which shows BM model is more robust over outliers.
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<echo=TRUE, eval=TRUE, tidy = TRUE, warning = FALSE, fig.width=10>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+library(rugarch)
+\end_layout
+
+\begin_layout Plain Layout
+
+spec <- ugarchspec(mean.model = list(armaOrder = c(0,0), include.mean = FALSE))
+\end_layout
+
+\begin_layout Plain Layout
+
+mod_rugarch <- ugarchfit(spec, rtn[1:604])   
+\end_layout
+
+\begin_layout Plain Layout
+
+plot(mod_rugarch, which=3)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conditional SD vs |returns| of SP500 with rugarch
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:rugarchSP500plot"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<echo=TRUE, eval=TRUE, tidy = TRUE, warning = FALSE, fig.width=10>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+fit_QML <- rGarch(rtn[1:604], methods = "QML")
+\end_layout
+
+\begin_layout Plain Layout
+
+plot(fit_QML, main = 
+\begin_inset Quotes eld
+\end_inset
+
+Conditional SD (vs |returns|) of SP500 with QML - robGarch")
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conditional SD vs |returns| of SP500 with robGarch QML
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:robGarchQMLSP500plot"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<echo=TRUE, eval=TRUE, tidy = TRUE, warning = FALSE, fig.width=10>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+fit_M1 <- rGarch(rtn[1:604], methods=
+\begin_inset Quotes erd
+\end_inset
+
+modified MEst
+\begin_inset Quotes erd
+\end_inset
+
+, fixed_pars=1.0)
+\end_layout
+
+\begin_layout Plain Layout
+
+plot(fit_M1, main = 
+\begin_inset Quotes eld
+\end_inset
+
+Conditional SD (vs |returns|) of SP500 with M1 - robGarch")
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conditional SD vs |returns| of SP500 with robGarch M1
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:robGarchM1SP500plot"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<echo=TRUE, eval=TRUE, tidy = TRUE, warning = FALSE, fig.width=10>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+fit_BM1 <- rGarch(rtn[1:604], methods = "bounded MEst", fixed_pars = c(1.0,
+ 5.02))
+\end_layout
+
+\begin_layout Plain Layout
+
+plot(fit_BM1, main = 
+\begin_inset Quotes eld
+\end_inset
+
+Conditional SD (vs |returns|) of SP500 with BM1 - robGarch")
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conditional SD vs |returns| of SP500 with robGarch BM1
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:robGarchBM1SP500plot"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Test Result with Simulated Garch Series
+\end_layout
+
+\begin_layout Standard
+In Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:FIRSTgarch11Fits"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ through 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:FIFTHgarch11Fits"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, for returns generated by the five Garch 11 models in Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab: 5garch11Parameters"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, we present the 
+\family typewriter
+rugarch
+\family default
+ results along with the results of our QML, M1 and BM1 methods.
+ We note that the parameter estimates of QML are reasonably close to those
+ of 
+\family typewriter
+rugarch
+\family default
+ in Tables 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:FIRSTgarch11Fits"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+-
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:FIFTHgarch11Fits"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, which shows the parameter estimation of 
+\family typewriter
+robGarch
+\family default
+ package is correct.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Garch(1,1) model fits for returns simulated with first model, 
+\begin_inset Formula $\alpha_{1}+\beta_{1}=$
+\end_inset
+
+ 0.821)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<results=
+\begin_inset Quotes erd
+\end_inset
+
+asis
+\begin_inset Quotes erd
+\end_inset
+
+, echo=F, warning = FALSE, tidy=FALSE>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+options(knitr.kable.NA = NA)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+est_a0 <- c(8.76e-04, 0.0007187746, 0.0007173205, 0.0007488871, 0.0007661785)
+\end_layout
+
+\begin_layout Plain Layout
+
+est_a1 <- c(0.135, 0.1944225636, 0.1935931502, 0.1143375798, 0.1394162084)
+\end_layout
+
+\begin_layout Plain Layout
+
+est_b1 <- c(0.686
+, 0.6493820616, 0.6504965855, 0.6917849352, 0.6686222519)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+a1_b1 <- est_a1 + est_b1
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+dt2 <- data.frame(cbind(est_a0, est_a1, est_b1, a1_b1))
+\end_layout
+
+\begin_layout Plain Layout
+
+dt2 <- signif(dt2, 2)
+\end_layout
+
+\begin_layout Plain Layout
+
+names(dt2) <- c(
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_0$
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_1$
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+beta_1$
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_1+
+\backslash
+
+\backslash
+beta_1$
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+row.names(dt2) <- c(
+\begin_inset Quotes eld
+\end_inset
+
+true parameters
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes eld
+\end_inset
+
+rugarch
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+QML
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+M1
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+BM1
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+kable(dt2, format=
+\begin_inset Quotes erd
+\end_inset
+
+latex
+\begin_inset Quotes erd
+\end_inset
+
+, escape = FALSE, booktabs=TRUE) %>%
+\end_layout
+
+\begin_layout Plain Layout
+
+	kable_styling
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:FIRSTgarch11Fits"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Similar to SP500 test results, from Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:rugarchFIRSTplot"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ to Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:robGarchBM1FIFTHplot"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, the conditional standard deviation is more robust in BM1 compared to rugarch.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename robGarch/plots/rugarchFIRSTplot.jpeg
+	scale 40
+	rotateOrigin center
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conditional SD vs |returns| of first model with rugarch
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:rugarchFIRSTplot"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename robGarch/plots/robGarchBM1FIRSTplot.jpeg
+	scale 38
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conditional SD vs |returns| of first model with robGarch BM1
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:robGarchBM1FIRSTplot"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Garch(1,1) model fits for returns simulated with second model, 
+\begin_inset Formula $\alpha_{1}+\beta_{1}=$
+\end_inset
+
+ 0.920
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<results=
+\begin_inset Quotes erd
+\end_inset
+
+asis
+\begin_inset Quotes erd
+\end_inset
+
+, echo=F, warning = FALSE, tidy=FALSE>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+options(knitr.kable.NA = NA)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+est_a0 <- c(3.90e-04,0.0008231785,0.0006755002,0.0007546013,0.0007477893)
+\end_layout
+
+\begin_layout Plain Layout
+
+est_a1 <- c(0.144,0.1201757743, 0.1055735454, 0.1197419765,0.1247704648)
+\end_layout
+
+\begin_layout Plain Layout
+
+est_b1 <- c(0.776
+,0.6642460988, 0.7175699718, 0.6954005739,0.6947563425)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+a1_b1 <- est_a1 + est_b1
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+dt2 <- data.frame(cbind(est_a0, est_a1, est_b1, a1_b1))
+\end_layout
+
+\begin_layout Plain Layout
+
+dt2 <- signif(dt2, 2)
+\end_layout
+
+\begin_layout Plain Layout
+
+names(dt2) <- c(
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_0$
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_1$
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+beta_1$
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_1+
+\backslash
+
+\backslash
+beta_1$
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+row.names(dt2) <- c(
+\begin_inset Quotes eld
+\end_inset
+
+true parameters
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes eld
+\end_inset
+
+rugarch
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+QML
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+M1
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+BM1
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+kable(dt2, format=
+\begin_inset Quotes erd
+\end_inset
+
+latex
+\begin_inset Quotes erd
+\end_inset
+
+, escape = FALSE, booktabs=TRUE) %>%
+\end_layout
+
+\begin_layout Plain Layout
+
+	kable_styling
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:SECONDgarch11Fits"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename robGarch/plots/rugarchSECONDplot.jpeg
+	scale 38
+	rotateOrigin center
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conditional SD vs |returns| of second model with rugarch
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:rugarchSECONDplot"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename robGarch/plots/robGarchBM1SECONDplot.jpeg
+	scale 38
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conditional SD vs |returns| of second model with robGarch BM1
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:robGarchBM1SECONDplot"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Garch(1,1) model fits for returns simulated with third model, 
+\begin_inset Formula $\alpha_{1}+\beta_{1}=$
+\end_inset
+
+ 0.950
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<results=
+\begin_inset Quotes erd
+\end_inset
+
+asis
+\begin_inset Quotes erd
+\end_inset
+
+, echo=F, warning = FALSE, tidy=FALSE>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+options(knitr.kable.NA = NA)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+est_a0 <- c(2.43e-04, 0.0005767708, 0.000366037, 0.0003832793, 0.0003705674)
+\end_layout
+
+\begin_layout Plain Layout
+
+est_a1 <- c(0.117, 0.0824516451, 0.061427871, 0.0673320850, 0.0713626411)
+\end_layout
+
+\begin_layout Plain Layout
+
+est_b1 <- c(0.833
+, 0.7582627826, 0.837917304, 0.8342189018, 0.8350276103)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+a1_b1 <- est_a1 + est_b1
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+dt2 <- data.frame(cbind(est_a0, est_a1, est_b1, a1_b1))
+\end_layout
+
+\begin_layout Plain Layout
+
+dt2 <- signif(dt2, 2)
+\end_layout
+
+\begin_layout Plain Layout
+
+names(dt2) <- c(
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_0$
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_1$
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+beta_1$
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_1+
+\backslash
+
+\backslash
+beta_1$
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+row.names(dt2) <- c(
+\begin_inset Quotes eld
+\end_inset
+
+true parameters
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes eld
+\end_inset
+
+rugarch
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+QML
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+M1
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+BM1
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+kable(dt2, format=
+\begin_inset Quotes erd
+\end_inset
+
+latex
+\begin_inset Quotes erd
+\end_inset
+
+, escape = FALSE, booktabs=TRUE) %>%
+\end_layout
+
+\begin_layout Plain Layout
+
+	kable_styling
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:THIRDgarch11Fits"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename robGarch/plots/rugarchTHIRDplot.jpeg
+	scale 38
+	rotateOrigin center
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conditional SD vs |returns| of third model with rugarch
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:rugarchTHIRDplot"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename robGarch/plots/robGarchBM1THIRDplot.jpeg
+	scale 38
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conditional SD vs |returns| of third model with robGarch BM1
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:robGarchBM1THIRDplot"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Garch(1,1) model fits for returns simulated with fourth model, 
+\begin_inset Formula $\alpha_{1}+\beta_{1}=$
+\end_inset
+
+ 0.971
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<results=
+\begin_inset Quotes erd
+\end_inset
+
+asis
+\begin_inset Quotes erd
+\end_inset
+
+, echo=F, warning = FALSE, tidy=FALSE>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+options(knitr.kable.NA = NA)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+est_a0 <- c(2.45e-04, 0.0005051122, 0.000570232, 0.0005842173, 0.0005842173)
+\end_layout
+
+\begin_layout Plain Layout
+
+est_a1 <- c(0.103, 0.0729540644, 0.078057953, 0.0874411426, 0.0874411426)
+\end_layout
+
+\begin_layout Plain Layout
+
+est_b1 <- c(0.867, 0.8538007383, 0.838831102, 0.8286316219, 0.8286316219)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+a1_b1 <- est_a1 + est_b1
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+dt2 <- data.frame(cbind(est_a0, est_a1, est_b1, a1_b1))
+\end_layout
+
+\begin_layout Plain Layout
+
+dt2 <- signif(dt2, 2)
+\end_layout
+
+\begin_layout Plain Layout
+
+names(dt2) <- c(
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_0$
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_1$
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+beta_1$
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_1+
+\backslash
+
+\backslash
+beta_1$
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+row.names(dt2) <- c(
+\begin_inset Quotes eld
+\end_inset
+
+true parameters
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes eld
+\end_inset
+
+rugarch
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+QML
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+M1
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+BM1
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+kable(dt2, format=
+\begin_inset Quotes erd
+\end_inset
+
+latex
+\begin_inset Quotes erd
+\end_inset
+
+, escape = FALSE, booktabs=TRUE) %>%
+\end_layout
+
+\begin_layout Plain Layout
+
+	kable_styling 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:FOURTHgarch11Fits"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename robGarch/plots/rugarchFOURTHplot.jpeg
+	scale 38
+	rotateOrigin center
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conditional SD vs |returns| of fourth model with rugarch
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:rugarchFOURTHplot"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename robGarch/plots/robGarchBM1FOURTHplot.jpeg
+	scale 38
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conditional SD vs |returns| of fourth model with robGarch BM1
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:robGarchBM1FOURTHplot"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Garch(1,1) model fits for returns simulated with fifth model, 
+\begin_inset Formula $\alpha_{1}+\beta_{1}=$
+\end_inset
+
+ 0.992
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<results=
+\begin_inset Quotes erd
+\end_inset
+
+asis
+\begin_inset Quotes erd
+\end_inset
+
+, echo=F, warning = FALSE, tidy=FALSE>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+options(knitr.kable.NA = NA)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+est_a0 <- c(1.01e-4, 9.279211e-05, 0.0001049613, 0.0001059963, 0.0001059963)
+\end_layout
+
+\begin_layout Plain Layout
+
+est_a1 <- c(0.083, 4.077931e-02, 0.0426549785, 0.0480457351, 0.0480457351)
+\end_layout
+
+\begin_layout Plain Layout
+
+est_b1 <- c(0.909
+, 9.486985e-01, 0.9452527239, 0.9403480472, 0.9403480472)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+a1_b1 <- est_a1 + est_b1
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+dt2 <- data.frame(cbind(est_a0, est_a1, est_b1, a1_b1))
+\end_layout
+
+\begin_layout Plain Layout
+
+dt2 <- signif(dt2, 2)
+\end_layout
+
+\begin_layout Plain Layout
+
+names(dt2) <- c(
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_0$
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_1$
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+beta_1$
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+$
+\backslash
+
+\backslash
+alpha_1+
+\backslash
+
+\backslash
+beta_1$
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+row.names(dt2) <- c(
+\begin_inset Quotes eld
+\end_inset
+
+true parameters
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes eld
+\end_inset
+
+rugarch
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+QML
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+M1
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes erd
+\end_inset
+
+BM1
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+kable(dt2, format=
+\begin_inset Quotes erd
+\end_inset
+
+latex
+\begin_inset Quotes erd
+\end_inset
+
+, escape = FALSE, booktabs=TRUE) %>%
+\end_layout
+
+\begin_layout Plain Layout
+
+	kable_styling
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:FIFTHgarch11Fits"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename robGarch/plots/rugarchFIFTHplot.jpeg
+	scale 38
+	rotateOrigin center
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conditional SD vs |returns| of fifth model with rugarch
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:rugarchFIFTHplot"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename robGarch/plots/robGarchBM1FIFTHplot.jpeg
+	scale 38
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conditional SD vs |returns| of fifth model with robGarch BM1
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:robGarchBM1FIFTHplot"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Future Development
+\end_layout
+
+\begin_layout Standard
+Any future development will be released in the github page.
+ A few key features will be added to the package in September 2020:
+\end_layout
+
+\begin_layout Itemize
+Statistics tests such as std_error, t_value, p_value for Garch parameters
+\end_layout
+
+\begin_layout Itemize
+Code debug on model filter for M model and QML
+\end_layout
+
+\begin_layout Itemize
+More optimization choices
+\end_layout
+
+\begin_layout Itemize
+Extension to robust Garch(p, q)
 \end_layout
 
 \begin_layout Standard
