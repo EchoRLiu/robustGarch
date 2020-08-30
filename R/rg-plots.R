@@ -1,4 +1,4 @@
-.plot.garchsim <- function(fit, seed = 42, main_name = "Conditional SD (vs returns)", abs_ = TRUE)
+.plot.garchsim <- function(fit, seed = 42, main_name = "Conditional Volatility and Returns", abs_ = TRUE)
 {
 
   n <- length(fit$data) + 100
@@ -20,19 +20,21 @@
   }
 
   sigma2 <- sigma2[101:n]
-  par(mfrow = c(2,1), mar=c(2,2,2,2))
+  # par(mfrow = c(2,1), mar=c(2,2,2,2))
+  plot.zoo(fit$data, xlab = "", ylab = "Return", main = "Returns")
   if(abs_){
-    plot(abs(fit$data), main=main_name,type="l", col="grey")
+    retAndVol <- cbind(abs(fit$data),sqrt(sigma2))
   } else{
-    plot(fit$data, main=main_name,type="l", col="grey")
-    }
-  par(new=TRUE)
-  lines(sqrt(sigma2), col = "dark blue", main=main_name)
+    retAndVol <- cbind(fit$data,sqrt(sigma2))
+  }
+  plot.zoo(retAndVol,screens = "single",xlab = "",ylab = "",
+           main = main_name,
+           lty = c("dotted","solid"),col = c("blue","black"), lwd = c(.8,1.5))
   legend("topleft", bty = "n",
          legend=as.expression(c(bquote(alpha[0]~'='~.(signif(a0, 2))),
                                 bquote(alpha[1]~'='~.(signif(a1, 2))),
                                 bquote(beta[1]~'='~.(signif(b1, 2))))))
-
-  #x
+  legend("topright",legend = c("CondVol","Returns"),lty = c("solid","dashed"),
+         col = c("black","blue"),lwd = 1.5,bty = "n")
 
 }
