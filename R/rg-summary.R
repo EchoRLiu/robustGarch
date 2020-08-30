@@ -16,7 +16,7 @@
 #' @examples
 #'
 #' data("rtn")
-#' fit <- rGarch(rtn, methods="bounded MEst", fixed_pars = c(0.8, 3.0), optimizer="Rsolnp", stdErr_method = "numDeriv")
+#' fit <- robGarch(rtn, methods="bounded MEst", fixed_pars = c(0.8, 3.0), optimizer="Rsolnp", stdErr_method = "numDeriv")
 #' summary(fit)
 #' print(fit)
 #' plot(fit)

@@ -1,7 +1,7 @@
 #' @title Robust Estimates for GARCH(1,1) Model
 #'
-#' @name rGarch
-#' @aliases rGarch
+#' @name robGarch
+#' @aliases robGarch
 #'
 #' @description Methods for fitting a Garch(1,1) model with daily log return time series, using two methods of robust extended M-Estimates:
 #' (1) maximizing modified likelihood function;
@@ -34,7 +34,7 @@
 #'     \item{p_value}{p-values of alpha_0, alpha_1, beta_1}
 #'
 #' @details
-#' The \code{rGarch} function fits a Garch(1, 1) model to a time series of log return data, using one of the two methods of robust extended M-Estimates with certain parameters specified by the user, with guidance and examples from the vignette. The user can also specify the optimizer used during optimization procesure, and the method used to calculate standard error for the fitted parameters.
+#' The \code{robGarch} function fits a Garch(1, 1) model to a time series of log return data, using one of the two methods of robust extended M-Estimates with certain parameters specified by the user, with guidance and examples from the vignette. The user can also specify the optimizer used during optimization procesure, and the method used to calculate standard error for the fitted parameters.
 #'
 #' For details of the list of control arguments, please refer to \code{nloptr::nloptr}, \code{Rsolnp::solnp}, \code{nlminb}.
 #'
@@ -50,10 +50,10 @@
 #'
 #'
 #'
-#' @rdname rGarch
+#' @rdname rg-robGarch
 #' @export
 # Garch(1,1) model fit function
-rGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), fixed_pars = c(0.85, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich")){
+robGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), fixed_pars = c(0.85, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich")){
 
   if(!is.numeric(data) || length(data)==0)
     stop("Data must be a numeric vector of non-zero length")

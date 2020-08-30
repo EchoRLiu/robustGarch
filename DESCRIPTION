@@ -1,4 +1,4 @@
-Package: robGarch
+Package: robustGarch
 Type: Package
 Title: Robust Garch(1,1) Model 
 Version: 0.1.0
@@ -8,8 +8,8 @@ Description: Estimation and methods of two Robust Garch(1,1) models
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-URL: https://github.com/EchoRLiu/robGarch
-BugReports: https://github.com/EchoRLiu/robGarch/issues
+URL: https://github.com/EchoRLiu/robustGarch
+BugReports: https://github.com/EchoRLiu/robustGarch/issues
 RoxygenNote: 7.1.1
 Suggests:
     knitr,
@@ -18,7 +18,8 @@ Suggests:
 Imports:
     pracma,
     nloptr,
-    Rsolnp
+    Rsolnp,
+    xts
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)
