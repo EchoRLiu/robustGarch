@@ -21,13 +21,13 @@
 
   sigma2 <- sigma2[101:n]
   # par(mfrow = c(2,1), mar=c(2,2,2,2))
-  plot(fit$data, xlab = "", ylab = "Return", main = "Returns")
+  plot(fit$data, type = "l", xlab = "", ylab = "Return", main = "Returns")
   if(abs_){
     retAndVol <- cbind(abs(fit$data),sqrt(sigma2))
   } else{
     retAndVol <- cbind(fit$data,sqrt(sigma2))
   }
-  plot(retAndVol,screens = "single",xlab = "",ylab = "",
+  plot(retAndVol, screens = "single", type = "l", xlab = "",ylab = "",
            main = main_name,
            lty = c("dotted","solid"),col = c("blue","black"), lwd = c(.8,1.5))
   legend("topleft", bty = "n",
