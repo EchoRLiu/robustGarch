@@ -258,9 +258,9 @@ opts_chunk$set(keep.source=TRUE,
 \begin_layout Title
 Introduction to the 
 \family typewriter
-robGarch
+robustGarch
 \family default
- package (Version 0.1.0)
+ package (Version 0.3.0)
 \end_layout
 
 \begin_layout Author
@@ -316,47 +316,60 @@ Introduction
 \end_layout
 
 \begin_layout Standard
-AutoRegressive Conditional Heteroscedasticity (ARCH) was introduced by 
-\begin_inset CommandInset citation
-LatexCommand citet
-key "engle"
-literal "false"
+The purpose of this vignette is to show how to use the 
+\family typewriter
+robustGarch
+\family default
+ package to robustly fit Garch(1,1) models, defined as 
+\begin_inset Formula $x_{t}=\sigma_{t}z_{t}$
+\end_inset
+
+, where 
+\begin_inset Formula $z_{t}$
+\end_inset
+
+ is i.i.d random variables with continuous density 
+\begin_inset Formula $f$
+\end_inset
+
+ such that 
+\begin_inset Formula $E(z_{t})=0$
+\end_inset
+
+, 
+\begin_inset Formula $Var(z_{t})=1$
+\end_inset
+
+, and where the conditional variance 
+\begin_inset Formula $\sigma_{t}^{2}$
+\end_inset
+
+ are given by
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\sigma_{t}^{2}=\alpha_{0}+\alpha_{1}x_{t-1}^{2}+\beta_{1}\sigma_{t-1}^{2},\ \alpha_{1}+\beta_{1}<1
+\]
 
 \end_inset
 
- and extended to Generalized Autoregressive Conditional Heteroscedasticity
- (Garch) models by 
-\begin_inset CommandInset citation
-LatexCommand citet
-key "Bollerslev"
-literal "false"
 
-\end_inset
+\end_layout
 
-, the latter proven very popular in many applications as they provide a
- rich statistical framework for non-constant variance and their ability
- to capture observed empirical phenomena such as volatility clustering.
- 
-\begin_inset CommandInset citation
-LatexCommand citet
-key "chou"
-literal "false"
+\begin_layout Standard
+for returns time series that may have either: (1) a normal or a fat-tailed
+ non-normal Garch model innovations distribution, or (2) additive outliers.
+ The most common way of fitting a Garch model is to compute a maximum-likelihood
+ estimate (MLE) of the parameters based on the assumption that the innovations
+ have a normal distribution, and when the method used for possibly non-normal
+ innovations distributions, the method is called Quasi-Maximum Likelihood
+ (QML) method.
+\end_layout
 
-\end_inset
-
- showed the ability of Garch to estimate risk premium valuation of a stock.
- In 
-\begin_inset CommandInset citation
-LatexCommand citet
-key "duan"
-literal "false"
-
-\end_inset
-
-, Garch is applied to pricing options, where volatility plays a crucial
- role in the Black-Scholes option pricing model, thereby adding a new perspectiv
-e in comparison to stochastic volatility model.
- Bias caused by outliers has been studied in some literature.
+\begin_layout Standard
+Bias caused by outliers has been studied in some literature.
  
 \begin_inset CommandInset citation
 LatexCommand citet
@@ -395,7 +408,7 @@ literal "false"
 status open
 
 \begin_layout Plain Layout
-We reference the paper as MY2008 in the following content
+We reference the paper as MY2008 in the later content
 \end_layout
 
 \end_inset
@@ -409,36 +422,25 @@ We reference the paper as MY2008 in the following content
 
 \begin_layout Standard
 The 
-\noun on
-robGarch
-\noun default
- package aims to provide two main methods for modelling robust Garch processes,
- modified M-Estimate method providing M model family and bounded M-Estimate
- method 
+\family typewriter
+robustGarch
+\family default
+ package provides two main methods for fitting robust Garch processes, M-Estimat
+es based on a bounded loss function,
 \begin_inset Note Note
 status open
 
 \begin_layout Plain Layout
-Not sure if we should say M models are robust
+(MEst),
 \end_layout
 
 \end_inset
 
-providing BM model family, addressing the issue of robustness toward additive
- outliers, rather than innovations outliers
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Not sure if we should still say that
-\end_layout
-
-\end_inset
-
-.
- The package also contains quasi maximum likelihood (QML) method as an option
- for the user.
- It currently contains fitting and plotting ready for users to use.
+ and so-called BM estimates that are M-estimates with a bounded rho function
+ combined with a robust variance filtering algorithm that prevents the propagati
+on of additive outliers.
+ The package also contains QML method as an option for the user.
+ It currently contains fitting and plotting methods for fitted models.
 \begin_inset Note Note
 status open
 
@@ -454,16 +456,43 @@ status open
  
 \end_layout
 
+\begin_layout Section
+Using the 
+\family typewriter
+robustGarch
+\family default
+ Package
+\end_layout
+
 \begin_layout Standard
-This document discusses the details of the included models and how they
- are implemented in the package with some examples.
+This document discusses the details of the above two robust Garch(1, 1)
+ estimator methods, and how they are implemented in the package with some
+ examples
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+the development version on github (
+\begin_inset CommandInset href
+LatexCommand href
+target "https://github.com/EchoRLiu/robustGarch"
+literal "false"
+
+\end_inset
+
+) with examples and and demos
+\end_layout
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
 The 
-\noun on
-robGarch
-\noun default
+\family typewriter
+robustGarch
+\family default
  package can be installed as following:
 \end_layout
 
@@ -486,7 +515,7 @@ devtools::install_github(
 \begin_inset Quotes eld
 \end_inset
 
-EchoRLiu/robGarch
+EchoRLiu/robustGarch
 \begin_inset Quotes erd
 \end_inset
 
@@ -495,7 +524,7 @@ EchoRLiu/robGarch
 
 \begin_layout Plain Layout
 
-library(robGarch)
+library(robustGarch)
 \end_layout
 
 \begin_layout Plain Layout
@@ -513,24 +542,11 @@ library(robGarch)
 \end_layout
 
 \begin_layout Standard
-and the development version on github (
-\begin_inset CommandInset href
-LatexCommand href
-target "https://github.com/EchoRLiu/robGarch"
-literal "false"
-
-\end_inset
-
-) with examples and and demos.
-\end_layout
-
-\begin_layout Section
-Model Specification
-\end_layout
-
-\begin_layout Standard
-This section discusses the model specification in the modelling process.
- This is done via specifying 
+To use 
+\family typewriter
+robGarch
+\family default
+ function, the user needs to specify two important parameters, 
 \family typewriter
 methods
 \family default
@@ -538,314 +554,28 @@ methods
 \family typewriter
 fixed_pars
 \family default
- parameters by the user for the main fitting function
+, for the main fitting function
 \family typewriter
- rGarch
-\family default
-,
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
+ robGarch
+\begin_inset Foot
 status open
 
 \begin_layout Plain Layout
 
-<<echo=TRUE, eval=TRUE, tidy = TRUE>>=
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-args(rGarch)
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-@
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The following sub-sections outline the background and details of the methods
- implemented in 
 \family typewriter
-robGarch
+To see the complete arguments of robGarch, use args(robGarch)
+\end_layout
+
+\end_inset
+
+
 \family default
 .
+ 
 \end_layout
 
-\begin_layout Subsection
-BM Models
-\end_layout
-
-\begin_layout Standard
-Robust Garch is first introduced by 
-\begin_inset CommandInset citation
-LatexCommand citet
-key "yohaimuler"
-literal "false"
-
-\end_inset
-
- with the foundation work of 
-\begin_inset CommandInset citation
-LatexCommand citet
-key "huber"
-literal "false"
-
-\end_inset
-
-.
- Defined as 
-\begin_inset Formula $x_{t}=\sigma_{t}z_{t}$
-\end_inset
-
-, where 
-\begin_inset Formula $z_{t}$
-\end_inset
-
- is i.i.d random variables with continuous density 
-\begin_inset Formula $f$
-\end_inset
-
- such that 
-\begin_inset Formula $E(z_{t})=0$
-\end_inset
-
-, 
-\begin_inset Formula $Var(z_{t})=1$
-\end_inset
-
-, and where the conditional variance 
-\begin_inset Formula $\sigma_{t}^{2}$
-\end_inset
-
- are given by 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{equation}
-\sigma_{t}^{2}=\alpha_{0}+\sum_{i=1}^{p}\alpha_{i}x_{t-i}^{2}+\sum_{j=1}^{q}\beta_{j}\sigma_{t-j}^{2}
-\end{equation}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-the robust parameters estimation is based on M-estimate with more flavors.
-\end_layout
-
-\begin_layout Standard
-The main structure of parameter estimation is 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{equation}
-\hat{\gamma_{T}}^{B}=\begin{cases}
-\hat{\gamma_{1,T}}, & M_{T}(\hat{\gamma_{1,T}})\leq M_{Tk}^{*}(\hat{\gamma_{2,T}})\\
-\hat{\gamma_{2,T}}, & M_{T}(\hat{\gamma_{1,T}})>M_{Tk}^{*}(\hat{\gamma_{2,T}})
-\end{cases}
-\end{equation}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-where 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{equation}
-\begin{split}\hat{\gamma_{1,T}} & =arg\min_{\textbf{c}}M_{T}(\textbf{c})\\
- & =arg\min_{\alpha_{i},\beta_{j}}\frac{1}{T-p}\sum_{t=p+1}^{T}\rho(log(x_{t}^{2})-log(\alpha_{0}+\sum_{i=1}^{p}\alpha_{i}x_{t-i}^{2}+\sum_{j=1}^{q}\beta_{j}\sigma_{t-j}^{2}))
-\end{split}
-\end{equation}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-and 
-\begin_inset Formula 
-\begin{equation}
-\begin{split}\hat{\gamma_{2,T}} & =arg\min_{\textbf{c}}M_{Tk}^{*}(\textbf{c})\\
- & =arg\min_{\alpha_{i},\beta_{j}}\frac{1}{T-p}\sum_{t=p+1}^{T}\rho(log(x_{t}^{2})\\
- & -log(\alpha_{0}+\sum_{i=1}^{p}\alpha_{i}\sigma_{t-i,k}^{2}(\alpha_{i},\beta_{j})r_{k}(\frac{x_{t-i}^{2}}{\sigma_{t-i,k}^{2}})+\sum_{j=1}^{q}\beta_{j}\sigma_{t-j}^{2}))
-\end{split}
-\label{eq:optimize}
-\end{equation}
-
-\end_inset
-
- where 
-\begin_inset Formula 
-\begin{equation}
-r_{k}(u)=\begin{cases}
-u, & u\leq k\\
-k, & u>k
-\end{cases}\label{eq:rk}
-\end{equation}
-
-\end_inset
-
- The use of Equation 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "eq:rk"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
- is to restrict the propagation of the outlier effect, and thus small 
-\family typewriter
-k
-\family default
- can provide a robust model.
- The different optimization under different cases makes sure that the model
- has robustness with outliers and maintains consistency when the series
- follows a Garch without outliers.
-\end_layout
-
-\begin_layout Standard
-BM models are also controlled by 
-\begin_inset Formula $\rho=m_{1}(\rho_{0})$
-\end_inset
-
-, where 
-\begin_inset Formula $\rho_{0}=-log(\frac{1}{\sqrt{2\pi}}e^{-(e^{w}-w)/2}))$
-\end_inset
-
-
-\family roman
-\series medium
-\shape up
-\size normal
-\emph off
-\bar no
-\strikeout off
-\xout off
-\uuline off
-\uwave off
-\noun off
-\color none
-, 
-\begin_inset Formula $w=log(z_{t}^{2})$
-\end_inset
-
-, and 
-\family default
-\series default
-\shape default
-\size default
-\emph default
-\bar default
-\strikeout default
-\xout default
-\uuline default
-\uwave default
-\noun default
-\color inherit
-
-\begin_inset Formula $m_{1}$
-\end_inset
-
- is a non-decreasing, bounded function, defined as
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{equation}
-m_{1}(x)=\begin{cases}
-x, & x\leq4\\
-P(x), & 4<x\leq4.34.15,x>4.3
-\end{cases}
-\end{equation}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-and
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{multline}
-P(x)=\frac{2}{(b-a)^{3}}(\frac{1}{4}(x^{4}-a^{4})-\frac{1}{3}(2a+b)(x^{3}-a^{3})+\frac{1}{2}(a^{2}+2ab)(x^{2}-a^{2}))\\
--\frac{2a^{2}b}{(b-a)^{3}}(x-a)-\frac{1}{3(b-a)^{2}}(x-a)^{3}+x,a=4,b=4.3\label{eq:ps}
-\end{multline}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-satisfying constraints 
-\begin_inset Formula $P(a)=a,P'(a)=1,P'(b)=P''(a)=P''(b)=0$
-\end_inset
-
-.
- To have different level of robustness, BM model can use 
-\begin_inset Formula $\rho=div*m_{1}(\rho_{0}/div)$
-\end_inset
-
-, where 
-\begin_inset Formula $0<div<=1$
-\end_inset
-
-.
- The smaller 
-\begin_inset Formula $div$
-\end_inset
-
- is, the larger 
-\family roman
-\series medium
-\shape up
-\size normal
-\emph off
-\bar no
-\strikeout off
-\xout off
-\uuline off
-\uwave off
-\noun off
-\color none
-
-\begin_inset Formula $\rho_{0}/div$
-\end_inset
-
- would be, thus obtaining more control and gaining more robustness.
-\end_layout
-
-\begin_layout Standard
-To use BM models, the user needs to choose 
+\begin_layout Itemize
+For BM estimators, the user needs to choose 
 \family typewriter
 
 \begin_inset Quotes eld
@@ -866,54 +596,17 @@ methods
 fixed_pars = c(div, k)
 \family default
  (default c(0.8, 3.0)) need to be specified.
+ 
 \end_layout
 
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-However, BM2 unfortunately would still be influenced by large outliers.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-M Models
-\end_layout
-
-\begin_layout Standard
-M models are similar to BM models without the restriction on the propagation
- of the outlier effect.
- If k in Equation 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "eq:rk"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
- is large, then 
-\begin_inset Formula $\sum_{i=1}^{p}\alpha_{i}\sigma_{t-i,k}^{2}(\alpha_{i},\beta_{j})r_{k}(\frac{x_{t-i}^{2}}{\sigma_{t-i,k}^{2}})$
-\end_inset
-
- becomes the normal form 
-\begin_inset Formula $\sum_{i=1}^{p}\alpha_{i}x_{t-i}^{2}$
-\end_inset
-
-, and thus lose the robustness of BM models.
- When the 
+\begin_layout Itemize
+When the 
 \family typewriter
 methods
 \family default
  parameter of 
 \family typewriter
-rGarch
+robGarch
 \family default
  is specified as 
 \family typewriter
@@ -931,8 +624,8 @@ modified MEst
 \family typewriter
  div
 \family default
- (default = 0.8) controls the robustness of M models.
- To use M models, the user needs to specify the 
+ (default = 0.8) controls the robustness of M estimators.
+ The user should specify the 
 \family typewriter
 methods
 \family default
@@ -955,13 +648,8 @@ fixed_pars = div
 .
 \end_layout
 
-\begin_layout Subsection
-QML
-\end_layout
-
-\begin_layout Standard
+\begin_layout Itemize
 QML is obtained without any restriction or control over the outlier effect.
- Thus it is a simple M-Estimate.
  The user only needs to choose the 
 \family typewriter
 
@@ -978,11 +666,7 @@ QML
 \family typewriter
 methods
 \family default
- to specify the model.
-\end_layout
-
-\begin_layout Section
-Fitting
+ to specify the estimator.
 \end_layout
 
 \begin_layout Standard
@@ -996,7 +680,7 @@ fixed_pars
 \family default
  parameters specified, the 
 \family typewriter
-rGarch
+robGarch
 \family default
  function can take in the 
 \family typewriter
@@ -1005,7 +689,7 @@ data
 , and output the parameter estimations.
  The following is an example using the internal data in 
 \family typewriter
-robGarch
+robustGarch
 \family default
  package.
 \end_layout
@@ -1030,7 +714,7 @@ data(rtn)
 
 \begin_layout Plain Layout
 
-fit <- rGarch(rtn[1:604], methods=
+fit <- robGarch(rtn[1:604], methods=
 \begin_inset Quotes erd
 \end_inset
 
@@ -1048,11 +732,6 @@ summary(fit)
 
 \begin_layout Plain Layout
 
-plot(fit)
-\end_layout
-
-\begin_layout Plain Layout
-
 \end_layout
 
 \begin_layout Plain Layout
@@ -1065,14 +744,18 @@ plot(fit)
 
 \end_layout
 
+\begin_layout Subsection
+Some Examples and Data Testing Results
+\end_layout
+
 \begin_layout Standard
 The following sub-sections provide the results of testing 
 \family typewriter
-robGarch
+robustGarch
 \family default
  package function 
 \family typewriter
-rGarch
+robGarch
 \family default
  and comparing the results with those obtained using the 
 \family typewriter
@@ -1082,7 +765,7 @@ rugarch
 \family typewriter
 ugarchfit
 \family default
- for the following five data sets:
+ for the following six data sets:
 \end_layout
 
 \begin_layout Itemize
@@ -1091,8 +774,8 @@ SP500 daily returns from February 1, 2000 through June 30, 2002, a total
 \end_layout
 
 \begin_layout Itemize
-5 artificially generated Garch11 returns, a total of n = 500 observations,
- using the five models in Table 
+5 artificially generated Garch(1, 1) returns, a total of n = 500 observations,
+ using the five estimators in Table 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tab: 5garch11Parameters"
@@ -1103,6 +786,24 @@ noprefix "false"
 \end_inset
 
  that were provided by Doug Martin
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+For more details, please refer to 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "DougChen"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1542,7 +1243,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Garch(1,1) Parameter Values Used for robGarch Test
+Garch(1,1) Parameter Values Used for robustGarch Test
 \end_layout
 
 \end_inset
@@ -1566,30 +1267,31 @@ name "tab: 5garch11Parameters"
 \end_layout
 
 \begin_layout Standard
-We are testing the following three Garch11 fitting methods from the 
+We are testing the following three Garch(1, 1) fitting methods from the
+ 
 \family typewriter
-robGarch
+robustGarch
 \family default
  package:
 \end_layout
 
 \begin_layout Enumerate
-The QML method: quasi-maximum likelihood method (MLE for normal distribution
- Garch11 innovations)
+QML method: quasi-maximum likelihood method (MLE for normal distribution
+ Garch(1, 1) innovations)
 \end_layout
 
 \begin_layout Enumerate
-M1 model: a bounded loss function M-estimator, as described in MY2008, with
- tuning parameter 
-\begin_inset Formula $c=1.0$
+M estimator: a bounded loss function M-estimator, as described in MY2008,
+ with tuning parameter 
+\begin_inset Formula $div=1.0$
 \end_inset
 
 
 \end_layout
 
 \begin_layout Enumerate
-BM1 model: M1 with robust filter added, with 
-\begin_inset Formula $c=1.0$
+BM estimator: M1 with robust filter added, with 
+\begin_inset Formula $div=1.0$
 \end_inset
 
  and filter tuning parameter 
@@ -1616,7 +1318,7 @@ The QML method uses some of the same code as the M1 and BM1 methods, and
 \begin_layout Standard
 In further testing we will also include M2 and BM2, which are more robust
  versions of M and BM, obtained by using smaller values of 
-\begin_inset Formula $c$
+\begin_inset Formula $div$
 \end_inset
 
  and 
@@ -1626,14 +1328,14 @@ In further testing we will also include M2 and BM2, which are more robust
 .
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Subsubsection
 Test Result with SP500 Returns
 \end_layout
 
 \begin_layout Standard
 For the SP500 returns we also compare our 
 \family typewriter
-robGarch
+robustGarch
 \family default
  results with those in MY2008, and refer to their results as the MY results.
  Table 
@@ -1646,7 +1348,7 @@ noprefix "false"
 
 \end_inset
 
- below contains the results of testing our QML, M1, BM1 methods, along witth
+ below contains the results of testing our QML, M1, BM1 methods, along with
  the MY results labeled QML-MY, BM1-MY (MY results did not provide M1 result),
  in comparison with the 
 \family typewriter
@@ -1977,7 +1679,7 @@ name "tab:SP500garchFits"
 \end_layout
 
 \begin_layout Standard
-Comparing 
+Comparing Figure 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:robGarchBM1SP500plot"
@@ -1987,7 +1689,7 @@ noprefix "false"
 
 \end_inset
 
- with 
+ with Figure 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:rugarchSP500plot"
@@ -1998,7 +1700,7 @@ noprefix "false"
 \end_inset
 
 , we can notice that the BM1 captains the main dynamics of the SP500 series,
- but has smaller lagging, which shows BM model is more robust over outliers.
+ but has smaller lagging, which shows BM estimator is more robust over outliers.
 \begin_inset Float figure
 wide false
 sideways false
@@ -2103,7 +1805,7 @@ status open
 
 \begin_layout Plain Layout
 
-fit_QML <- rGarch(rtn[1:604], methods = "QML")
+fit_QML <- robGarch(rtn[1:604], methods = "QML")
 \end_layout
 
 \begin_layout Plain Layout
@@ -2112,7 +1814,7 @@ plot(fit_QML, main =
 \begin_inset Quotes eld
 \end_inset
 
-Conditional SD (vs |returns|) of SP500 with QML - robGarch")
+Conditional SD (vs |returns|) of SP500 with QML - robustGarch")
 \end_layout
 
 \begin_layout Plain Layout
@@ -2133,7 +1835,7 @@ Conditional SD (vs |returns|) of SP500 with QML - robGarch")
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Conditional SD vs |returns| of SP500 with robGarch QML
+Conditional SD vs |returns| of SP500 with robustGarch QML
 \end_layout
 
 \end_inset
@@ -2177,7 +1879,7 @@ status open
 
 \begin_layout Plain Layout
 
-fit_M1 <- rGarch(rtn[1:604], methods=
+fit_M1 <- robGarch(rtn[1:604], methods=
 \begin_inset Quotes erd
 \end_inset
 
@@ -2194,7 +1896,7 @@ plot(fit_M1, main =
 \begin_inset Quotes eld
 \end_inset
 
-Conditional SD (vs |returns|) of SP500 with M1 - robGarch")
+Conditional SD (vs |returns|) of SP500 with M1 - robustGarch")
 \end_layout
 
 \begin_layout Plain Layout
@@ -2215,7 +1917,7 @@ Conditional SD (vs |returns|) of SP500 with M1 - robGarch")
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Conditional SD vs |returns| of SP500 with robGarch M1
+Conditional SD vs |returns| of SP500 with robustGarch M1
 \end_layout
 
 \end_inset
@@ -2264,17 +1966,17 @@ status open
 
 \begin_layout Plain Layout
 
-fit_BM1 <- rGarch(rtn[1:604], methods = "bounded MEst", fixed_pars = c(1.0,
+fit_BM1 <- robGarch(rtn[1:604], methods = "bounded MEst", fixed_pars = c(1.0,
  5.02))
 \end_layout
 
 \begin_layout Plain Layout
 
-plot(fit_BM1, main = 
+plot(fit_BM1, main_name = 
 \begin_inset Quotes eld
 \end_inset
 
-Conditional SD (vs |returns|) of SP500 with BM1 - robGarch")
+Conditional SD (vs |returns|) of SP500 with BM1 - robustGarch")
 \end_layout
 
 \begin_layout Plain Layout
@@ -2295,7 +1997,8 @@ Conditional SD (vs |returns|) of SP500 with BM1 - robGarch")
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Conditional SD vs |returns| of SP500 with robGarch BM1
+Conditional SD vs |returns| of SP500 with robustGarch BM1 (div = 1.0, k =
+ 5.02)
 \end_layout
 
 \end_inset
@@ -2318,7 +2021,7 @@ name "fig:robGarchBM1SP500plot"
 
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Subsubsection
 Test Result with Simulated Garch Series
 \end_layout
 
@@ -2333,7 +2036,7 @@ noprefix "false"
 
 \end_inset
 
- through 
+ through Table 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tab:FIFTHgarch11Fits"
@@ -2343,7 +2046,7 @@ noprefix "false"
 
 \end_inset
 
-, for returns generated by the five Garch 11 models in Table 
+, for returns generated by the five Garch(1, 1) models in Table 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tab: 5garch11Parameters"
@@ -2363,7 +2066,7 @@ rugarch
 \family typewriter
 rugarch
 \family default
- in Tables 
+ in Table 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tab:FIRSTgarch11Fits"
@@ -2385,7 +2088,7 @@ noprefix "false"
 
 , which shows the parameter estimation of 
 \family typewriter
-robGarch
+robustGarch
 \family default
  package is correct.
  
@@ -2455,8 +2158,7 @@ est_a1 <- c(0.135, 0.1944225636, 0.1935931502, 0.1143375798, 0.1394162084)
 
 \begin_layout Plain Layout
 
-est_b1 <- c(0.686
-, 0.6493820616, 0.6504965855, 0.6917849352, 0.6686222519)
+est_b1 <- c(0.686, 0.6493820616, 0.6504965855, 0.6917849352, 0.6686222519)
 \end_layout
 
 \begin_layout Plain Layout
@@ -2671,9 +2373,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename robGarch/plots/rugarchFIRSTplot.jpeg
-	scale 40
-	rotateOrigin center
+	filename robustGarch/plots/rugarchFIRSTplot.jpeg
+	scale 38
 
 \end_inset
 
@@ -2715,7 +2416,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename robGarch/plots/robGarchBM1FIRSTplot.jpeg
+	filename robustGarch/plots/robGarchBM1FIRSTplot.jpeg
 	scale 38
 
 \end_inset
@@ -2727,7 +2428,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Conditional SD vs |returns| of first model with robGarch BM1
+Conditional SD vs |returns| of first model with robustGarch BM1
 \end_layout
 
 \end_inset
@@ -2814,8 +2515,7 @@ est_a1 <- c(0.144,0.1201757743, 0.1055735454, 0.1197419765,0.1247704648)
 
 \begin_layout Plain Layout
 
-est_b1 <- c(0.776
-,0.6642460988, 0.7175699718, 0.6954005739,0.6947563425)
+est_b1 <- c(0.776,0.6642460988, 0.7175699718, 0.6954005739,0.6947563425)
 \end_layout
 
 \begin_layout Plain Layout
@@ -3006,9 +2706,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename robGarch/plots/rugarchSECONDplot.jpeg
+	filename robustGarch/plots/rugarchSECONDplot.jpeg
 	scale 38
-	rotateOrigin center
 
 \end_inset
 
@@ -3050,7 +2749,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename robGarch/plots/robGarchBM1SECONDplot.jpeg
+	filename robustGarch/plots/robGarchBM1SECONDplot.jpeg
 	scale 38
 
 \end_inset
@@ -3062,7 +2761,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Conditional SD vs |returns| of second model with robGarch BM1
+Conditional SD vs |returns| of second model with robustGarch BM1
 \end_layout
 
 \end_inset
@@ -3149,8 +2848,7 @@ est_a1 <- c(0.117, 0.0824516451, 0.061427871, 0.0673320850, 0.0713626411)
 
 \begin_layout Plain Layout
 
-est_b1 <- c(0.833
-, 0.7582627826, 0.837917304, 0.8342189018, 0.8350276103)
+est_b1 <- c(0.833, 0.7582627826, 0.837917304, 0.8342189018, 0.8350276103)
 \end_layout
 
 \begin_layout Plain Layout
@@ -3341,9 +3039,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename robGarch/plots/rugarchTHIRDplot.jpeg
+	filename robustGarch/plots/rugarchTHIRDplot.jpeg
 	scale 38
-	rotateOrigin center
 
 \end_inset
 
@@ -3385,7 +3082,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename robGarch/plots/robGarchBM1THIRDplot.jpeg
+	filename robustGarch/plots/robGarchBM1THIRDplot.jpeg
 	scale 38
 
 \end_inset
@@ -3397,7 +3094,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Conditional SD vs |returns| of third model with robGarch BM1
+Conditional SD vs |returns| of third model with robustGarch BM1
 \end_layout
 
 \end_inset
@@ -3675,9 +3372,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename robGarch/plots/rugarchFOURTHplot.jpeg
+	filename robustGarch/plots/rugarchFOURTHplot.jpeg
 	scale 38
-	rotateOrigin center
 
 \end_inset
 
@@ -3719,7 +3415,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename robGarch/plots/robGarchBM1FOURTHplot.jpeg
+	filename robustGarch/plots/robGarchBM1FOURTHplot.jpeg
 	scale 38
 
 \end_inset
@@ -3731,7 +3427,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Conditional SD vs |returns| of fourth model with robGarch BM1
+Conditional SD vs |returns| of fourth model with robustGarch BM1
 \end_layout
 
 \end_inset
@@ -3818,8 +3514,7 @@ est_a1 <- c(0.083, 4.077931e-02, 0.0426549785, 0.0480457351, 0.0480457351)
 
 \begin_layout Plain Layout
 
-est_b1 <- c(0.909
-, 9.486985e-01, 0.9452527239, 0.9403480472, 0.9403480472)
+est_b1 <- c(0.909, 9.486985e-01, 0.9452527239, 0.9403480472, 0.9403480472)
 \end_layout
 
 \begin_layout Plain Layout
@@ -4010,9 +3705,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename robGarch/plots/rugarchFIFTHplot.jpeg
+	filename robustGarch/plots/rugarchFIFTHplot.jpeg
 	scale 38
-	rotateOrigin center
 
 \end_inset
 
@@ -4054,7 +3748,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename robGarch/plots/robGarchBM1FIFTHplot.jpeg
+	filename robustGarch/plots/robGarchBM1FIFTHplot.jpeg
 	scale 38
 
 \end_inset
@@ -4066,7 +3760,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Conditional SD vs |returns| of fifth model with robGarch BM1
+Conditional SD vs |returns| of fifth model with robustGarch BM1
 \end_layout
 
 \end_inset
@@ -4099,6 +3793,10 @@ Any future development will be released in the github page.
 \end_layout
 
 \begin_layout Itemize
+Fix the issue with singularity error with Hessian matrix
+\end_layout
+
+\begin_layout Itemize
 Statistics tests such as std_error, t_value, p_value for Garch parameters
 \end_layout
 
@@ -4112,6 +3810,10 @@ More optimization choices
 
 \begin_layout Itemize
 Extension to robust Garch(p, q)
+\end_layout
+
+\begin_layout Itemize
+Extension to Windows system
 \end_layout
 
 \begin_layout Standard
@@ -4149,6 +3851,293 @@ printbibliography
 \end_inset
 
 
+\end_layout
+
+\begin_layout Section
+\start_of_appendix
+BM Estimators
+\end_layout
+
+\begin_layout Standard
+Robust Garch is first introduced by 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "yohaimuler"
+literal "false"
+
+\end_inset
+
+ with the foundation work of 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "huber"
+literal "false"
+
+\end_inset
+
+.
+ Defined as 
+\begin_inset Formula $x_{t}=\sigma_{t}z_{t}$
+\end_inset
+
+, where 
+\begin_inset Formula $z_{t}$
+\end_inset
+
+ is i.i.d random variables with continuous density 
+\begin_inset Formula $f$
+\end_inset
+
+ such that 
+\begin_inset Formula $E(z_{t})=0$
+\end_inset
+
+, 
+\begin_inset Formula $Var(z_{t})=1$
+\end_inset
+
+, and where the conditional variance 
+\begin_inset Formula $\sigma_{t}^{2}$
+\end_inset
+
+ are given by 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\sigma_{t}^{2}=\alpha_{0}+\sum_{i=1}^{p}\alpha_{i}x_{t-i}^{2}+\sum_{j=1}^{q}\beta_{j}\sigma_{t-j}^{2}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+the robust parameters estimation is based on M-estimate with more flavors.
+\end_layout
+
+\begin_layout Standard
+The main structure of parameter estimation is 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\hat{\gamma_{T}}^{B}=\begin{cases}
+\hat{\gamma_{1,T}}, & M_{T}(\hat{\gamma_{1,T}})\leq M_{Tk}^{*}(\hat{\gamma_{2,T}})\\
+\hat{\gamma_{2,T}}, & M_{T}(\hat{\gamma_{1,T}})>M_{Tk}^{*}(\hat{\gamma_{2,T}})
+\end{cases}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\begin{split}\hat{\gamma_{1,T}} & =arg\min_{\textbf{c}}M_{T}(\textbf{c})\\
+ & =arg\min_{\alpha_{i},\beta_{j}}\frac{1}{T-p}\sum_{t=p+1}^{T}\rho(log(x_{t}^{2})-log(\alpha_{0}+\sum_{i=1}^{p}\alpha_{i}x_{t-i}^{2}+\sum_{j=1}^{q}\beta_{j}\sigma_{t-j}^{2}))
+\end{split}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and 
+\begin_inset Formula 
+\begin{equation}
+\begin{split}\hat{\gamma_{2,T}} & =arg\min_{\textbf{c}}M_{Tk}^{*}(\textbf{c})\\
+ & =arg\min_{\alpha_{i},\beta_{j}}\frac{1}{T-p}\sum_{t=p+1}^{T}\rho(log(x_{t}^{2})\\
+ & -log(\alpha_{0}+\sum_{i=1}^{p}\alpha_{i}\sigma_{t-i,k}^{2}(\alpha_{i},\beta_{j})r_{k}(\frac{x_{t-i}^{2}}{\sigma_{t-i,k}^{2}})+\sum_{j=1}^{q}\beta_{j}\sigma_{t-j}^{2}))
+\end{split}
+\label{eq:optimize}
+\end{equation}
+
+\end_inset
+
+ where 
+\begin_inset Formula 
+\begin{equation}
+r_{k}(u)=\begin{cases}
+u, & u\leq k\\
+k, & u>k
+\end{cases}\label{eq:rk}
+\end{equation}
+
+\end_inset
+
+ The use of Equation 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:rk"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ is to restrict the propagation of the outlier effect, and thus small 
+\family typewriter
+k
+\family default
+ can provide a robust model.
+ The different optimization under different cases makes sure that the model
+ has robustness with outliers and maintains consistency when the series
+ follows a Garch without outliers.
+\end_layout
+
+\begin_layout Standard
+BM estimators are also controlled by 
+\begin_inset Formula $\rho=m_{1}(\rho_{0})$
+\end_inset
+
+, where 
+\begin_inset Formula $\rho_{0}=-log(\frac{1}{\sqrt{2\pi}}e^{-(e^{w}-w)/2}))$
+\end_inset
+
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+, 
+\begin_inset Formula $w=log(z_{t}^{2})$
+\end_inset
+
+, and 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\xout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+
+\begin_inset Formula $m_{1}$
+\end_inset
+
+ is a non-decreasing, bounded function, defined as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+m_{1}(x)=\begin{cases}
+x, & x\leq4\\
+P(x), & 4<x\leq4.34.15,x>4.3
+\end{cases}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{multline}
+P(x)=\frac{2}{(b-a)^{3}}(\frac{1}{4}(x^{4}-a^{4})-\frac{1}{3}(2a+b)(x^{3}-a^{3})+\frac{1}{2}(a^{2}+2ab)(x^{2}-a^{2}))\\
+-\frac{2a^{2}b}{(b-a)^{3}}(x-a)-\frac{1}{3(b-a)^{2}}(x-a)^{3}+x,a=4,b=4.3\label{eq:ps}
+\end{multline}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+satisfying constraints 
+\begin_inset Formula $P(a)=a,P'(a)=1,P'(b)=P''(a)=P''(b)=0$
+\end_inset
+
+.
+ To have different level of robustness, BM estimators can use 
+\begin_inset Formula $\rho=div*m_{1}(\rho_{0}/div)$
+\end_inset
+
+, where 
+\begin_inset Formula $0<div<=1$
+\end_inset
+
+.
+ The smaller 
+\begin_inset Formula $div$
+\end_inset
+
+ is, the larger 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $\rho_{0}/div$
+\end_inset
+
+ would be, thus obtaining more control and gaining more robustness.
+\end_layout
+
+\begin_layout Section
+M Estimators
+\end_layout
+
+\begin_layout Standard
+M estimators are similar to BM estimators without the restriction on the
+ propagation of the outlier effect.
+ If k in Equation 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:rk"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ is large, then 
+\begin_inset Formula $\sum_{i=1}^{p}\alpha_{i}\sigma_{t-i,k}^{2}(\alpha_{i},\beta_{j})r_{k}(\frac{x_{t-i}^{2}}{\sigma_{t-i,k}^{2}})$
+\end_inset
+
+ becomes the normal form 
+\begin_inset Formula $\sum_{i=1}^{p}\alpha_{i}x_{t-i}^{2}$
+\end_inset
+
+, and thus lose the robustness of BM estimators.
 \end_layout
 
 \end_body
