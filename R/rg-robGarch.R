@@ -41,13 +41,10 @@
 #' @references Muler, Nora & Yohai, Victor. (2008). Robust estimates for GARCH models. Journal of Statistical Planning and Inference. 138. 2918-2940.
 #'
 #' @examples
-#' # TBD.
 #'
 #'
-#'
-#'
-#'
-#'
+#' data("rtn")
+#' fit <- robGarch(rtn[1:604], methods="bounded MEst", fixed_pars = c(0.8, 3.0))
 #'
 #'
 #' @rdname rg-robGarch
