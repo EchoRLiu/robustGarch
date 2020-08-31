@@ -28,6 +28,7 @@ For more examples and explanation, please refer to the  [robustGarch-Vignette](h
 
 Any future development will be released in the github page. A few key features will be added to the package in September 2020:
   
+ * Fix the issue with singularity error with Hessian matrix
  * Statistics tests such as std_error, t_value, p_value for Garch parameters
  * Code debug on model filter for M model and QML
  * More optimization choices
