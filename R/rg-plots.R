@@ -1,3 +1,6 @@
+#' @import xts
+#' @import zoo
+
 .plot.garchsim <- function(fit, seed = 42, main_name = "Conditional Volatility and Returns", abs_ = TRUE)
 {
 
@@ -18,23 +21,22 @@
     sigma2[i] <- a0 + a1 * x[i-1]^2 + b1 * sigma2[i-1]
     x[i] <- z[i] * sqrt(sigma2[i])
   }
-
   sigma2 <- sigma2[101:n]
-  # par(mfrow = c(2,1), mar=c(2,2,2,2))
-  plot(fit$data, type = "l", xlab = "", ylab = "Return", main = "Returns")
+
+  returns <- zoo(fit$data)
+  plot.zoo(returns, type = "l", xlab = "", ylab = "Return", main = "Returns")
+
   if(abs_){
-    retAndVol <- cbind(abs(fit$data),sqrt(sigma2))
+    retAndVol <- cbind(abs(returns),zoo(sqrt(sigma2), order.by = index(returns)))
   } else{
-    retAndVol <- cbind(fit$data,sqrt(sigma2))
+    retAndVol <- cbind(returns,zoo(sqrt(sigma2), order.by = index(returns)))
   }
-  plot(retAndVol, screens = "single", type = "l", xlab = "",ylab = "",
-           main = main_name,
-           lty = c("dotted","solid"),col = c("blue","black"), lwd = c(.8,1.5))
+  plot.zoo(retAndVol, screens = "single", type = "l", xlab = "",ylab = "",main = main_name,lty = c("dotted","solid"),col = c("blue","black"), lwd = c(.8,1.5))
   legend("topleft", bty = "n",
          legend=as.expression(c(bquote(alpha[0]~'='~.(signif(a0, 2))),
                                 bquote(alpha[1]~'='~.(signif(a1, 2))),
                                 bquote(beta[1]~'='~.(signif(b1, 2))))))
-  legend("topright",legend = c("CondVol","Returns"),lty = c("solid","dashed"),
-         col = c("black","blue"),lwd = 1.5,bty = "n")
+  legend("topright",legend = c("Returns","CondVol") ,lty = c("dashed","solid"),
+         col = c("blue","black"),lwd = c(0.8, 1.5), bty = "n")
 
 }
