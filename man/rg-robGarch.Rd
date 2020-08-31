@@ -56,13 +56,10 @@ The \code{robGarch} function fits a Garch(1, 1) model to a time series of log re
 For details of the list of control arguments, please refer to \code{nloptr::nloptr}, \code{Rsolnp::solnp}, \code{nlminb}.
 }
 \examples{
-# TBD.
 
 
-
-
-
-
+data("rtn")
+fit <- robGarch(rtn[1:604], methods="bounded MEst", fixed_pars = c(0.8, 3.0))
 
 
 }
