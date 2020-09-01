@@ -33,7 +33,3 @@ Any future development will be released in the github page. A few key features w
  * Code debug on model filter for M model and QML
  * More optimization choices
  * Extension to robust Garch(p, q)
- * Extension to Windows system
-
-
-:heavy_exclamation_mark: This is currently only working on Mac system :heavy_exclamation_mark:
