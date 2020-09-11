@@ -8,6 +8,7 @@
   a0 <- fit$fitted_pars["alpha_0"]
   a1 <- fit$fitted_pars["alpha_1"]
   b1 <- fit$fitted_pars["beta_1"]
+  method <- fit$methods
   #set.seed(seed)
   #z <- rnorm(n)
   #x <- rep(0.0, n)
@@ -31,10 +32,27 @@
     retAndVol <- cbind(returns,zoo(sqrt(sigma2), order.by = index(returns)))
   }
   plot.zoo(retAndVol, screens = "single", type = "l", xlab = "",ylab = "",main = main_name,lty = c("dotted","solid"),col = c("blue","black"), lwd = c(.8,1.5))
-  legend("topleft", bty = "n",
+  if(method == "bounded MEst"){
+    legend("topleft", bty = "n",
          legend=as.expression(c(bquote(alpha[0]~'='~.(signif(a0, 2))),
                                 bquote(alpha[1]~'='~.(signif(a1, 2))),
-                                bquote(beta[1]~'='~.(signif(b1, 2))))))
+                                bquote(beta[1]~'='~.(signif(b1, 2))),
+                                bquote(div~'='~.(signif(fit$fixed_pars[1], 2))),
+                                bquote(c~'='~.(signif(fit$fixed_pars[2], 2))))))
+  } else if(method == "modified MEst"){
+    legend("topleft", bty = "n",
+           legend=as.expression(c(bquote(alpha[0]~'='~.(signif(a0, 2))),
+                                  bquote(alpha[1]~'='~.(signif(a1, 2))),
+                                  bquote(beta[1]~'='~.(signif(b1, 2))),
+                                  bquote(div~'='~.(signif(fit$fixed_pars[1], 2))))))
+  } else if(method == "QML"){
+    legend("topleft", bty = "n",
+           legend=as.expression(c(bquote(alpha[0]~'='~.(signif(a0, 2))),
+                                  bquote(alpha[1]~'='~.(signif(a1, 2))),
+                                  bquote(beta[1]~'='~.(signif(b1, 2))))))
+  } else{
+    NA
+  }
   legend("topright",legend = c("Returns","CondVol") ,lty = c("dashed","solid"),
          col = c("blue","black"),lwd = c(0.8, 1.5), bty = "n")
 
