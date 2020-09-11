@@ -1,31 +1,30 @@
 #' @import xts
 #' @import zoo
 
-.plot.garchsim <- function(fit, seed = 42, main_name = "Conditional Volatility and Returns", abs_ = TRUE)
+.plot.garchsim <- function(fit, main_name = "Conditional Volatility (vs |Returns|)", abs_ = TRUE)
 {
 
   n <- length(fit$data) + 100
   a0 <- fit$fitted_pars["alpha_0"]
   a1 <- fit$fitted_pars["alpha_1"]
   b1 <- fit$fitted_pars["beta_1"]
-
-  set.seed(seed)
-  z <- rnorm(n)
-  x <- rep(0.0, n)
-  sigma2 <- rep(0.0, n)
-  sigma2[1] <- a0 / (1-b1)
+  #set.seed(seed)
+  #z <- rnorm(n)
+  #x <- rep(0.0, n)
+  #sigma2 <- rep(0.0, n)
+  #sigma2[1] <- a0 / (1-b1)
   #x[1] <- fit$data[1]
   #sigma2[1] <- (x[1]/z[1])^2
-
-  for(i in 2:n){
-    sigma2[i] <- a0 + a1 * x[i-1]^2 + b1 * sigma2[i-1]
-    x[i] <- z[i] * sqrt(sigma2[i])
-  }
-  sigma2 <- sigma2[101:n]
+  #for(i in 2:n){
+  #  sigma2[i] <- a0 + a1 * x[i-1]^2 + b1 * sigma2[i-1]
+  #  x[i] <- z[i] * sqrt(sigma2[i])
+  #}
+  #sigma2 <- sigma2[101:n]
 
   returns <- zoo(fit$data)
   plot.zoo(returns, type = "l", xlab = "", ylab = "Return", main = "Returns")
 
+  sigma2 <- fit$sigma
   if(abs_){
     retAndVol <- cbind(abs(returns),zoo(sqrt(sigma2), order.by = index(returns)))
   } else{

@@ -187,6 +187,10 @@ rgFit_local <- function(data, optimizer, optimizer_control){
       NA
     }
 
+  ##############
+  sigma <- sigmaCal(fitted_pars, data)
+  ##############
+
   ######### DELETE BEFORE SUBMIT ##########
   print(fitted_pars)
   ######### DELETE BEFORE SUBMIT ##########
@@ -201,7 +205,8 @@ rgFit_local <- function(data, optimizer, optimizer_control){
        fitted_pars = fitted_pars,
        objective=objective,
        time_elapsed=time_elapsed,
-       message=message)
+       message=message,
+       sigma=sigma)
 }
 
 nEst <- function(y, vini, optimizer, optimizer_control){
@@ -288,6 +293,9 @@ nEst <- function(y, vini, optimizer, optimizer_control){
                          fun = Fnue,
                          LB = lb,
                          UB = ub,
+                         ineqfun = function(vi){vi[2]+vi[3]},
+                         ineqLB = 0.0,
+                         ineqUB = 1.0,
                          control = optimizer_control)
 
     return(res)
@@ -403,7 +411,7 @@ s_est <- function(x){
 # A continous rho function.
 rho <- function(x){
 
-  if(method == "QML"){
+  if(method == "QML" || method == "modified MEst"){
 
     ps <- x^2/2
 
@@ -432,6 +440,23 @@ nfun <- function(x){
   ps <- freg(x, b1, b)
 
   ps
+}
+
+sigmaCal <- function(pars, data){
+
+  n <- prod(length(data))
+
+  var <- rep(0.0, n)
+  var[1] <- pars[1]/(1-pars[3])
+
+  if(pars[1] >0 & pars[2] >=0 & pars[3] >=0){
+    l <- k+1
+    for(i in 2:n){
+      var[i]<-pars[1]+(pars[2]*rk(data[i-1]^2/var[i-1],k,l)+pars[3])*var[i-1]
+    }
+  }
+
+  var
 }
 
 Fnue <- function(start_pars){

@@ -3,7 +3,6 @@
 #' @description Summary for rg S3 class
 #'
 #' @param fit A RG fit object of class \code{\link{rg}}
-#' @param seed a number to be used for setting the seed of random number generator, default is 42
 #' @param main_name the title of the plot, default is "Conditional SD (vs returns)"
 #' @param abs_ a logical argument, when TRUE, the plot function will plot abs(returns) with conditional standard deviation instead of returns, default to TRUE.
 #'
@@ -68,9 +67,9 @@ print.rg <- function(fit){
 
 #' @rdname rg-summary
 #' @export
-plot.rg <- function(fit, seed = 42, main_name = "Conditional SD (vs returns)", abs_ = TRUE){
+plot.rg <- function(fit, main_name = "Conditional Volatility (vs |Returns|)", abs_ = TRUE){
 
-  .plot.garchsim(fit, seed, main_name, abs_)
+  .plot.garchsim(fit, main_name, abs_)
 
 }
 

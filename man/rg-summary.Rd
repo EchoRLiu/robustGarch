@@ -11,12 +11,10 @@
 
 \method{print}{rg}(fit)
 
-\method{plot}{rg}(fit, seed = 42, main_name = "Conditional SD (vs returns)", abs_ = TRUE)
+\method{plot}{rg}(fit, main_name = "Conditional Volatility (vs |Returns|)", abs_ = TRUE)
 }
 \arguments{
 \item{fit}{A RG fit object of class \code{\link{rg}}}
-
-\item{seed}{a number to be used for setting the seed of random number generator, default is 42}
 
 \item{main_name}{the title of the plot, default is "Conditional SD (vs returns)"}
 
