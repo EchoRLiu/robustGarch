@@ -78,49 +78,62 @@ robGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), 
   fit <- rgFit_local(data, optimizer, optimizer_control)
 
   # std_err calculation
-  if(stdErr_method == "numDeriv")
-  {
-    if(optimizer == "Rsolnp"){
-      solution <- fit$optimizer_result$pars
-    } else if(optimizer == "nloptr"){
-      solution <- fit$optimizer_result$solution
-    } else if(optimizer == "nlminb"){
-      solution <- fit$optimizer_result$par
-    }
-    H <- numDeriv::hessian(Fnue, x = solution)/length(data)
-    standard_error <- sqrt(diag(abs(solve(H)/length(data))))[1:3]
-    t_value <- solution[1:3] / standard_error
-    p_value <- 2*(1-pnorm(abs(t_value)))
-
+  if(optimizer == "Rsolnp"){
+    solution <- fit$optimizer_result$pars
+    H <- fit$optimizer_result$hessian[2:5, 2:5]
+  } else if(optimizer == "nloptr"){
+    solution <- fit$optimizer_result$solution
+    stop("use Rsolnp optimizer for now")
+  } else if(optimizer == "nlminb"){
+    solution <- fit$optimizer_result$par
+    stop("use Rsolnp optimizer for now")
   }
-  if(stdErr_method == "optim")
-  {
-    stop("under development")
-    H <- optim(par = fit$optimizer_result$pars, fn = Fnue,
-               method="L-BFGS-B",
-               lower=c(-1, -1, -1, 0),
-               upper=c(1, 1, 1, 2),
-               hessian=TRUE)$hessian/length(data)
-    standard_error <- sqrt(diag(abs(solve(H)/length(data))))[1:3]
-    t_value <- fit$fitted_pars / standard_error
-    p_value <- 2*(1-pnorm(abs(t_value)))
-
-  }
-  if(stdErr_method == "sandwich")
-  {
-    stop("under development")
-    Scores <- matrix(numDeriv::grad(Fnue, x = fit$optimizer_result$pars), nrow = 1)
-    V <- (t(Scores) %*% Scores)/length(data)
-    H <- optim(par = fit$optimizer_result$pars, fn = Fnue,
-               method="L-BFGS-B",
-               hessian=TRUE,
-               control=list(maxit=1))$hessian/length(data)
-    S <- solve(H) %*% V %*% solve(H)
-
-    standard_error <- sqrt(diag(abs(S/length(data))))[1:3]
-    t_value <- fit$fitted_pars / standard_error
-    p_value <- 2*(1-pnorm(abs(t_value)))
-  }
+  standard_error <- sqrt(diag(abs(solve(H)/length(data))))[1:3]
+  t_value <- solution[1:3] / standard_error
+  p_value <- 2*(1-pnorm(abs(t_value)))
+  ######## Change calculation method to above. ###########
+  #if(stdErr_method == "numDeriv")
+  #{
+  #  stop("under development.")
+  #  if(optimizer == "Rsolnp"){
+  #    solution <- fit$optimizer_result$pars
+  #  } else if(optimizer == "nloptr"){
+  #    solution <- fit$optimizer_result$solution
+  #  } else if(optimizer == "nlminb"){
+  #    solution <- fit$optimizer_result$par
+  #  }
+  #  H <- numDeriv::hessian(Fnue, x = solution)/length(data)
+  #  standard_error <- sqrt(diag(abs(solve(H)/length(data))))[1:3]
+  #  t_value <- solution[1:3] / standard_error
+  #  p_value <- 2*(1-pnorm(abs(t_value)))
+  #}
+  #if(stdErr_method == "optim")
+  #{
+  #  stop("under development")
+  #  H <- optim(par = fit$optimizer_result$pars, fn = Fnue,
+  #             method="L-BFGS-B",
+  #             lower=c(-1, -1, -1, 0),
+  #             upper=c(1, 1, 1, 2),
+  #             hessian=TRUE)$hessian/length(data)
+  #  standard_error <- sqrt(diag(abs(solve(H)/length(data))))[1:3]
+  #  t_value <- fit$fitted_pars / standard_error
+  #  p_value <- 2*(1-pnorm(abs(t_value)))
+  #}
+  #if(stdErr_method == "sandwich")
+  #{
+  #  stop("under development")
+  #  Scores <- matrix(numDeriv::grad(Fnue, x = fit$optimizer_result$pars), nrow = 1)
+  #  V <- (t(Scores) %*% Scores)/length(data)
+  #  H <- optim(par = fit$optimizer_result$pars, fn = Fnue,
+  #             method="L-BFGS-B",
+  #             hessian=TRUE,
+  #             control=list(maxit=1))$hessian/length(data)
+  #  S <- solve(H) %*% V %*% solve(H)
+  #  standard_error <- sqrt(diag(abs(S/length(data))))[1:3]
+  #  t_value <- fit$fitted_pars / standard_error
+  #  p_value <- 2*(1-pnorm(abs(t_value)))
+  #}
+  ##########################################
 
   names(standard_error) <- c("alpha_0", "alpha_1", "beta_1")
   names(t_value) <- c("alpha_0", "alpha_1", "beta_1")
@@ -137,8 +150,7 @@ robGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), 
 
   structure(fit, class="rg")
 }
-
-
+#' @export
 rgFit_local <- function(data, optimizer, optimizer_control){
 
   start_time <- Sys.time()
@@ -208,7 +220,7 @@ rgFit_local <- function(data, optimizer, optimizer_control){
        message=message,
        sigma=sigma)
 }
-
+#' @export
 nEst <- function(y, vini, optimizer, optimizer_control){
 
   rm(Muestray)
@@ -314,7 +326,7 @@ nEst <- function(y, vini, optimizer, optimizer_control){
     NA
   }
 }
-
+#' @export
 new_var <- function(x){
 
   n <- length(x)
@@ -337,7 +349,7 @@ new_var <- function(x){
 
   v
 }
-
+#' @export
 tau_sq <- function(x){
 
   s <- s_est(x)
@@ -348,8 +360,7 @@ tau_sq <- function(x){
 
   t
 }
-
-
+#' @export
 s_est <- function(x){
 
   b <- 1.625
@@ -407,7 +418,7 @@ s_est <- function(x){
 
   s
 }
-
+#' @export
 # A continous rho function.
 rho <- function(x){
 
@@ -431,7 +442,7 @@ rho <- function(x){
 
   ps
 }
-
+#' @export
 nfun <- function(x){
 
   b <- 6.7428
@@ -441,7 +452,7 @@ nfun <- function(x){
 
   ps
 }
-
+#' @export
 sigmaCal <- function(pars, data){
 
   n <- prod(length(data))
@@ -458,7 +469,7 @@ sigmaCal <- function(pars, data){
 
   var
 }
-
+#' @export
 Fnue <- function(start_pars){
 
   n <- prod(length(Muestram))
@@ -495,7 +506,7 @@ Fnue <- function(start_pars){
 
   nml
 }
-
+#' @export
 freg <- function(x, a, b){
 
   if(method == "QML" || a == b){
@@ -515,7 +526,7 @@ freg <- function(x, a, b){
 
   g
 }
-
+#' @export
 rk <- function(x, k, l){
 
   if(method == "QML" || method == "modified MEst" || k == l){

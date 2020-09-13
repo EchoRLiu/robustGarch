@@ -52,6 +52,7 @@
 ~%2FDownloads%2FrobustGarch%2FDESCRIPTION="2832F2FF"
 ~%2FDownloads%2FrobustGarch%2FNAMESPACE="ACCAA3A1"
 ~%2FDownloads%2FrobustGarch%2FR%2Fdata.R="EF3B6365"
+~%2FDownloads%2FrobustGarch%2FR%2Frg-infomat.R="DB729BE4"
 ~%2FDownloads%2FrobustGarch%2FR%2Frg-mest.R="FF0B766A"
 ~%2FDownloads%2FrobustGarch%2FR%2Frg-package.R="7F8224FD"
 ~%2FDownloads%2FrobustGarch%2FR%2Frg-plots.R="23A41A5B"
@@ -62,4 +63,5 @@
 ~%2FDownloads%2FrobustGarch%2Fman%2FrobustGarch-package.Rd="653F7F4A"
 ~%2FDownloads%2Fstd_err-test.R="8C6A48D9"
 ~%2FDropbox%2F2020GSOC%2FCode%20Doug%2FgarchFitGNCMAcleanedNocleaned.R="A6DF5A7C"
+~%2FDropbox%2F2020GSOC%2FCode%20Doug%2FrobGarchVol.R="75212C87"
 ~%2FDropbox%2F2020GSOC%2FCode%20Doug%2FrugarchFitGNCMA.R="8F322121"
