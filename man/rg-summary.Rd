@@ -5,6 +5,7 @@
 \alias{summary.rg}
 \alias{print.rg}
 \alias{plot.rg}
+\alias{aef.rg}
 \title{Summary for rg class}
 \usage{
 \method{summary}{rg}(fit)
@@ -12,6 +13,8 @@
 \method{print}{rg}(fit)
 
 \method{plot}{rg}(fit, main_name = "Conditional Volatility (vs |Returns|)", abs_ = TRUE)
+
+aef.rg(fit, dist = "std_norm")
 }
 \arguments{
 \item{fit}{A RG fit object of class \code{\link{rg}}}
@@ -19,6 +22,8 @@
 \item{main_name}{the title of the plot, default is "Conditional SD (vs returns)"}
 
 \item{abs_}{a logical argument, when TRUE, the plot function will plot abs(returns) with conditional standard deviation instead of returns, default to TRUE.}
+
+\item{dist}{one of "std_norm" or "t_dist", the distribution of z_t, default is "std_norm"}
 }
 \description{
 Summary for rg S3 class
@@ -30,5 +35,6 @@ fit <- robGarch(rtn, methods="bounded MEst", fixed_pars = c(0.8, 3.0), optimizer
 summary(fit)
 print(fit)
 plot(fit)
+# aef cal.
 
 }

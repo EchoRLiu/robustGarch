@@ -1,6 +1,5 @@
 #' @import xts
 #' @import zoo
-
 .plot.garchsim <- function(fit, main_name = "Conditional Volatility (vs |Returns|)", abs_ = TRUE)
 {
 

@@ -20,7 +20,8 @@ Imports:
     nloptr,
     Rsolnp,
     xts,
-    zoo
+    zoo,
+    stats
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)

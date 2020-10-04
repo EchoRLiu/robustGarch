@@ -80,7 +80,7 @@ robGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), 
   # std_err calculation
   if(optimizer == "Rsolnp"){
     solution <- fit$optimizer_result$pars
-    H <- fit$optimizer_result$hessian[2:5, 2:5]
+    H <- fit$optimizer_result$hessian #[2:5, 2:5]
   } else if(optimizer == "nloptr"){
     solution <- fit$optimizer_result$solution
     stop("use Rsolnp optimizer for now")
@@ -88,8 +88,9 @@ robGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), 
     solution <- fit$optimizer_result$par
     stop("use Rsolnp optimizer for now")
   }
-  standard_error <- sqrt(diag(abs(solve(H)/length(data))))[1:3]
-  t_value <- solution[1:3] / standard_error
+  standard_error <- sqrt(diag(abs(solve(H)/length(data))))[2:4]
+  standard_error[1] <- standard_error[1] * (fit$fitted_pars[1] / solution[1])
+  t_value <- fit$fitted_pars / standard_error
   p_value <- 2*(1-pnorm(abs(t_value)))
   ######## Change calculation method to above. ###########
   #if(stdErr_method == "numDeriv")
@@ -447,7 +448,7 @@ nfun <- function(x){
 
   b <- 6.7428
   b1 <- b-0.5
-  x <- exp(x/div)-x/div
+  x <- (exp(x)-x +log(2*pi))/2
   ps <- freg(x, b1, b)
 
   ps
@@ -463,6 +464,7 @@ sigmaCal <- function(pars, data){
   if(pars[1] >0 & pars[2] >=0 & pars[3] >=0){
     l <- k+1
     for(i in 2:n){
+      # h_c(t) in the paper.
       var[i]<-pars[1]+(pars[2]*rk(data[i-1]^2/var[i-1],k,l)+pars[3])*var[i-1]
     }
   }
@@ -508,20 +510,28 @@ Fnue <- function(start_pars){
 }
 #' @export
 freg <- function(x, a, b){
+  # the rho function.
 
   if(method == "QML" || a == b){
-
+    # used to be return exp(w/div)-w/div, now correct it to be the following as stated in the paper.
     g <- x
 
   } else{
 
+    x <- x/div
+
     u <- as.numeric(x>b)
     v <- as.numeric(x<a)
 
-    c1 <- a-(2/(b-a)^3)*((-1/4)*a^4+(1/3)*(2*a+b)*a^3+(1/2)*(-a^2-2*a*b)*a^2+a^2*b*a)
-    c2 <- (-1/(3*(b-a)^2))*(b-a)^3+b-(2/(b-a)^3)*((-1/4)*b^4+(1/3)*(2*a+b)*b^3+(1/2)*(-a^2-2*a*b)*b^2+a^2*b*b)
+    ba <- b-a
+    c1 <- a-(2*a^3/ba^3)*(b/3-a/12) #a-(2/(b-a)^3)*((-1/4)*a^4+(1/3)*(2*a+b)*a^3+(1/2)*(-a^2-2*a*b)*a^2+a^2*b*a)
+    c2 <- -ba/3 +b -(2*b^2/ba^3)*(b^2/12-a*b/3+a^2/2) #(-1/(3*(b-a)^2))*(b-a)^3+b-(2/(b-a)^3)*((-1/4)*b^4+(1/3)*(2*a+b)*b^3+(1/2)*(-a^2-2*a*b)*b^2+a^2*b*b)
 
-    g <- x*v+(1-u-v)*((-1/(3*(b-a)^2))*(x-a)^3+x-(2/(b-a)^3)*((-1/4)*x^4+(1/3)*(2*a+b)*x^3+(1/2)*(-a^2-2*a*b)*x^2+a^2*b*x)+a-c1)+(c2+a-c1)*u
+    g <- v*x +
+      (1-u-v)*(x -(x-a)^3/(3*ba^2) -(2*a^2*b*(x-a))/ba^3 +2*((x^4-a^4)/4 -(2*a+b)*(x^3-a^3)/3 +(a^2+2*a*b)*(x^2-a^2)/2)/ba^3) +
+      u*(c2+a-c1)
+
+    g <- g*div
   }
 
   g

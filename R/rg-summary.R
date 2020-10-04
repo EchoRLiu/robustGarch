@@ -5,12 +5,13 @@
 #' @param fit A RG fit object of class \code{\link{rg}}
 #' @param main_name the title of the plot, default is "Conditional SD (vs returns)"
 #' @param abs_ a logical argument, when TRUE, the plot function will plot abs(returns) with conditional standard deviation instead of returns, default to TRUE.
-#'
+#' @param dist one of "std_norm" or "t_dist", the distribution of z_t, default is "std_norm"
 #'
 #' @name rg-summary
 #' @aliases summary.rg
 #' @aliases print.rg
 #' @aliases plot.rg
+#' @aliases aef.rg
 #'
 #' @examples
 #'
@@ -19,6 +20,7 @@
 #' summary(fit)
 #' print(fit)
 #' plot(fit)
+#' # aef cal.
 #'
 #' @rdname rg-summary
 #' @export
@@ -44,7 +46,6 @@ summary.rg <- function(fit){
   cat("\nTime elapsed: ", fit$time_elapsed)
   cat("\nConvergence Message: ", fit$message)
 }
-
 #' @rdname rg-summary
 #' @export
 print.rg <- function(fit){
@@ -64,7 +65,6 @@ print.rg <- function(fit){
   cat("\nResult:\n")
   print(res)
 }
-
 #' @rdname rg-summary
 #' @export
 plot.rg <- function(fit, main_name = "Conditional Volatility (vs |Returns|)", abs_ = TRUE){
@@ -72,7 +72,15 @@ plot.rg <- function(fit, main_name = "Conditional Volatility (vs |Returns|)", ab
   .plot.garchsim(fit, main_name, abs_)
 
 }
+#' @rdname rg-summary
+#' @export
+aef.rg <- function(fit, dist = "std_norm"){
 
+  aTop <- .aValue(fit, dist, TRUE)
+  aBottom <- .aValue(fit, dist, FALSE)
+
+  cat("The AEF of the estimate with respect to QML is: ", aTop/aBottom, "\n")
+}
 
 
 
