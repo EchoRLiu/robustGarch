@@ -8,6 +8,7 @@ robGarch(
   data,
   methods = c("bounded MEst", "modified MEst", "QML"),
   fixed_pars = c(0.85, 3),
+  distribution.model = c("norm", "std"),
   optimizer = c("Rsolnp", "nloptr", "nlminb"),
   optimizer_control = list(),
   stdErr_method = c("numDeriv", "optim", "sandwich")
@@ -20,6 +21,8 @@ robGarch(
 
 \item{fixed_pars}{a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "modified MEst", the parameter should be c, which controls the modified loss function, user can use default c = .85; for "bounded MEst", the parameters should be c(c, k), where c is the same as in "modified MEst", user can use default c = 0.85,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.}
 
+\item{distribution.model}{the assumed distribution of z_t, one of "norm", "std", default is "norm".}
+
 \item{optimizer}{optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".}
 
 \item{optimizer_control}{list of control arguments passed to the optimizer}
@@ -31,6 +34,7 @@ A \code{rg} object(S3), the components of the object are:
     \item{data}{the log returns data object for the rg model to be fitted}
     \item{methods}{the method called}
     \item{fixed_pars}{named numeric vector of fixed parameters used}
+    \item{distribution.model}{the distribution assumed for z_t}
     \item{optimizer}{the optimizer called}
     \item{optimizer_control}{the list of control arguments passed to the optimizer}
     \item{optimizer_result}{output of the called optimizer}
@@ -41,8 +45,8 @@ A \code{rg} object(S3), the components of the object are:
     \item{time_elapsed}{the time used for the optimization routine}
     \item{message}{the message of the convergence status produced by the called solver}
     \item{standard_error}{standard erros of the fitted parameters using the method called}
-    \item{t_value}{t-values of alpha_0, alpha_1, beta_1}
-    \item{p_value}{p-values of alpha_0, alpha_1, beta_1}
+    \item{t_value}{t-values of alpha_0, alpha_1, beta_1, shape as well for "std" distribution.model}
+    \item{p_value}{p-values of alpha_0, alpha_1, beta_1, shape as well for "std" distribution.model}
 }
 \description{
 Methods for fitting a Garch(1,1) model with daily log return time series, using two methods of robust extended M-Estimates:
@@ -59,7 +63,7 @@ For details of the list of control arguments, please refer to \code{nloptr::nlop
 
 
 data("rtn")
-fit <- robGarch(rtn[1:604], methods="bounded MEst", fixed_pars = c(0.8, 3.0))
+fit <- robGarch(rtn[1:604], methods="bounded MEst", distribution.model = "norm", fixed_pars = c(0.8, 3.0))
 
 
 }

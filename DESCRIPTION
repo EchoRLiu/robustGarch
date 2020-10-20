@@ -21,7 +21,8 @@ Imports:
     Rsolnp,
     xts,
     zoo,
-    stats
+    stats,
+    numDeriv
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)

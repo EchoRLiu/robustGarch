@@ -31,27 +31,22 @@
     retAndVol <- cbind(returns,zoo(sqrt(sigma2), order.by = index(returns)))
   }
   plot.zoo(retAndVol, screens = "single", type = "l", xlab = "",ylab = "",main = main_name,lty = c("dotted","solid"),col = c("blue","black"), lwd = c(.8,1.5))
-  if(method == "bounded MEst"){
-    legend("topleft", bty = "n",
-         legend=as.expression(c(bquote(alpha[0]~'='~.(signif(a0, 2))),
-                                bquote(alpha[1]~'='~.(signif(a1, 2))),
-                                bquote(beta[1]~'='~.(signif(b1, 2))),
-                                bquote(div~'='~.(signif(fit$fixed_pars[1], 2))),
-                                bquote(c~'='~.(signif(fit$fixed_pars[2], 2))))))
-  } else if(method == "modified MEst"){
-    legend("topleft", bty = "n",
-           legend=as.expression(c(bquote(alpha[0]~'='~.(signif(a0, 2))),
-                                  bquote(alpha[1]~'='~.(signif(a1, 2))),
-                                  bquote(beta[1]~'='~.(signif(b1, 2))),
-                                  bquote(div~'='~.(signif(fit$fixed_pars[1], 2))))))
-  } else if(method == "QML"){
-    legend("topleft", bty = "n",
-           legend=as.expression(c(bquote(alpha[0]~'='~.(signif(a0, 2))),
-                                  bquote(alpha[1]~'='~.(signif(a1, 2))),
-                                  bquote(beta[1]~'='~.(signif(b1, 2))))))
-  } else{
-    NA
+  exprss <- c(bquote(alpha[0]~'='~.(signif(a0, 2))),
+              bquote(alpha[1]~'='~.(signif(a1, 2))),
+              bquote(beta[1]~'='~.(signif(b1, 2))))
+  if(fit$distribution.model == "std"){
+    exprss <- c(exprss, bquote(v~'='~.(signif(fit$fitted_pars["shape"], 2))))
   }
+  if(method == "bounded MEst"){
+    exprss <- c(exprss,
+                bquote(div~'='~.(signif(fit$fixed_pars[1], 2))),
+                bquote(c~'='~.(signif(fit$fixed_pars[2], 2))))
+  } else if(method == "modified MEst"){
+    exprss <- c(exprss,
+                bquote(div~'='~.(signif(fit$fixed_pars[1], 2))))
+  }
+  legend("topleft", bty = "n",
+         legend=as.expression(exprss))
   legend("topright",legend = c("Returns","CondVol") ,lty = c("dashed","solid"),
          col = c("blue","black"),lwd = c(0.8, 1.5), bty = "n")
 
