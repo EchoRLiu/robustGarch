@@ -22,7 +22,8 @@ Imports:
     xts,
     zoo,
     stats,
-    numDeriv
+    numDeriv,
+    rugarch
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)

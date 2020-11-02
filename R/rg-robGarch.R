@@ -167,6 +167,79 @@ robGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), 
   structure(fit, class="rg")
 }
 #' @export
+robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c("bounded MEst", "modified MEst", "QML"), fixed_pars = c(0.85, 3.0), distribution.model = c("norm", "std"), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich"), n = 2000, m = 100, rseed = 42){
+
+  methods <- match.arg(methods)
+  distribution.model <- match.arg(distribution.model)
+  optimizer <- match.arg(optimizer)
+  stdErr_method <- match.arg(stdErr_method)
+
+  par(mfrow=c(2,2))
+  spec <- ugarchspec(mean.model = list(armaOrder = c(0,0), include.mean = FALSE), distribution.model = distribution.model)
+
+  if(distribution.model=="norm"){
+    if(length(param)!=3){stop("the parameters for norm distribution should only be alpha_0, alpha_1, beta_1")}
+    fixed <- param
+    names(fixed) <- c("omega", "alpha1", "beta1")
+    fspec <- spec
+    setfixed(fspec) <- fixed
+    y <- ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
+    y. <- y@path$seriesSim
+
+    qml_res <- matrix(0.0, nrow = m, ncol = 3)
+    for( i in 1:m){
+      y_ <- y.[((i-1)*n+1):(i*n)]
+      fit <- robGarch(y_, methods = methods, fixed_pars = fixed_pars, distribution.model = distribution.model, optimizer=optimizer, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
+      qml_res[i,1:3] <- fit$fitted_pars
+    }
+
+    d_omega <- density(qml_res[,1])
+    d_omega
+    plot(d_omega, main=paste("Parameter", expression( alpha ), "0 \n True value: ",fixed[1]), cex=.5)
+
+    d_alpha1 <- density(qml_res[,2])
+    d_alpha1
+    plot(d_alpha1, main=paste("Parameter", expression( alpha ),"1 \n True value: ", fixed[2]), cex=.5)
+
+    d_beta1 <- density(qml_res[,3])
+    d_beta1
+    plot(d_beta1, main=paste("Parameter", expression( beta ),"1 \n True value: ", fixed[3]), cex=.5)
+  }
+  else{
+    if(length(param)!=4){stop("the parameters for std distribution should be alpha_0, alpha_1, beta_1, shape")}
+    fixed <- param
+    names(fixed) <- c("omega", "alpha1", "beta1", "shape")
+    fspec <- spec
+    setfixed(fspec) <- fixed
+    y <- ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
+    y. <- y@path$seriesSim
+
+    qml_res <- matrix(0.0, nrow = m, ncol = 4)
+    for( i in 1:m){
+      y_ <- y.[((i-1)*n+1):(i*n)]
+      fit <- robGarch(y_, methods = methods, fixed_pars = fixed_pars, distribution.model = distribution.model, optimizer=optimizer, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
+      qml_res[i,1:4] <- fit$fitted_pars
+    }
+
+    d_omega <- density(qml_res[,1])
+    d_omega
+    plot(d_omega, main=paste("Parameter", expression( alpha ), "0 \n True value: ",fixed[1]), cex=.5)
+
+    d_alpha1 <- density(qml_res[,2])
+    d_alpha1
+    plot(d_alpha1, main=paste("Parameter", expression( alpha ),"1 \n True value: ", fixed[2]), cex=.5)
+
+    d_beta1 <- density(qml_res[,3])
+    d_beta1
+    plot(d_beta1, main=paste("Parameter", expression( beta ),"1 \n True value: ", fixed[3]), cex=.5)
+
+    d_shape <- density(qml_res[,4])
+    d_shape
+    plot(d_shape, main=paste("Parameter shape\n True value: ", fixed[4]), cex=.5)
+
+  }
+}
+#' @export
 rgFit_local <- function(data, optimizer, optimizer_control){
 
   start_time <- Sys.time()
