@@ -6,10 +6,11 @@
 \usage{
 robGarch(
   data,
-  methods = c("bounded MEst", "modified MEst", "QML"),
-  fixed_pars = c(0.85, 3),
+  methods = c("BM", "M", "QML", "MLE"),
+  fixed_pars = c(0.8, 3),
   distribution.model = c("norm", "std"),
   optimizer = c("Rsolnp", "nloptr", "nlminb"),
+  optimizer_x0 = FALSE,
   optimizer_control = list(),
   stdErr_method = c("numDeriv", "optim", "sandwich")
 )
@@ -17,13 +18,15 @@ robGarch(
 \arguments{
 \item{data}{a time series of log returns, need to be numeric value.}
 
-\item{methods}{robust M-Estimate method used for Garch(1,1) model, one of "modified MEst", "bounded MEst", default is "bounded MEst"}
+\item{methods}{robust M-Estimate method used for Garch(1,1) model, "M" and "BM", or non-robust M-Estimate method, "QML" and "MLE". Default is "BM".}
 
-\item{fixed_pars}{a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "modified MEst", the parameter should be c, which controls the modified loss function, user can use default c = .85; for "bounded MEst", the parameters should be c(c, k), where c is the same as in "modified MEst", user can use default c = 0.85,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.}
+\item{fixed_pars}{a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "M", the parameter should be c, which controls the modified loss function, user can use default c = .8; for "BM", the parameters should be c(c, k), where c is the same as in "M", user can use default c = 0.8,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.}
 
-\item{distribution.model}{the assumed distribution of z_t, one of "norm", "std", default is "norm".}
+\item{distribution.model}{the assumed distribution of z_t, "norm" if the methods is "QML" or "std" if the methods is "MLE", default is "norm".}
 
 \item{optimizer}{optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".}
+
+\item{optimizer_x0}{user-defined starting point for searching the optimum, c(x0_alpha0, x0_alpha1, x0_beta1) when the distribution.model is "norm" or c(x0_alpha0, x0_alpha1, x0_beta1, x0_shape) when the distribution.model is "std". Default is "FALSE", where the starting point will be calculated instead of being user-defined.}
 
 \item{optimizer_control}{list of control arguments passed to the optimizer}
 
@@ -36,6 +39,7 @@ A \code{rg} object(S3), the components of the object are:
     \item{fixed_pars}{named numeric vector of fixed parameters used}
     \item{distribution.model}{the distribution assumed for z_t}
     \item{optimizer}{the optimizer called}
+    \item{optimizer_x0}{user-defined or calculated starting point for searching the optimum}
     \item{optimizer_control}{the list of control arguments passed to the optimizer}
     \item{optimizer_result}{output of the called optimizer}
     \item{stdErr_method}{the method called to calculate standard error}
@@ -63,7 +67,7 @@ For details of the list of control arguments, please refer to \code{nloptr::nlop
 
 
 data("rtn")
-fit <- robGarch(rtn[1:604], methods="bounded MEst", distribution.model = "norm", fixed_pars = c(0.8, 3.0))
+fit <- robGarch(rtn[1:604], methods="BM", distribution.model = "norm", fixed_pars = c(0.8, 3.0))
 
 
 }

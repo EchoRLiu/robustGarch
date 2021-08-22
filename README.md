@@ -17,9 +17,9 @@ This is a basic example which shows you how to fit your daily return time series
 
 ```js
 data(rtn)
-fit <- robGarch(rtn, methods = "bounded MEst", fixed_pars = c(1.0, 5.02), optimizer="Rsolnp", stdErr_method = "numDeriv")
+fit <- robGarch(rtn, methods = "BM", fixed_pars = c(0.8, 3.0), optimizer="Rsolnp", stdErr_method = "numDeriv")
 summary(fit)
-plot(fit, seed = 42, main_name = "Conditional Volatility and Returns", abs_ = TRUE)
+plot(fit)
 ```
 
 For more examples and explanation, please refer to the  [robustGarch-Vignette](https://github.com/EchoRLiu/robustGarch/blob/master/vignettes/robustGarch_Vignette.pdf).

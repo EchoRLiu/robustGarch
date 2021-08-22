@@ -5,23 +5,33 @@
 \alias{summary.rg}
 \alias{print.rg}
 \alias{plot.rg}
-\alias{aef.rg}
+\alias{aef}
 \title{Summary for rg class}
 \usage{
 \method{summary}{rg}(fit)
 
 \method{print}{rg}(fit)
 
-\method{plot}{rg}(fit, main_name = "Conditional Volatility (vs |Returns|)", abs_ = TRUE)
+\method{plot}{rg}(
+  fit,
+  pctReturn_ = TRUE,
+  abs_ = TRUE,
+  original_ = FALSE,
+  main_name = "Conditional Volatility (vs |pctReturns(\%)|)"
+)
 
-aef.rg(fit, dist = "std_norm")
+aef(fit, v = 5)
 }
 \arguments{
 \item{fit}{A RG fit object of class \code{\link{rg}}}
 
-\item{main_name}{the title of the plot, default is "Conditional SD (vs returns)"}
+\item{pctReturn_}{a logical argument. IF TRUE, the plot function will plot the returns in percentage instead of original. Default is TRUE.}
 
 \item{abs_}{a logical argument, when TRUE, the plot function will plot abs(returns) with conditional standard deviation instead of returns, default to TRUE.}
+
+\item{original_}{a logical argument. If TRUE, the original return will be plotted. Default is FALSE}
+
+\item{main_name}{the title of the plot, default is "Conditional SD (vs returns)"}
 
 \item{dist}{one of "std_norm" or "t_dist", the distribution of z_t, default is "std_norm"}
 }
@@ -31,10 +41,10 @@ Summary for rg S3 class
 \examples{
 
 data("rtn")
-fit <- robGarch(rtn, methods="bounded MEst", fixed_pars = c(0.8, 3.0), optimizer="Rsolnp", stdErr_method = "numDeriv")
+fit <- robGarch(rtn, methods="BM", fixed_pars = c(0.8, 3.0), optimizer="Rsolnp", stdErr_method = "numDeriv")
 summary(fit)
 print(fit)
 plot(fit)
-# aef cal.
+aef(fit)
 
 }

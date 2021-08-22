@@ -9,10 +9,11 @@
 #' returns a \code{rg} object
 #'
 #' @param data a time series of log returns, need to be numeric value.
-#' @param methods robust M-Estimate method used for Garch(1,1) model, one of "modified MEst", "bounded MEst", default is "bounded MEst"
-#' @param fixed_pars a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "modified MEst", the parameter should be c, which controls the modified loss function, user can use default c = .85; for "bounded MEst", the parameters should be c(c, k), where c is the same as in "modified MEst", user can use default c = 0.85,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.
-#' @param distribution.model the assumed distribution of z_t, one of "norm", "std", default is "norm".
+#' @param methods robust M-Estimate method used for Garch(1,1) model, "M" and "BM", or non-robust M-Estimate method, "QML" and "MLE". Default is "BM".
+#' @param fixed_pars a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "M", the parameter should be c, which controls the modified loss function, user can use default c = .8; for "BM", the parameters should be c(c, k), where c is the same as in "M", user can use default c = 0.8,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.
+#' @param distribution.model the assumed distribution of z_t, "norm" if the methods is "QML" or "std" if the methods is "MLE", default is "norm".
 #' @param optimizer optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".
+#' @param optimizer_x0 user-defined starting point for searching the optimum, c(x0_alpha0, x0_alpha1, x0_beta1) when the distribution.model is "norm" or c(x0_alpha0, x0_alpha1, x0_beta1, x0_shape) when the distribution.model is "std". Default is "FALSE", where the starting point will be calculated instead of being user-defined.
 #' @param optimizer_control list of control arguments passed to the optimizer
 #' @param stdErr_method method used to calculate standard error, one of "numDerive", "optim", "sandwich", default is "numDeriv" using hessian from numDeriv
 #'
@@ -23,6 +24,7 @@
 #'     \item{fixed_pars}{named numeric vector of fixed parameters used}
 #'     \item{distribution.model}{the distribution assumed for z_t}
 #'     \item{optimizer}{the optimizer called}
+#'     \item{optimizer_x0}{user-defined or calculated starting point for searching the optimum}
 #'     \item{optimizer_control}{the list of control arguments passed to the optimizer}
 #'     \item{optimizer_result}{output of the called optimizer}
 #'     \item{stdErr_method}{the method called to calculate standard error}
@@ -46,13 +48,13 @@
 #'
 #'
 #' data("rtn")
-#' fit <- robGarch(rtn[1:604], methods="bounded MEst", distribution.model = "norm", fixed_pars = c(0.8, 3.0))
+#' fit <- robGarch(rtn[1:604], methods="BM", distribution.model = "norm", fixed_pars = c(0.8, 3.0))
 #'
 #'
 #' @rdname rg-robGarch
 #' @export
 # Garch(1,1) model fit function
-robGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), fixed_pars = c(0.85, 3.0), distribution.model = c("norm", "std"), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich")){
+robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.8, 3.0), distribution.model = c("norm", "std"), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich")){
 
   if(!is.numeric(data) || length(data)==0)
     stop("Data must be a numeric vector of non-zero length")
@@ -66,7 +68,7 @@ robGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), 
   assign("methods", methods, envir = .GlobalEnv)
   # .pkg.env$methods <- methods ## In recent version of R, .pkg.env can be a locked env.
   assign("distribution.model", distribution.model, envir = .GlobalEnv)
-  if(methods == "QML"){
+  if(methods == "QML" || methods == "MLE"){
     assign("div", 1.0, envir = .GlobalEnv)
     # .pkg.env$div <- 1.0
   }
@@ -74,7 +76,8 @@ robGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), 
     assign("div", fixed_pars[1], envir = .GlobalEnv)
     # .pkg.env$div <- fixed_pars[1]
   }
-  if(methods == "bounded MEst"){
+
+  if(methods == "BM"){
     assign("k", fixed_pars[2], envir = .GlobalEnv)
     # .pkg.env$k <- fixed_pars[2]
   }
@@ -83,7 +86,14 @@ robGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), 
     # .pkg.env$k <- 3.0
   }
 
-  fit <- rgFit_local(data, optimizer, optimizer_control)
+  if(methods == "QML"){
+    distribution.model <- "norm"
+  }
+  if(methods == "MLE"){
+    distribution.model <- "std"
+  }
+
+  fit <- rgFit_local(data, optimizer, optimizer_x0, optimizer_control)
 
   # std_err calculation
   if(optimizer == "Rsolnp"){
@@ -99,8 +109,10 @@ robGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), 
   std_errors <- sqrt(diag(abs(solve(H)/length(data))))
   if(distribution.model == "std"){
     standard_error <- c(std_errors[2:4], std_errors[6])
+    fit$observed_I <- -H[c(2,3,4,6), c(2,3,4,6)]
   } else{
     standard_error <- std_errors[2:4]
+    fit$observed_I <- -H[c(2,3,4), c(2,3,4)]
   }
   standard_error[1] <- standard_error[1] * (fit$fitted_pars[1] / solution[1])
   t_value <- fit$fitted_pars / standard_error
@@ -167,12 +179,19 @@ robGarch <- function(data, methods = c("bounded MEst", "modified MEst", "QML"), 
   structure(fit, class="rg")
 }
 #' @export
-robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c("bounded MEst", "modified MEst", "QML"), fixed_pars = c(0.85, 3.0), distribution.model = c("norm", "std"), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich"), n = 2000, m = 100, rseed = 42){
+robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.85, 3.0), distribution.model = c("norm", "std"), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich"), n = 2000, m = 100, rseed = 42){
 
   methods <- match.arg(methods)
   distribution.model <- match.arg(distribution.model)
   optimizer <- match.arg(optimizer)
   stdErr_method <- match.arg(stdErr_method)
+
+  if(methods == "QML"){
+    distribution.model <- "norm"
+  }
+  if(methods == "MLE"){
+    distribution.model <- "std"
+  }
 
   par(mfrow=c(2,2))
   spec <- ugarchspec(mean.model = list(armaOrder = c(0,0), include.mean = FALSE), distribution.model = distribution.model)
@@ -189,7 +208,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     qml_res <- matrix(0.0, nrow = m, ncol = 3)
     for( i in 1:m){
       y_ <- y.[((i-1)*n+1):(i*n)]
-      fit <- robGarch(y_, methods = methods, fixed_pars = fixed_pars, distribution.model = distribution.model, optimizer=optimizer, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
+      fit <- robGarch(y_, methods = methods, fixed_pars = fixed_pars, distribution.model = distribution.model, optimizer=optimizer, optimizer_x0 = optimizer_x0, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
       qml_res[i,1:3] <- fit$fitted_pars
     }
 
@@ -217,7 +236,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     qml_res <- matrix(0.0, nrow = m, ncol = 4)
     for( i in 1:m){
       y_ <- y.[((i-1)*n+1):(i*n)]
-      fit <- robGarch(y_, methods = methods, fixed_pars = fixed_pars, distribution.model = distribution.model, optimizer=optimizer, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
+      fit <- robGarch(y_, methods = methods, fixed_pars = fixed_pars, distribution.model = distribution.model, optimizer=optimizer, optimizer_x0 = optimizer_x0, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
       qml_res[i,1:4] <- fit$fitted_pars
     }
 
@@ -240,7 +259,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
   }
 }
 #' @export
-rgFit_local <- function(data, optimizer, optimizer_control){
+rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
 
   start_time <- Sys.time()
   # optimizer/optimizer_control
@@ -256,7 +275,7 @@ rgFit_local <- function(data, optimizer, optimizer_control){
   }
   vini <- new_var(data_normalized)
 
-  res <- nEst(data_normalized, vini, optimizer, optimizer_control)
+  res <- nEst(data_normalized, vini, optimizer, optimizer_x0, optimizer_control)
   optimizer_result <- res
     #if(optimizer == "fminsearch"){
       #stop("This feature is under active development, please use Rsolnp.")
@@ -310,16 +329,18 @@ rgFit_local <- function(data, optimizer, optimizer_control){
        methods = methods,
        distribution.model = distribution.model,
        optimizer=optimizer,
+       optimizer_x0=res$x0,
        optimizer_control=optimizer_control,
        optimizer_result=optimizer_result,
        fitted_pars = fitted_pars,
        objective=objective,
        time_elapsed=time_elapsed,
        message=message,
-       sigma=sigma)
+       sigma=sigma,
+       yt=Muestram)
 }
 #' @export
-nEst <- function(y, vini, optimizer, optimizer_control){
+nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control){
 
   rm(Muestram)
   rm(Muestrac)
@@ -338,7 +359,7 @@ nEst <- function(y, vini, optimizer, optimizer_control){
 
   alfa0min <- 0.1
   alfa0max <- 1
-  alfa1min <- 0.
+  alfa1min <- 0.0
   alfa1max <- 1.
   beta1min <- 0.
   beta1max <- 1.
@@ -351,22 +372,66 @@ nEst <- function(y, vini, optimizer, optimizer_control){
   lmalfa0 <- (alfa0max-alfa0min)/nalfa0
   lmbeta1 <- (beta1max-beta1min)/nbeta1
   if(std){
-    shapemin <- 1.0
-    shapemax <- 31.
-    nshape <- 30 # With 30 degree of freedom, the std would be very close to normal.
-    # In the future, can seperate <30, >30 cases.
-    lmshape <- (shapemax-shapemin)/nshape
 
-    for(nj in 0:nalfa1){
-      alfa1 <- alfa1min+nj*lmalfa1
-      for(nk in 0:nbeta1){
-        beta1 <- beta1min+nk*lmbeta1
-        if(alfa1+beta1 <1){
+    if(length(optimizer_x0) > 1){
+      x0 <- c(optimizer_x0[1:3], vini, optimizer_x0[4])
+    } else{
+      shapemin <- 3.0 # 1.0
+      shapemax <- 31.
+      nshape <- 30 # With 30 degree of freedom, the std would be very close to normal.
+      # In the future, can seperate <30, >30 cases.
+      lmshape <- (shapemax-shapemin)/nshape
 
-          for(ni in 0:nalfa0){
-            alfa0 <- alfa0min+ni*lmalfa0
-            for(np in 0:nshape){
-              shape <- shapemin+np*lmshape
+      for(nj in 0:nalfa1){
+        alfa1 <- alfa1min+nj*lmalfa1
+        for(nk in 0:nbeta1){
+          beta1 <- beta1min+nk*lmbeta1
+          if(alfa1+beta1 <1 ){
+
+            for(ni in 0:nalfa0){
+              alfa0 <- alfa0min+ni*lmalfa0
+              for(np in 0:nshape){
+                shape <- shapemin+np*lmshape
+
+                var <- rep(0.0, n)
+                var[1] <- vini
+                for(ki in c(k, 20)){
+                  l <- ki+1
+                  for(i in 2:n){
+                    var[i] <- alfa0+(alfa1*rk(yc[i-1]/var[i-1],ki,l)+beta1)*var[i-1]
+                  }
+
+                  nml <- mean(nfun(y2[2:n]-log(var[2:n]), shape))
+                  if(nml < ml){
+                    flag <- 1
+                    vi <- c(alfa0,alfa1,beta1,shape)
+                    ml <- nml
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      x0 <- c(vi[1:3], vini, vi[4])
+    }
+
+    lb <- c( 0., 0., 0., 0.0, 3.0) # 1.0 for lower bound for earlier version.
+    ub <- c( 1.0, 1., 1., Inf, Inf)
+  } else{
+
+    if(length(optimizer_x0) > 1){
+      x0 <- c(optimizer_x0[1:3], vini)
+    } else{
+      for(nj in 0:nalfa1){
+        alfa1 <- alfa1min+nj*lmalfa1
+        for(nk in 0:nbeta1){
+          beta1 <- beta1min+nk*lmbeta1
+
+          if(alfa1+beta1 <1 ){
+            for(ni in 0:nalfa0){
+              alfa0 <- alfa0min+ni*lmalfa0
 
               var <- rep(0.0, n)
               var[1] <- vini
@@ -376,10 +441,11 @@ nEst <- function(y, vini, optimizer, optimizer_control){
                   var[i] <- alfa0+(alfa1*rk(yc[i-1]/var[i-1],ki,l)+beta1)*var[i-1]
                 }
 
-                nml <- mean(nfun(y2[2:n]-log(var[2:n]), shape))
+                nml <- mean(nfun(y2[2:n]-log(var[2:n])))
+
                 if(nml < ml){
                   flag <- 1
-                  vi <- c(alfa0,alfa1,beta1,shape)
+                  vi <- c(alfa0,alfa1,beta1)
                   ml <- nml
                 }
               }
@@ -387,47 +453,16 @@ nEst <- function(y, vini, optimizer, optimizer_control){
           }
         }
       }
+      x0 <- c(vi, vini)
     }
 
-    x0 = c(vi[1:3], vini, vi[4])
-    lb = c( 0., 0., 0., 0.0, 1.0)
-    ub = c( 1.0, 1.0, 1.0, Inf, Inf)
-  } else{
-
-    for(nj in 0:nalfa1){
-      alfa1 <- alfa1min+nj*lmalfa1
-      for(nk in 0:nbeta1){
-        beta1 <- beta1min+nk*lmbeta1
-
-        if(alfa1+beta1 <1){
-          for(ni in 0:nalfa0){
-            alfa0 <- alfa0min+ni*lmalfa0
-
-            var <- rep(0.0, n)
-            var[1] <- vini
-            for(ki in c(k, 20)){
-              l <- ki+1
-              for(i in 2:n){
-                var[i] <- alfa0+(alfa1*rk(yc[i-1]/var[i-1],ki,l)+beta1)*var[i-1]
-              }
-
-              nml <- mean(nfun(y2[2:n]-log(var[2:n])))
-
-              if(nml < ml){
-                flag <- 1
-                vi <- c(alfa0,alfa1,beta1)
-                ml <- nml
-              }
-            }
-          }
-        }
-      }
-    }
-
-    x0 = c(vi, vini)
-    lb = c( 0., 0., 0., 0.0)
-    ub = c( 1.0, 1.0, 1.0, Inf)
+    lb <- c( 0., 0., 0., 0.0)
+    ub <- c( 1.0, 1.0, 1.0, Inf)
   }
+
+  ### THIS IS FOR INVESGATING THE DIFF BETWEEN RUGARCH AND ROBUSTGARCH ###
+  # print(x0)
+  ### SHOULD BE DELETED ###
 
   if (optimizer == "nloptr"){
 
@@ -437,6 +472,7 @@ nEst <- function(y, vini, optimizer, optimizer_control){
                           lb = lb,
                           ub = ub,
                           opts=optimizer_control)
+    res$x0 <- x0
 
     return(res)
 
@@ -450,6 +486,7 @@ nEst <- function(y, vini, optimizer, optimizer_control){
                          ineqLB = 0.0,
                          ineqUB = 1.0,
                          control = optimizer_control)
+    res$x0 <- x0
 
     return(res)
 
@@ -460,6 +497,7 @@ nEst <- function(y, vini, optimizer, optimizer_control){
                   control = optimizer_control,
                   lower = lb,
                   upper = ub)
+    res$x0 <- x0
 
     return(res)
 
@@ -561,7 +599,7 @@ s_est <- function(x){
 # A continous ... function.
 rho <- function(x){
 
-  if(methods == "QML" || methods == "modified MEst"){
+  if(methods == "QML" || methods == "MLE" || methods == "M"){
 
     ps <- x^2/2
 
@@ -584,8 +622,8 @@ rho <- function(x){
 #' @export
 nfun <- function(x, shape = 3.0){
   # input here is w_t.
-  b <- 6.7428
-  b1 <- b-0.5
+  b <- 4.3 #6.7428
+  b1 <- 4.0 #b-0.5
 
   if(distribution.model == "norm"){
     # assume z_t is standard norm.
@@ -593,7 +631,9 @@ nfun <- function(x, shape = 3.0){
   } else if(distribution.model == "std"){
     # this is rho assuming z_t is std(shape).
     # this changes to MLE instead of QML.
-    x <- -log(gamma((shape+1)/2)/(sqrt((shape)*pi)*gamma(shape/2))) - x/2 + (shape+1)/2 *log(1+exp(x)/(shape))
+    #x <- -log(gamma((shape+1)/2)/(sqrt((shape)*pi)*gamma(shape/2))) - x/2 + (shape+1)/2 *log(1+exp(x)/(shape))
+    x <- -log(gamma((shape+1)/2)/(sqrt(shape-2)*gamma(shape/2))) - x/2 + (shape+1)/2 *log(1+exp(x)/(shape-2))
+
   }
 
   ps <- freg(x, b1, b)
@@ -650,7 +690,10 @@ Fnue <- function(start_pars){
         ml <- mean(nfun(y2[2:n]-log(var[2:n])))
       }
 
-      if(ml<nml){ nml <- ml}
+      if(is.nan(ml) || is.nan(nml)){
+        break
+      }
+      else if(ml<nml){ nml <- ml}
     }
   }
 
@@ -660,7 +703,7 @@ Fnue <- function(start_pars){
 freg <- function(x, a, b){
   # the rho function.
 
-  if(methods == "QML" || a == b){
+  if(methods == "QML" || methods == "MLE" || a == b){
     # used to be return exp(w/div)-w/div, now correct it to be the following as stated in the paper.
     g <- x
 
@@ -687,7 +730,7 @@ freg <- function(x, a, b){
 #' @export
 rk <- function(x, k, l){
 
-  if(methods == "QML" || methods == "modified MEst" || k == l){
+  if(methods == "QML" || methods == "MLE" || methods == "M" || k == l){
 
     g <- x
 
