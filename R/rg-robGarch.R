@@ -64,10 +64,18 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
   optimizer = match.arg(optimizer)
   stdErr_method = match.arg(stdErr_method)
 
+  if(methods == "QML"){
+    distribution.model <- "norm"
+  }
+  if(methods == "MLE"){
+    distribution.model <- "std"
+  }
+
   # .pkg.env <- new.env(parent = emptyenv()) # create package local environment.
   assign("methods", methods, envir = .GlobalEnv)
   # .pkg.env$methods <- methods ## In recent version of R, .pkg.env can be a locked env.
   assign("distribution.model", distribution.model, envir = .GlobalEnv)
+
   if(methods == "QML" || methods == "MLE"){
     assign("div", 1.0, envir = .GlobalEnv)
     # .pkg.env$div <- 1.0
@@ -84,13 +92,6 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
   else{
     assign("k", 3.0, envir = .GlobalEnv)
     # .pkg.env$k <- 3.0
-  }
-
-  if(methods == "QML"){
-    distribution.model <- "norm"
-  }
-  if(methods == "MLE"){
-    distribution.model <- "std"
   }
 
   fit <- rgFit_local(data, optimizer, optimizer_x0, optimizer_control)
