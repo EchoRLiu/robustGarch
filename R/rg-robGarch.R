@@ -12,7 +12,7 @@
 #' @param methods robust M-Estimate method used for Garch(1,1) model, "M" and "BM", or non-robust M-Estimate method, "QML" and "MLE". Default is "BM".
 #' @param fixed_pars a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "M", the parameter should be c, which controls the modified loss function, user can use default c = .8; for "BM", the parameters should be c(c, k), where c is the same as in "M", user can use default c = 0.8,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.
 #' @param optimizer optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".
-#' @param optimizer_x0 user-defined starting point for searching the optimum, c(x0_alpha0, x0_alpha1, x0_beta1) or c(x0_alpha0, x0_alpha1, x0_beta1, x0_shape) when the methods is "MLE". Default is "FALSE", where the starting point will be calculated instead of being user-defined.
+#' @param optimizer_x0 user-defined starting point for searching the optimum, c(x0_gamma, x0_alpha, x0_beta) or c(x0_gamma, x0_alpha, x0_beta, x0_shape) when the methods is "MLE". Default is "FALSE", where the starting point will be calculated instead of being user-defined.
 #' @param optimizer_control list of control arguments passed to the optimizer
 #' @param stdErr_method method used to calculate standard error, one of "numDerive", "optim", "sandwich", default is "numDeriv" using hessian from numDeriv
 #'
@@ -32,8 +32,8 @@
 #'     \item{time_elapsed}{the time used for the optimization routine}
 #'     \item{message}{the message of the convergence status produced by the called solver}
 #'     \item{standard_error}{standard erros of the fitted parameters using the method called}
-#'     \item{t_value}{t-values of alpha_0, alpha_1, beta_1, shape as well for methods "MLE"}
-#'     \item{p_value}{p-values of alpha_0, alpha_1, beta_1, shape as well for methods "MLE"}
+#'     \item{t_value}{t-values of gamma, alpha, beta, shape as well for methods "MLE"}
+#'     \item{p_value}{p-values of gamma, alpha, beta, shape as well for methods "MLE"}
 #'
 #' @details
 #' The \code{robGarch} function fits a Garch(1, 1) model to a time series of log return data, using one of the two methods of robust extended M-Estimates with certain parameters specified by the user, with guidance and examples from the vignette. The user can also specify the optimizer used during optimization procesure, and the method used to calculate standard error for the fitted parameters.
@@ -152,13 +152,13 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
   ##########################################
 
   if(methods == "MLE"){
-    names(standard_error) <- c("alpha_0", "alpha_1", "beta_1", "shape")
-    names(t_value) <- c("alpha_0", "alpha_1", "beta_1", "shape")
-    names(p_value) <- c("alpha_0", "alpha_1", "beta_1", "shape")
+    names(standard_error) <- c("gamma", "alpha", "beta", "shape")
+    names(t_value) <- c("gamma", "alpha", "beta", "shape")
+    names(p_value) <- c("gamma", "alpha", "beta", "shape")
   } else{
-    names(standard_error) <- c("alpha_0", "alpha_1", "beta_1")
-    names(t_value) <- c("alpha_0", "alpha_1", "beta_1")
-    names(p_value) <- c("alpha_0", "alpha_1", "beta_1")
+    names(standard_error) <- c("gamma", "alpha", "beta")
+    names(t_value) <- c("gamma", "alpha", "beta")
+    names(p_value) <- c("gamma", "alpha", "beta")
   }
 
   fit$standard_error <- standard_error
@@ -179,9 +179,9 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
   spec <- ugarchspec(mean.model = list(armaOrder = c(0,0), include.mean = FALSE))
 
   if(methods == "MLE"){
-    if(length(param)!=4){stop("the parameters for std distribution should be alpha_0, alpha_1, beta_1, shape")}
+    if(length(param)!=4){stop("the parameters for std distribution should be gamma, alpha, beta, shape")}
     fixed <- param
-    names(fixed) <- c("omega", "alpha1", "beta1", "shape")
+    names(fixed) <- c("gamma", "alpha", "beta", "shape")
     fspec <- spec
     setfixed(fspec) <- fixed
     y <- ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
@@ -211,9 +211,9 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     plot(d_shape, main=paste("Parameter shape\n True value: ", fixed[4]), cex=.5)
   } else{
 
-    if(length(param)!=3){stop("the parameters for norm distribution should only be alpha_0, alpha_1, beta_1")}
+    if(length(param)!=3){stop("the parameters for norm distribution should only be gamma, alpha, beta")}
     fixed <- param
-    names(fixed) <- c("omega", "alpha1", "beta1")
+    names(fixed) <- c("gamma", "alpha", "beta")
     fspec <- spec
     setfixed(fspec) <- fixed
     y <- ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
@@ -263,17 +263,17 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
       #stop("This feature is under active development, please use Rsolnp.")
       #fitted_pars <- res$fmin[1:3]
       #fitted_pars[1] <- fitted_pars[1]*v_data
-      #names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1")
+      #names(fitted_pars) <- c("gamma", "alpha", "beta")
       #objective <- res$xopt
       #message <- NULL
     #} else
     if(optimizer == "Rsolnp"){
       if(methods == "MLE"){
         fitted_pars <- c(res$pars[1:3], res$pars[5])
-        names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1", "shape")
+        names(fitted_pars) <- c("gamma", "alpha", "beta", "shape")
       } else{
         fitted_pars <- res$pars[1:3]
-        names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1")
+        names(fitted_pars) <- c("gamma", "alpha", "beta")
       }
       fitted_pars[1] <- fitted_pars[1]*v_data
       objective <- res$values[length(res$values)]
@@ -281,10 +281,10 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
     } else if (optimizer == "nloptr"){
       if(methods == "MLE"){
         fitted_pars <- c(res$solution[1:3], res$solution[5])
-        names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1", "shape")
+        names(fitted_pars) <- c("gamma", "alpha", "beta", "shape")
       } else{
         fitted_pars <- res$solution[1:3]
-        names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1")
+        names(fitted_pars) <- c("gamma", "alpha", "beta")
       }
       fitted_pars[1] <- fitted_pars[1]*v_data
       objective <- res$objective
@@ -292,10 +292,10 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
     } else if (optimizer == "nlminb"){
       if(methods == "MLE"){
         fitted_pars <- c(res$par[1:3], res$par[5])
-        names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1", "shape")
+        names(fitted_pars) <- c("gamma", "alpha", "beta", "shape")
       } else{
         fitted_pars <- res$par[1:3]
-        names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1")
+        names(fitted_pars) <- c("gamma", "alpha", "beta")
       }
       fitted_pars[1] <- fitted_pars[1]*v_data
       objective <- res$objective
@@ -323,8 +323,12 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
 #' @export
 nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control){
 
-  rm(Muestram)
-  rm(Muestrac)
+  if(exists('Muestrac')){
+    rm(Muestrac)
+  }
+  if(exists('Muestram')){
+    rm(Muestram)
+  }
 
   if(methods == "MLE"){
     std <- TRUE

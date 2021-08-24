@@ -3,6 +3,7 @@
 #' @description Summary for rg S3 class
 #'
 #' @param fit A RG fit object of class \code{\link{rg}}
+#' @param digits the number of digits for print and plot, default is 3.
 #' @param main_name the title of the plot, default is "Conditional SD (vs returns)"
 #' @param original_ a logical argument. If TRUE, the original return will be plotted. Default is FALSE
 #' @param pctReturn_ a logical argument. IF TRUE, the plot function will plot the returns in percentage instead of original. Default is TRUE.
@@ -25,11 +26,11 @@
 #'
 #' @rdname rg-summary
 #' @export
-summary.rg <- function(fit){
+summary.rg <- function(fit, digits = 3){
 
-  res <- rbind(fit$fitted_pars, fit$standard_error, fit$t_value, fit$p_value)
+  res <- rbind(round(fit$fitted_pars, digits), round(fit$standard_error, digits), round(fit$t_value, digits), round(fit$p_value, digits))
   colnames(res) <- names(fit$fitted_pars)
-  rownames(res) <- c("Fitted Pars", "Standard Error", "T-value", "P-value")
+  rownames(res) <- c("Estimates", "Std. Errors", "t-statistic", "p-value")
 
   cat("Model: ", fit$methods, "\n")
   if (fit$methods == "BM"){
@@ -43,34 +44,27 @@ summary.rg <- function(fit){
   print(res)
   cat("\nLog-likelihood: ", fit$objective)
   cat("\n\nOptimizer: ", fit$optimizer)
-  cat("\nStarting point for optimization: ", fit$optimizer_x0)
+  cat("\nInitial parameter estimates: ", fit$optimizer_x0)
   cat("\nTime elapsed: ", fit$time_elapsed)
   cat("\nConvergence Message: ", fit$message)
 }
 #' @rdname rg-summary
 #' @export
-print.rg <- function(fit){
+print.rg <- function(fit, digits = 3){
 
-  res <- rbind(fit$fitted_pars, fit$standard_error, fit$t_value, fit$p_value)
+  res <- rbind(round(fit$fitted_pars, digits), round(fit$standard_error, digits))
   colnames(res) <- names(fit$fitted_pars)
-  rownames(res) <- c("Fitted Pars", "Standard Error", "T-value", "P-value")
+  rownames(res) <- c("Estimates", "Std. Errors")
 
   cat("Model: ", fit$methods, "\n")
-  if (fit$methods == "BM"){
-    cat("with div = ", fit$fixed_pars[1], ", k = ", fit$fixed_pars[2], "\n")
-  }
-  if (fit$methods == "M"){
-    cat("with div = ", fit$fixed_pars[1])
-  }
-  cat("Observations: ", length(fit$data), "\n")
   cat("\nResult:\n")
   print(res)
 }
 #' @rdname rg-summary
 #' @export
-plot.rg <- function(fit, pctReturn_ = TRUE, abs_ = TRUE, original_ = FALSE, main_name = "Conditional Volatility (vs |pctReturns(%)|)"){
+plot.rg <- function(fit, digits = 3, pctReturn_ = TRUE, abs_ = TRUE, original_ = FALSE, main_name = "Conditional Volatility (vs |pctReturns(%)|)"){
 
-  .plot.garchsim(fit, pctReturn_, abs_, original_, main_name)
+  .plot.garchsim(fit, digits, pctReturn_, abs_, original_, main_name)
 
 }
 #' @rdname rg-summary

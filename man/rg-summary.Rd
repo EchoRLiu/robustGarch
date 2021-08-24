@@ -8,12 +8,13 @@
 \alias{aef}
 \title{Summary for rg class}
 \usage{
-\method{summary}{rg}(fit)
+\method{summary}{rg}(fit, digits = 3)
 
-\method{print}{rg}(fit)
+\method{print}{rg}(fit, digits = 3)
 
 \method{plot}{rg}(
   fit,
+  digits = 3,
   pctReturn_ = TRUE,
   abs_ = TRUE,
   original_ = FALSE,
@@ -24,6 +25,8 @@ aef(fit, v = 5)
 }
 \arguments{
 \item{fit}{A RG fit object of class \code{\link{rg}}}
+
+\item{digits}{the number of digits for print and plot, default is 3.}
 
 \item{pctReturn_}{a logical argument. IF TRUE, the plot function will plot the returns in percentage instead of original. Default is TRUE.}
 

@@ -1,12 +1,12 @@
 #' @import xts
 #' @import zoo
-.plot.garchsim <- function(fit, pctReturn_ = TRUE, abs_ = TRUE, original_ = FALSE, main_name = "Conditional Volatility (vs |pctReturns(%)|)")
+.plot.garchsim <- function(fit, digits = 3, pctReturn_ = TRUE, abs_ = TRUE, original_ = FALSE, main_name = "Conditional Volatility (vs |pctReturns(%)|)")
 {
 
   n <- length(fit$data) + 100
-  a0 <- fit$fitted_pars["alpha_0"]
-  a1 <- fit$fitted_pars["alpha_1"]
-  b1 <- fit$fitted_pars["beta_1"]
+  a0 <- fit$fitted_pars["gamma"]
+  a1 <- fit$fitted_pars["alpha"]
+  b1 <- fit$fitted_pars["beta"]
   method <- fit$methods
 
   #set.seed(seed)
@@ -41,23 +41,27 @@
   }
 
   plot.zoo(retAndVol, screens = "single", type = "l", xlab = "",ylab = "",main = main_name,lty = c("dotted","solid"),col = c("blue","black"), lwd = c(.8,1.5))
-  exprss <- c(bquote(alpha[0]~'='~.(signif(a0, 2))),
-              bquote(alpha[1]~'='~.(signif(a1, 2))),
-              bquote(beta[1]~'='~.(signif(b1, 2))))
+  exprss <- c(bquote(alpha[0]~'='~.(signif(a0, digits))),
+              bquote(alpha[1]~'='~.(signif(a1, digits))),
+              bquote(beta[1]~'='~.(signif(b1, digits))))
   if(fit$methods == "MLE"){
-    exprss <- c(exprss, bquote(v~'='~.(signif(fit$fitted_pars["shape"], 2))))
-  }
-  if(method == "BM"){
-    exprss <- c(exprss,
-                bquote(div~'='~.(signif(fit$fixed_pars[1], 2))),
-                bquote(c~'='~.(signif(fit$fixed_pars[2], 2))))
-  } else if(method == "M"){
-    exprss <- c(exprss,
-                bquote(div~'='~.(signif(fit$fixed_pars[1], 2))))
-  }
+    exprss <- c(exprss, bquote(v~'='~.(signif(fit$fitted_pars["shape"], digits))))
+  } #else if(method == "BM"){
+    #exprss <- c(exprss,
+    #            bquote(div~'='~.(signif(fit$fixed_pars[1], digits))),
+    #            bquote(c~'='~.(signif(fit$fixed_pars[2], digits))))
+  #} else if(method == "M"){
+    #exprss <- c(exprss,
+    #            bquote(div~'='~.(signif(fit$fixed_pars[1], digits))))
+  #}
   legend("topleft", bty = "n",
          legend=as.expression(exprss))
-  legend("topright",legend = c("Returns","CondVol") ,lty = c("dashed","solid"),
-         col = c("blue","black"),lwd = c(0.8, 1.5), bty = "n")
+  if(abs_){
+    legend("topright",legend = c("Absolute Returns","Conditional Vol") ,lty = c("dashed","solid"),
+           col = c("blue","black"),lwd = c(0.8, 1.5), bty = "n")
+  } else {
+    legend("topright",legend = c("Returns","Conditional Vol") ,lty = c("dashed","solid"),
+           col = c("blue","black"),lwd = c(0.8, 1.5), bty = "n")
+  }
 
 }

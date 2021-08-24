@@ -23,7 +23,7 @@ robGarch(
 
 \item{optimizer}{optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".}
 
-\item{optimizer_x0}{user-defined starting point for searching the optimum, c(x0_alpha0, x0_alpha1, x0_beta1) or c(x0_alpha0, x0_alpha1, x0_beta1, x0_shape) when the methods is "MLE". Default is "FALSE", where the starting point will be calculated instead of being user-defined.}
+\item{optimizer_x0}{user-defined starting point for searching the optimum, c(x0_gamma, x0_alpha, x0_beta) or c(x0_gamma, x0_alpha, x0_beta, x0_shape) when the methods is "MLE". Default is "FALSE", where the starting point will be calculated instead of being user-defined.}
 
 \item{optimizer_control}{list of control arguments passed to the optimizer}
 
@@ -45,8 +45,8 @@ A \code{rg} object(S3), the components of the object are:
     \item{time_elapsed}{the time used for the optimization routine}
     \item{message}{the message of the convergence status produced by the called solver}
     \item{standard_error}{standard erros of the fitted parameters using the method called}
-    \item{t_value}{t-values of alpha_0, alpha_1, beta_1, shape as well for methods "MLE"}
-    \item{p_value}{p-values of alpha_0, alpha_1, beta_1, shape as well for methods "MLE"}
+    \item{t_value}{t-values of gamma, alpha, beta, shape as well for methods "MLE"}
+    \item{p_value}{p-values of gamma, alpha, beta, shape as well for methods "MLE"}
 }
 \description{
 Methods for fitting a Garch(1,1) model with daily log return time series, using two methods of robust extended M-Estimates:
