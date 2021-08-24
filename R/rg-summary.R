@@ -7,7 +7,6 @@
 #' @param original_ a logical argument. If TRUE, the original return will be plotted. Default is FALSE
 #' @param pctReturn_ a logical argument. IF TRUE, the plot function will plot the returns in percentage instead of original. Default is TRUE.
 #' @param abs_ a logical argument, when TRUE, the plot function will plot abs(returns) with conditional standard deviation instead of returns, default to TRUE.
-#' @param dist one of "std_norm" or "t_dist", the distribution of z_t, default is "std_norm"
 #'
 #' @name rg-summary
 #' @aliases summary.rg
@@ -39,9 +38,6 @@ summary.rg <- function(fit){
   if (fit$methods == "M"){
     cat("with div = ", fit$fixed_pars[1], "\n")
   }
-  if (fit$methods == "QML" || fit$methods == "MLE"){
-    cat("Assumed distribution: ", fit$distribution.model, "\n")
-  }
   cat("Observations: ", length(fit$data), "\n")
   cat("\nResult:\n")
   print(res)
@@ -65,9 +61,6 @@ print.rg <- function(fit){
   }
   if (fit$methods == "M"){
     cat("with div = ", fit$fixed_pars[1])
-  }
-  if (fit$methods == "QML" || fit$methods == "MLE"){
-    cat("Assumed distribution: ", fit$distribution.model, "\n")
   }
   cat("Observations: ", length(fit$data), "\n")
   cat("\nResult:\n")

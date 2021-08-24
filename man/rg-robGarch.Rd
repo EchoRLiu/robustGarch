@@ -8,7 +8,6 @@ robGarch(
   data,
   methods = c("BM", "M", "QML", "MLE"),
   fixed_pars = c(0.8, 3),
-  distribution.model = c("norm", "std"),
   optimizer = c("Rsolnp", "nloptr", "nlminb"),
   optimizer_x0 = FALSE,
   optimizer_control = list(),
@@ -22,11 +21,9 @@ robGarch(
 
 \item{fixed_pars}{a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "M", the parameter should be c, which controls the modified loss function, user can use default c = .8; for "BM", the parameters should be c(c, k), where c is the same as in "M", user can use default c = 0.8,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.}
 
-\item{distribution.model}{the assumed distribution of z_t, "norm" if the methods is "QML" or "std" if the methods is "MLE", default is "norm".}
-
 \item{optimizer}{optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".}
 
-\item{optimizer_x0}{user-defined starting point for searching the optimum, c(x0_alpha0, x0_alpha1, x0_beta1) when the distribution.model is "norm" or c(x0_alpha0, x0_alpha1, x0_beta1, x0_shape) when the distribution.model is "std". Default is "FALSE", where the starting point will be calculated instead of being user-defined.}
+\item{optimizer_x0}{user-defined starting point for searching the optimum, c(x0_alpha0, x0_alpha1, x0_beta1) or c(x0_alpha0, x0_alpha1, x0_beta1, x0_shape) when the methods is "MLE". Default is "FALSE", where the starting point will be calculated instead of being user-defined.}
 
 \item{optimizer_control}{list of control arguments passed to the optimizer}
 
@@ -37,7 +34,6 @@ A \code{rg} object(S3), the components of the object are:
     \item{data}{the log returns data object for the rg model to be fitted}
     \item{methods}{the method called}
     \item{fixed_pars}{named numeric vector of fixed parameters used}
-    \item{distribution.model}{the distribution assumed for z_t}
     \item{optimizer}{the optimizer called}
     \item{optimizer_x0}{user-defined or calculated starting point for searching the optimum}
     \item{optimizer_control}{the list of control arguments passed to the optimizer}
@@ -49,8 +45,8 @@ A \code{rg} object(S3), the components of the object are:
     \item{time_elapsed}{the time used for the optimization routine}
     \item{message}{the message of the convergence status produced by the called solver}
     \item{standard_error}{standard erros of the fitted parameters using the method called}
-    \item{t_value}{t-values of alpha_0, alpha_1, beta_1, shape as well for "std" distribution.model}
-    \item{p_value}{p-values of alpha_0, alpha_1, beta_1, shape as well for "std" distribution.model}
+    \item{t_value}{t-values of alpha_0, alpha_1, beta_1, shape as well for methods "MLE"}
+    \item{p_value}{p-values of alpha_0, alpha_1, beta_1, shape as well for methods "MLE"}
 }
 \description{
 Methods for fitting a Garch(1,1) model with daily log return time series, using two methods of robust extended M-Estimates:
@@ -67,7 +63,7 @@ For details of the list of control arguments, please refer to \code{nloptr::nlop
 
 
 data("rtn")
-fit <- robGarch(rtn[1:604], methods="BM", distribution.model = "norm", fixed_pars = c(0.8, 3.0))
+fit <- robGarch(rtn[1:604], methods="BM", fixed_pars = c(0.8, 3.0))
 
 
 }

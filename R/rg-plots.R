@@ -44,7 +44,7 @@
   exprss <- c(bquote(alpha[0]~'='~.(signif(a0, 2))),
               bquote(alpha[1]~'='~.(signif(a1, 2))),
               bquote(beta[1]~'='~.(signif(b1, 2))))
-  if(fit$distribution.model == "std"){
+  if(fit$methods == "MLE"){
     exprss <- c(exprss, bquote(v~'='~.(signif(fit$fitted_pars["shape"], 2))))
   }
   if(method == "BM"){

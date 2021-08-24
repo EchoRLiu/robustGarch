@@ -11,9 +11,8 @@
 #' @param data a time series of log returns, need to be numeric value.
 #' @param methods robust M-Estimate method used for Garch(1,1) model, "M" and "BM", or non-robust M-Estimate method, "QML" and "MLE". Default is "BM".
 #' @param fixed_pars a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "M", the parameter should be c, which controls the modified loss function, user can use default c = .8; for "BM", the parameters should be c(c, k), where c is the same as in "M", user can use default c = 0.8,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.
-#' @param distribution.model the assumed distribution of z_t, "norm" if the methods is "QML" or "std" if the methods is "MLE", default is "norm".
 #' @param optimizer optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".
-#' @param optimizer_x0 user-defined starting point for searching the optimum, c(x0_alpha0, x0_alpha1, x0_beta1) when the distribution.model is "norm" or c(x0_alpha0, x0_alpha1, x0_beta1, x0_shape) when the distribution.model is "std". Default is "FALSE", where the starting point will be calculated instead of being user-defined.
+#' @param optimizer_x0 user-defined starting point for searching the optimum, c(x0_alpha0, x0_alpha1, x0_beta1) or c(x0_alpha0, x0_alpha1, x0_beta1, x0_shape) when the methods is "MLE". Default is "FALSE", where the starting point will be calculated instead of being user-defined.
 #' @param optimizer_control list of control arguments passed to the optimizer
 #' @param stdErr_method method used to calculate standard error, one of "numDerive", "optim", "sandwich", default is "numDeriv" using hessian from numDeriv
 #'
@@ -22,7 +21,6 @@
 #'     \item{data}{the log returns data object for the rg model to be fitted}
 #'     \item{methods}{the method called}
 #'     \item{fixed_pars}{named numeric vector of fixed parameters used}
-#'     \item{distribution.model}{the distribution assumed for z_t}
 #'     \item{optimizer}{the optimizer called}
 #'     \item{optimizer_x0}{user-defined or calculated starting point for searching the optimum}
 #'     \item{optimizer_control}{the list of control arguments passed to the optimizer}
@@ -34,8 +32,8 @@
 #'     \item{time_elapsed}{the time used for the optimization routine}
 #'     \item{message}{the message of the convergence status produced by the called solver}
 #'     \item{standard_error}{standard erros of the fitted parameters using the method called}
-#'     \item{t_value}{t-values of alpha_0, alpha_1, beta_1, shape as well for "std" distribution.model}
-#'     \item{p_value}{p-values of alpha_0, alpha_1, beta_1, shape as well for "std" distribution.model}
+#'     \item{t_value}{t-values of alpha_0, alpha_1, beta_1, shape as well for methods "MLE"}
+#'     \item{p_value}{p-values of alpha_0, alpha_1, beta_1, shape as well for methods "MLE"}
 #'
 #' @details
 #' The \code{robGarch} function fits a Garch(1, 1) model to a time series of log return data, using one of the two methods of robust extended M-Estimates with certain parameters specified by the user, with guidance and examples from the vignette. The user can also specify the optimizer used during optimization procesure, and the method used to calculate standard error for the fitted parameters.
@@ -48,33 +46,24 @@
 #'
 #'
 #' data("rtn")
-#' fit <- robGarch(rtn[1:604], methods="BM", distribution.model = "norm", fixed_pars = c(0.8, 3.0))
+#' fit <- robGarch(rtn[1:604], methods="BM", fixed_pars = c(0.8, 3.0))
 #'
 #'
 #' @rdname rg-robGarch
 #' @export
 # Garch(1,1) model fit function
-robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.8, 3.0), distribution.model = c("norm", "std"), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich")){
+robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.8, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich")){
 
   if(!is.numeric(data) || length(data)==0)
     stop("Data must be a numeric vector of non-zero length")
 
   methods = match.arg(methods)
-  distribution.model = match.arg(distribution.model)
   optimizer = match.arg(optimizer)
   stdErr_method = match.arg(stdErr_method)
-
-  if(methods == "QML"){
-    distribution.model <- "norm"
-  }
-  if(methods == "MLE"){
-    distribution.model <- "std"
-  }
 
   # .pkg.env <- new.env(parent = emptyenv()) # create package local environment.
   assign("methods", methods, envir = .GlobalEnv)
   # .pkg.env$methods <- methods ## In recent version of R, .pkg.env can be a locked env.
-  assign("distribution.model", distribution.model, envir = .GlobalEnv)
 
   if(methods == "QML" || methods == "MLE"){
     assign("div", 1.0, envir = .GlobalEnv)
@@ -108,7 +97,7 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
     stop("use Rsolnp optimizer for now")
   }
   std_errors <- sqrt(diag(abs(solve(H)/length(data))))
-  if(distribution.model == "std"){
+  if(methods == "MLE"){
     standard_error <- c(std_errors[2:4], std_errors[6])
     fit$observed_I <- -H[c(2,3,4,6), c(2,3,4,6)]
   } else{
@@ -162,7 +151,7 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
   #}
   ##########################################
 
-  if(distribution.model == "std"){
+  if(methods == "MLE"){
     names(standard_error) <- c("alpha_0", "alpha_1", "beta_1", "shape")
     names(t_value) <- c("alpha_0", "alpha_1", "beta_1", "shape")
     names(p_value) <- c("alpha_0", "alpha_1", "beta_1", "shape")
@@ -180,52 +169,16 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
   structure(fit, class="rg")
 }
 #' @export
-robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.85, 3.0), distribution.model = c("norm", "std"), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich"), n = 2000, m = 100, rseed = 42){
+robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.85, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich"), n = 2000, m = 100, rseed = 42){
 
   methods <- match.arg(methods)
-  distribution.model <- match.arg(distribution.model)
   optimizer <- match.arg(optimizer)
   stdErr_method <- match.arg(stdErr_method)
 
-  if(methods == "QML"){
-    distribution.model <- "norm"
-  }
-  if(methods == "MLE"){
-    distribution.model <- "std"
-  }
-
   par(mfrow=c(2,2))
-  spec <- ugarchspec(mean.model = list(armaOrder = c(0,0), include.mean = FALSE), distribution.model = distribution.model)
+  spec <- ugarchspec(mean.model = list(armaOrder = c(0,0), include.mean = FALSE))
 
-  if(distribution.model=="norm"){
-    if(length(param)!=3){stop("the parameters for norm distribution should only be alpha_0, alpha_1, beta_1")}
-    fixed <- param
-    names(fixed) <- c("omega", "alpha1", "beta1")
-    fspec <- spec
-    setfixed(fspec) <- fixed
-    y <- ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
-    y. <- y@path$seriesSim
-
-    qml_res <- matrix(0.0, nrow = m, ncol = 3)
-    for( i in 1:m){
-      y_ <- y.[((i-1)*n+1):(i*n)]
-      fit <- robGarch(y_, methods = methods, fixed_pars = fixed_pars, distribution.model = distribution.model, optimizer=optimizer, optimizer_x0 = optimizer_x0, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
-      qml_res[i,1:3] <- fit$fitted_pars
-    }
-
-    d_omega <- density(qml_res[,1])
-    d_omega
-    plot(d_omega, main=paste("Parameter", expression( alpha ), "0 \n True value: ",fixed[1]), cex=.5)
-
-    d_alpha1 <- density(qml_res[,2])
-    d_alpha1
-    plot(d_alpha1, main=paste("Parameter", expression( alpha ),"1 \n True value: ", fixed[2]), cex=.5)
-
-    d_beta1 <- density(qml_res[,3])
-    d_beta1
-    plot(d_beta1, main=paste("Parameter", expression( beta ),"1 \n True value: ", fixed[3]), cex=.5)
-  }
-  else{
+  if(methods == "MLE"){
     if(length(param)!=4){stop("the parameters for std distribution should be alpha_0, alpha_1, beta_1, shape")}
     fixed <- param
     names(fixed) <- c("omega", "alpha1", "beta1", "shape")
@@ -237,7 +190,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     qml_res <- matrix(0.0, nrow = m, ncol = 4)
     for( i in 1:m){
       y_ <- y.[((i-1)*n+1):(i*n)]
-      fit <- robGarch(y_, methods = methods, fixed_pars = fixed_pars, distribution.model = distribution.model, optimizer=optimizer, optimizer_x0 = optimizer_x0, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
+      fit <- robGarch(y_, methods = methods, fixed_pars = fixed_pars, optimizer=optimizer, optimizer_x0 = optimizer_x0, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
       qml_res[i,1:4] <- fit$fitted_pars
     }
 
@@ -256,6 +209,34 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     d_shape <- density(qml_res[,4])
     d_shape
     plot(d_shape, main=paste("Parameter shape\n True value: ", fixed[4]), cex=.5)
+  } else{
+
+    if(length(param)!=3){stop("the parameters for norm distribution should only be alpha_0, alpha_1, beta_1")}
+    fixed <- param
+    names(fixed) <- c("omega", "alpha1", "beta1")
+    fspec <- spec
+    setfixed(fspec) <- fixed
+    y <- ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
+    y. <- y@path$seriesSim
+
+    qml_res <- matrix(0.0, nrow = m, ncol = 3)
+    for( i in 1:m){
+      y_ <- y.[((i-1)*n+1):(i*n)]
+      fit <- robGarch(y_, methods = methods, fixed_pars = fixed_pars, optimizer=optimizer, optimizer_x0 = optimizer_x0, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
+      qml_res[i,1:3] <- fit$fitted_pars
+    }
+
+    d_omega <- density(qml_res[,1])
+    d_omega
+    plot(d_omega, main=paste("Parameter", expression( alpha ), "0 \n True value: ",fixed[1]), cex=.5)
+
+    d_alpha1 <- density(qml_res[,2])
+    d_alpha1
+    plot(d_alpha1, main=paste("Parameter", expression( alpha ),"1 \n True value: ", fixed[2]), cex=.5)
+
+    d_beta1 <- density(qml_res[,3])
+    d_beta1
+    plot(d_beta1, main=paste("Parameter", expression( beta ),"1 \n True value: ", fixed[3]), cex=.5)
 
   }
 }
@@ -287,7 +268,7 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
       #message <- NULL
     #} else
     if(optimizer == "Rsolnp"){
-      if(distribution.model == "std"){
+      if(methods == "MLE"){
         fitted_pars <- c(res$pars[1:3], res$pars[5])
         names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1", "shape")
       } else{
@@ -298,7 +279,7 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
       objective <- res$values[length(res$values)]
       message <- res$convergence
     } else if (optimizer == "nloptr"){
-      if(distribution.model == "std"){
+      if(methods == "MLE"){
         fitted_pars <- c(res$solution[1:3], res$solution[5])
         names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1", "shape")
       } else{
@@ -309,7 +290,7 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
       objective <- res$objective
       message <- res$message
     } else if (optimizer == "nlminb"){
-      if(distribution.model == "std"){
+      if(methods == "MLE"){
         fitted_pars <- c(res$par[1:3], res$par[5])
         names(fitted_pars) <- c("alpha_0", "alpha_1", "beta_1", "shape")
       } else{
@@ -328,7 +309,6 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
 
   list(data=data,
        methods = methods,
-       distribution.model = distribution.model,
        optimizer=optimizer,
        optimizer_x0=res$x0,
        optimizer_control=optimizer_control,
@@ -345,7 +325,8 @@ nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control){
 
   rm(Muestram)
   rm(Muestrac)
-  if(distribution.model == "std"){
+
+  if(methods == "MLE"){
     std <- TRUE
   } else{
     std <- FALSE
@@ -626,15 +607,14 @@ nfun <- function(x, shape = 3.0){
   b <- 4.3 #6.7428
   b1 <- 4.0 #b-0.5
 
-  if(distribution.model == "norm"){
-    # assume z_t is standard norm.
-    x <- (exp(x)-x +log(2*pi))/2
-  } else if(distribution.model == "std"){
+  if(methods == "MLE"){
     # this is rho assuming z_t is std(shape).
     # this changes to MLE instead of QML.
     #x <- -log(gamma((shape+1)/2)/(sqrt((shape)*pi)*gamma(shape/2))) - x/2 + (shape+1)/2 *log(1+exp(x)/(shape))
     x <- -log(gamma((shape+1)/2)/(sqrt(shape-2)*gamma(shape/2))) - x/2 + (shape+1)/2 *log(1+exp(x)/(shape-2))
-
+  } else{
+    # assume z_t is standard norm.
+    x <- (exp(x)-x +log(2*pi))/2
   }
 
   ps <- freg(x, b1, b)
@@ -669,7 +649,7 @@ Fnue <- function(start_pars){
 
   vi <- start_pars[1:3]
   vini <- start_pars[4]
-  if(distribution.model == "std"){
+  if(methods == "MLE"){
     shape <- start_pars[5]
   }
 
@@ -685,9 +665,9 @@ Fnue <- function(start_pars){
       for(i in 2:n){
         var[i]<-vi[1]+(vi[2]*rk(yc[i-1]/var[i-1],ki,l)+vi[3])*var[i-1]
       }
-      if(distribution.model == "std"){
+      if(methods == "MLE"){
         ml <- mean(nfun(y2[2:n]-log(var[2:n]), shape))
-      } else if(distribution.model == "norm"){
+      } else{
         ml <- mean(nfun(y2[2:n]-log(var[2:n])))
       }
 

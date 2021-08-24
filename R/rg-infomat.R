@@ -166,7 +166,9 @@
   # Big difference between expected and observed Fisher Information matrix.
   T <- length(fit$data)
 
-  if(fit$distribution.model == 'norm'){
+  if(fit$methods == 'MLE'){
+    # to be added.
+  } else{
 
     FS <- matrix(c(0.0, 0.0, 0.0), nrow = 3, ncol = 1, byrow = TRUE)
 
@@ -185,13 +187,6 @@
     for(k in 1:(T-1)){
       ht <- ht + true_pars[2] * true_pars[3]^(k-1) * (fit$data[T-k])^2
     }
-
-  }
-  else if(fit$distribution.model == 'std'){
-    # to be added.
-  }
-  else{
-    NaN
   }
 
   FI <- FS %*% t(FS)

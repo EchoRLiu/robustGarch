@@ -32,8 +32,6 @@ aef(fit, v = 5)
 \item{original_}{a logical argument. If TRUE, the original return will be plotted. Default is FALSE}
 
 \item{main_name}{the title of the plot, default is "Conditional SD (vs returns)"}
-
-\item{dist}{one of "std_norm" or "t_dist", the distribution of z_t, default is "std_norm"}
 }
 \description{
 Summary for rg S3 class
