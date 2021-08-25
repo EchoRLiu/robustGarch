@@ -44,7 +44,11 @@ summary.rg <- function(fit, digits = 3){
   print(res)
   cat("\nLog-likelihood: ", fit$objective)
   cat("\n\nOptimizer: ", fit$optimizer)
-  cat("\nInitial parameter estimates: ", fit$optimizer_x0)
+  if (fit$methods == "MLE"){
+    cat("\nInitial parameter estimates: ", fit$optimizer_x0[1:3], fit$optimizer_x0[5])
+  } else{
+    cat("\nInitial parameter estimates: ", fit$optimizer_x0[1:3])
+  }
   cat("\nTime elapsed: ", fit$time_elapsed)
   cat("\nConvergence Message: ", fit$message)
 }
@@ -52,13 +56,20 @@ summary.rg <- function(fit, digits = 3){
 #' @export
 print.rg <- function(fit, digits = 3){
 
-  res <- rbind(round(fit$fitted_pars, digits), round(fit$standard_error, digits))
+  res <- rbind(round(fit$fitted_pars, digits))
   colnames(res) <- names(fit$fitted_pars)
-  rownames(res) <- c("Estimates", "Std. Errors")
+  rownames(res) <- c("Estimates (Std. Errors)")
+
+  res[1,1] <- gsub("  ","",paste(res[1,1],'( ', round(fit$standard_error[1], digits), ' )'))
+  res[1,2] <- gsub("  ","",paste(res[1,2],'( ', round(fit$standard_error[2], digits), ' )'))
+  res[1,3] <- gsub("  ","",paste(res[1,3],'( ', round(fit$standard_error[3], digits), ' )'))
+  if (fit$methods == "MLE"){
+    res[1,4] <- gsub("  ","",paste(res[1,4],'( ', round(fit$standard_error[4], digits), ' )'))
+  }
 
   cat("Model: ", fit$methods, "\n")
   cat("\nResult:\n")
-  print(res)
+  noquote(res)
 }
 #' @rdname rg-summary
 #' @export

@@ -10,7 +10,7 @@ robGarch(
   fixed_pars = c(0.8, 3),
   optimizer = c("Rsolnp", "nloptr", "nlminb"),
   optimizer_x0 = FALSE,
-  optimizer_control = list(),
+  optimizer_control = list(trace = 0),
   stdErr_method = c("numDeriv", "optim", "sandwich")
 )
 }

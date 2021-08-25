@@ -52,7 +52,7 @@
 #' @rdname rg-robGarch
 #' @export
 # Garch(1,1) model fit function
-robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.8, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich")){
+robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.8, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(trace=0), stdErr_method = c("numDeriv", "optim", "sandwich")){
 
   if(!is.numeric(data) || length(data)==0)
     stop("Data must be a numeric vector of non-zero length")
@@ -323,12 +323,7 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
 #' @export
 nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control){
 
-  if(exists('Muestrac')){
-    rm(Muestrac)
-  }
-  if(exists('Muestram')){
-    rm(Muestram)
-  }
+  suppressWarnings(rm(Muestrac, Muestram))
 
   if(methods == "MLE"){
     std <- TRUE
