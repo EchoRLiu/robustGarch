@@ -1,6 +1,6 @@
 #' @import xts
 #' @import zoo
-.plot.garchsim <- function(fit, digits = 3, pctReturn_ = TRUE, abs_ = TRUE, original_ = FALSE, main_name = "Conditional Volatility (vs |pctReturns(%)|)")
+.plot.garchsim <- function(fit, digits = 3, estimation_pos = "topleft", line_name_pos = "topright", par_ = par(no.readonly = TRUE), pctReturn_ = TRUE, abs_ = TRUE, original_ = FALSE, main_name = "Conditional Volatility (vs |pctReturns(%)|)")
 {
 
   n <- length(fit$data) + 100
@@ -40,6 +40,7 @@
     retAndVol <- cbind(returns,sigma2)
   }
 
+  par_
   plot.zoo(retAndVol, screens = "single", type = "l", xlab = "",ylab = "",main = main_name,lty = c("dotted","solid"),col = c("blue","black"), lwd = c(.8,1.5))
   exprss <- c(bquote(alpha[0]~'='~.(signif(a0, digits))),
               bquote(alpha[1]~'='~.(signif(a1, digits))),
@@ -54,13 +55,13 @@
     #exprss <- c(exprss,
     #            bquote(div~'='~.(signif(fit$fixed_pars[1], digits))))
   #}
-  legend("topleft", bty = "n",
+  legend(estimation_pos, bty = "n",
          legend=as.expression(exprss))
   if(abs_){
-    legend("topright",legend = c("Absolute Returns","Conditional Vol") ,lty = c("dashed","solid"),
+    legend(line_name_pos,legend = c("Absolute Returns","Conditional Vol") ,lty = c("dashed","solid"),
            col = c("blue","black"),lwd = c(0.8, 1.5), bty = "n")
   } else {
-    legend("topright",legend = c("Returns","Conditional Vol") ,lty = c("dashed","solid"),
+    legend(line_name_pos,legend = c("Returns","Conditional Vol") ,lty = c("dashed","solid"),
            col = c("blue","black"),lwd = c(0.8, 1.5), bty = "n")
   }
 

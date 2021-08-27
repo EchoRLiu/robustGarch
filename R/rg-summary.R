@@ -5,6 +5,9 @@
 #' @param fit A RG fit object of class \code{\link{rg}}
 #' @param digits the number of digits for print and plot, default is 3.
 #' @param main_name the title of the plot, default is "Conditional SD (vs returns)"
+#' @param estimation_pos string that determines the legend position that specifies gamma, alpha, beta estimations. Choice of "bottomright", "bottom", "bottomleft", "left", "topleft", "top", "topright", "right" and "center". Default is "topleft".
+#' @param line_name_pos string that determines the legend position that specifies the names of lines in the plot. Choice of "bottomright", "bottom", "bottomleft", "left", "topleft", "top", "topright", "right" and "center". Default is "topright".
+#' @param par_ graphical parameters that can be set, which is in the form of par(...). The default is par(no.readonly = TRUE).
 #' @param original_ a logical argument. If TRUE, the original return will be plotted. Default is FALSE
 #' @param pctReturn_ a logical argument. IF TRUE, the plot function will plot the returns in percentage instead of original. Default is TRUE.
 #' @param abs_ a logical argument, when TRUE, the plot function will plot abs(returns) with conditional standard deviation instead of returns, default to TRUE.
@@ -32,13 +35,14 @@ summary.rg <- function(fit, digits = 3){
   colnames(res) <- names(fit$fitted_pars)
   rownames(res) <- c("Estimates", "Std. Errors", "t-statistic", "p-value")
 
-  cat("Model: ", fit$methods, "\n")
+  cat("Model: ", fit$methods, " ")
   if (fit$methods == "BM"){
-    cat("with div = ", fit$fixed_pars[1], ", k = ", fit$fixed_pars[2], "\n")
+    cat("with div = ", fit$fixed_pars[1], ", k = ", fit$fixed_pars[2])
   }
   if (fit$methods == "M"){
-    cat("with div = ", fit$fixed_pars[1], "\n")
+    cat("with div = ", fit$fixed_pars[1])
   }
+  cat("\nData: ", fit$data_name, "\n")
   cat("Observations: ", length(fit$data), "\n")
   cat("\nResult:\n")
   print(res)
@@ -68,14 +72,15 @@ print.rg <- function(fit, digits = 3){
   }
 
   cat("Model: ", fit$methods, "\n")
-  cat("\nResult:\n")
+  cat("Data: ", fit$data_name, "\n")
+  cat("Result:\n")
   noquote(res)
 }
 #' @rdname rg-summary
 #' @export
-plot.rg <- function(fit, digits = 3, pctReturn_ = TRUE, abs_ = TRUE, original_ = FALSE, main_name = "Conditional Volatility (vs |pctReturns(%)|)"){
+plot.rg <- function(fit, digits = 3, estimation_pos = "topleft", line_name_pos = "topright", par_ = par(no.readonly = TRUE), pctReturn_ = TRUE, abs_ = TRUE, original_ = FALSE, main_name = "Conditional Volatility (vs |pctReturns(%)|)"){
 
-  .plot.garchsim(fit, digits, pctReturn_, abs_, original_, main_name)
+  .plot.garchsim(fit, digits, estimation_pos, line_name_pos, par_, pctReturn_, abs_, original_, main_name)
 
 }
 #' @rdname rg-summary

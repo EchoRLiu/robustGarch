@@ -25,13 +25,14 @@ robGarch(
 
 \item{optimizer_x0}{user-defined starting point for searching the optimum, c(x0_gamma, x0_alpha, x0_beta) or c(x0_gamma, x0_alpha, x0_beta, x0_shape) when the methods is "MLE". Default is "FALSE", where the starting point will be calculated instead of being user-defined.}
 
-\item{optimizer_control}{list of control arguments passed to the optimizer}
+\item{optimizer_control}{list of control arguments passed to the optimizer. Default is list(trace=0). If wanting to print out the optimizer result, use list() instead.}
 
 \item{stdErr_method}{method used to calculate standard error, one of "numDerive", "optim", "sandwich", default is "numDeriv" using hessian from numDeriv}
 }
 \value{
 A \code{rg} object(S3), the components of the object are:
     \item{data}{the log returns data object for the rg model to be fitted}
+    \item{data_name}{the name of data variable input used}
     \item{methods}{the method called}
     \item{fixed_pars}{named numeric vector of fixed parameters used}
     \item{optimizer}{the optimizer called}
@@ -41,6 +42,9 @@ A \code{rg} object(S3), the components of the object are:
     \item{stdErr_method}{the method called to calculate standard error}
     \item{QML}{logical argument controlling the non-robustness of the fitting method}
     \item{fitted_pars}{Garch(1,1) parameter estimations output of the called method}
+    \item{sigma}{the time series of the conditional standard deviation}
+    \item{yt}{the time series of log(data^2)}
+    \item{observed_I}{observed information matrix}
     \item{objective}{the optimal likihood value obtained by the optimizer}
     \item{time_elapsed}{the time used for the optimization routine}
     \item{message}{the message of the convergence status produced by the called solver}

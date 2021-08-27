@@ -15,6 +15,9 @@
 \method{plot}{rg}(
   fit,
   digits = 3,
+  estimation_pos = "topleft",
+  line_name_pos = "topright",
+  par_ = par(no.readonly = TRUE),
   pctReturn_ = TRUE,
   abs_ = TRUE,
   original_ = FALSE,
@@ -27,6 +30,12 @@ aef(fit, v = 5)
 \item{fit}{A RG fit object of class \code{\link{rg}}}
 
 \item{digits}{the number of digits for print and plot, default is 3.}
+
+\item{estimation_pos}{string that determines the legend position that specifies gamma, alpha, beta estimations. Choice of "bottomright", "bottom", "bottomleft", "left", "topleft", "top", "topright", "right" and "center". Default is "topleft".}
+
+\item{line_name_pos}{string that determines the legend position that specifies the names of lines in the plot. Choice of "bottomright", "bottom", "bottomleft", "left", "topleft", "top", "topright", "right" and "center". Default is "topright".}
+
+\item{par_}{graphical parameters that can be set, which is in the form of par(...). The default is par(no.readonly = TRUE).}
 
 \item{pctReturn_}{a logical argument. IF TRUE, the plot function will plot the returns in percentage instead of original. Default is TRUE.}
 

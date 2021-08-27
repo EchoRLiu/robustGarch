@@ -13,12 +13,13 @@
 #' @param fixed_pars a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "M", the parameter should be c, which controls the modified loss function, user can use default c = .8; for "BM", the parameters should be c(c, k), where c is the same as in "M", user can use default c = 0.8,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.
 #' @param optimizer optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".
 #' @param optimizer_x0 user-defined starting point for searching the optimum, c(x0_gamma, x0_alpha, x0_beta) or c(x0_gamma, x0_alpha, x0_beta, x0_shape) when the methods is "MLE". Default is "FALSE", where the starting point will be calculated instead of being user-defined.
-#' @param optimizer_control list of control arguments passed to the optimizer
+#' @param optimizer_control list of control arguments passed to the optimizer. Default is list(trace=0). If wanting to print out the optimizer result, use list() instead.
 #' @param stdErr_method method used to calculate standard error, one of "numDerive", "optim", "sandwich", default is "numDeriv" using hessian from numDeriv
 #'
 #' @return
 #' A \code{rg} object(S3), the components of the object are:
 #'     \item{data}{the log returns data object for the rg model to be fitted}
+#'     \item{data_name}{the name of data variable input used}
 #'     \item{methods}{the method called}
 #'     \item{fixed_pars}{named numeric vector of fixed parameters used}
 #'     \item{optimizer}{the optimizer called}
@@ -28,6 +29,9 @@
 #'     \item{stdErr_method}{the method called to calculate standard error}
 #'     \item{QML}{logical argument controlling the non-robustness of the fitting method}
 #'     \item{fitted_pars}{Garch(1,1) parameter estimations output of the called method}
+#'     \item{sigma}{the time series of the conditional standard deviation}
+#'     \item{yt}{the time series of log(data^2)}
+#'     \item{observed_I}{observed information matrix}
 #'     \item{objective}{the optimal likihood value obtained by the optimizer}
 #'     \item{time_elapsed}{the time used for the optimization routine}
 #'     \item{message}{the message of the convergence status produced by the called solver}
@@ -161,6 +165,7 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
     names(p_value) <- c("gamma", "alpha", "beta")
   }
 
+  fit$data_name <- noquote(deparse(substitute(data)))
   fit$standard_error <- standard_error
   fit$t_value <- t_value
   fit$p_value <- p_value
