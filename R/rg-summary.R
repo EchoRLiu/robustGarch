@@ -1,8 +1,8 @@
-#' @title Summary for rg class
+#' @title Summary for robustGARCH class
 #'
-#' @description Summary for rg S3 class
+#' @description Summary for robustGARCH S3 class
 #'
-#' @param fit A RG fit object of class \code{\link{rg}}
+#' @param fit A robustGARCH fit object of class \code{\link{robustGARCH}}
 #' @param digits the number of digits for print and plot, default is 3.
 #' @param main_name the title of the plot, default is "Conditional SD (vs returns)"
 #' @param estimation_pos string that determines the legend position that specifies gamma, alpha, beta estimations. Choice of "bottomright", "bottom", "bottomleft", "left", "topleft", "top", "topright", "right" and "center". Default is "topleft".
@@ -12,10 +12,10 @@
 #' @param pctReturn_ a logical argument. IF TRUE, the plot function will plot the returns in percentage instead of original. Default is TRUE.
 #' @param abs_ a logical argument, when TRUE, the plot function will plot abs(returns) with conditional standard deviation instead of returns, default to TRUE.
 #'
-#' @name rg-summary
-#' @aliases summary.rg
-#' @aliases print.rg
-#' @aliases plot.rg
+#' @name robustGARCH-summary
+#' @aliases summary.robustGARCH
+#' @aliases print.robustGARCH
+#' @aliases plot.robustGARCH
 #' @aliases aef
 #'
 #' @examples
@@ -27,9 +27,9 @@
 #' plot(fit)
 #' aef(fit)
 #'
-#' @rdname rg-summary
+#' @rdname robustGARCH-summary
 #' @export
-summary.rg <- function(fit, digits = 3){
+summary.robustGARCH <- function(fit, digits = 3){
 
   res <- rbind(round(fit$fitted_pars, digits), round(fit$standard_error, digits), round(fit$t_value, digits), round(fit$p_value, digits))
   colnames(res) <- names(fit$fitted_pars)
@@ -56,9 +56,9 @@ summary.rg <- function(fit, digits = 3){
   cat("\nTime elapsed: ", fit$time_elapsed)
   cat("\nConvergence Message: ", fit$message)
 }
-#' @rdname rg-summary
+#' @rdname robustGARCH-summary
 #' @export
-print.rg <- function(fit, digits = 3){
+print.robustGARCH <- function(fit, digits = 3){
 
   res <- rbind(round(fit$fitted_pars, digits))
   colnames(res) <- names(fit$fitted_pars)
@@ -76,14 +76,14 @@ print.rg <- function(fit, digits = 3){
   cat("Result:\n")
   noquote(res)
 }
-#' @rdname rg-summary
+#' @rdname robustGARCH-summary
 #' @export
-plot.rg <- function(fit, digits = 3, estimation_pos = "topleft", line_name_pos = "topright", par_ = par(no.readonly = TRUE), pctReturn_ = TRUE, abs_ = TRUE, original_ = FALSE, main_name = "Conditional Volatility (vs |pctReturns(%)|)"){
+plot.robustGARCH <- function(fit, digits = 3, estimation_pos = "topleft", line_name_pos = "topright", par_ = par(no.readonly = TRUE), pctReturn_ = TRUE, abs_ = TRUE, original_ = FALSE, main_name = "Conditional Volatility (vs |pctReturns(%)|)"){
 
   .plot.garchsim(fit, digits, estimation_pos, line_name_pos, par_, pctReturn_, abs_, original_, main_name)
 
 }
-#' @rdname rg-summary
+#' @rdname robustGARCH-summary
 #' @export
 aef <- function(fit, v=5){
 
