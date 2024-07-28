@@ -27,7 +27,6 @@
 #' plot(fit)
 #' aef(fit)
 #'
-#' @rdname robustGARCH-summary
 #' @export
 summary.robustGARCH <- function(fit, digits = 3){
 
