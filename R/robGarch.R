@@ -49,8 +49,8 @@
 #' @examples
 #'
 #'
-#' data("rtn")
-#' fit <- robGarch(rtn[1:604], methods="BM", fixed_pars = c(0.8, 3.0))
+#' data("gspc")
+#' fit <- robGarch(gspc[1:604], methods="BM", fixed_pars = c(0.8, 3.0))
 #'
 #'
 #' @rdname robustGARCH-robGarch
