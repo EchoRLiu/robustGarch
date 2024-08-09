@@ -16,8 +16,8 @@ library(robustGarch)
 This is a basic example which shows you how to fit your daily return time series data into robust Garch(1,1) model.
 
 ```js
-data(rtn)
-fit <- robGarch(rtn, methods = "BM", fixed_pars = c(0.8, 3.0), optimizer="Rsolnp", stdErr_method = "numDeriv")
+data(gspc)
+fit <- robGarch(gspc, methods = "BM", fixed_pars = c(0.8, 3.0), optimizer="Rsolnp", stdErr_method = "numDeriv")
 summary(fit)
 plot(fit)
 ```
