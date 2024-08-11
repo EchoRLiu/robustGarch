@@ -6,7 +6,7 @@
 #' @description Methods for fitting a Garch(1,1) model with daily log return time series, using two methods of robust extended M-Estimates:
 #' (1) maximizing modified likelihood function;
 #' (2) M-Estimates with bounds to the propagation of the effect of one outlier on the subsequent predictors of the conditional variances.
-#' returns a \code{rg} object
+#' returns a \code{robustGARCH} object
 #'
 #' @param data a time series of log returns, need to be numeric value.
 #' @param methods robust M-Estimate method used for Garch(1,1) model, "M" and "BM", or non-robust M-Estimate method, "QML" and "MLE". Default is "BM".
@@ -17,8 +17,8 @@
 #' @param stdErr_method method used to calculate standard error, one of "numDerive", "optim", "sandwich", default is "numDeriv" using hessian from numDeriv
 #'
 #' @return
-#' A \code{rg} object(S3), the components of the object are:
-#'     \item{data}{the log returns data object for the rg model to be fitted}
+#' A \code{robustGARCH} object(S3), the components of the object are:
+#'     \item{data}{the log returns data object for the robustGARCH model to be fitted}
 #'     \item{data_name}{the name of data variable input used}
 #'     \item{methods}{the method called}
 #'     \item{fixed_pars}{named numeric vector of fixed parameters used}
@@ -49,11 +49,11 @@
 #' @examples
 #'
 #'
-#' data("rtn")
-#' fit <- robGarch(rtn[1:604], methods="BM", fixed_pars = c(0.8, 3.0))
+#' data("gspc")
+#' fit <- robGarch(gspc[1:604], methods="BM", fixed_pars = c(0.8, 3.0))
 #'
 #'
-#' @rdname rg-robGarch
+#' @rdname robustGARCH-robGarch
 #' @export
 # Garch(1,1) model fit function
 robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.8, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(trace=0), stdErr_method = c("numDeriv", "optim", "sandwich")){
@@ -171,7 +171,7 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
   fit$p_value <- p_value
   fit$fixed_pars <- fixed_pars
 
-  structure(fit, class="rg")
+  structure(fit, class="robustGARCH")
 }
 #' @export
 robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.85, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich"), n = 2000, m = 100, rseed = 42){

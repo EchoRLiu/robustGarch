@@ -10,7 +10,7 @@ Encoding: UTF-8
 LazyData: true
 URL: https://github.com/EchoRLiu/robustGarch
 BugReports: https://github.com/EchoRLiu/robustGarch/issues
-RoxygenNote: 7.1.1
+RoxygenNote: 7.3.2
 Suggests:
     knitr,
     rmarkdown,
