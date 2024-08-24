@@ -1,4 +1,4 @@
 library(testthat)
-library(robGarch)
+library(robustGarch)
 
-test_check("robGarch")
+test_file("tests/testthat/test-rg-mest.R")
