@@ -1,7 +1,7 @@
 Package: robustGarch
 Type: Package
 Title: Robust Garch(1,1) Model 
-Version: 0.2.0
+Version: 0.3.0
 Author: Echo Liu
 Maintainer: Echo Liu <yliu49@uw.edu>
 Description: Estimation and methods of two Robust Garch(1,1) models
@@ -26,4 +26,4 @@ Imports:
     rugarch
 VignetteBuilder: knitr
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5.0)
