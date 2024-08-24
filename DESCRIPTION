@@ -5,7 +5,7 @@ Version: 0.3.0
 Author: Echo Liu
 Maintainer: Echo Liu <yliu49@uw.edu>
 Description: Estimation and methods of two Robust Garch(1,1) models
-License: What license is it under?
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/EchoRLiu/robustGarch
