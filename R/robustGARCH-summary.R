@@ -84,10 +84,10 @@ plot.robustGARCH <- function(fit, digits = 3, estimation_pos = "topleft", line_n
 }
 #' @rdname robustGARCH-summary
 #' @export
-aef <- function(fit, v=5){
+aef <- function(fit, nu=5){
 
-  aTop <- .aValue(fit, TRUE, v)
-  aBottom <- .aValue(fit, FALSE, v)
+  aTop <- .aValue(fit, TRUE, nu)
+  aBottom <- .aValue(fit, FALSE, nu)
 
   aef <- aTop/aBottom
 
