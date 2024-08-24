@@ -16,14 +16,11 @@ Suggests:
     rmarkdown,
     testthat
 Imports:
-    pracma,
-    nloptr,
     Rsolnp,
-    xts,
+    nloptr,
+    rugarch,
     zoo,
-    stats,
-    numDeriv,
-    rugarch
+    xts
 VignetteBuilder: knitr
 Depends: 
     R (>= 3.5.0)

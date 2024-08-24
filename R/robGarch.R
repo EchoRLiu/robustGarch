@@ -221,7 +221,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     names(fixed) <- c("gamma", "alpha", "beta")
     fspec <- spec
     setfixed(fspec) <- fixed
-    y <- ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
+    y <- rugarch::ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
     y. <- y@path$seriesSim
 
     qml_res <- matrix(0.0, nrow = m, ncol = 3)

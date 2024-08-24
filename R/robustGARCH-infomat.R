@@ -1,5 +1,3 @@
-#' @import stats
-#' @import numDeriv
 #' @export
 .aValue <- function(fit, top = FALSE, v=5){
   if(top){
