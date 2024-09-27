@@ -3,7 +3,7 @@ Type: Package
 Title: Robust Garch(1,1) Model 
 Version: 0.3.1
 Author: Echo Liu
-Maintainer: Echo Liu <yliu49@uw.edu>
+Maintainer: Echo Liu <yliu49@uw.edu>, Dan Xia <DanSummer94@gmail.com>
 Description: Estimation and methods of two Robust Garch(1,1) models.
 License: MIT + file LICENSE
 Encoding: UTF-8
