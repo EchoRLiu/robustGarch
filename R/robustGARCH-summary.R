@@ -15,6 +15,7 @@
 #' @param abs_ a logical argument, when TRUE, the plot function will plot abs(returns) with conditional standard deviation instead of returns, default to TRUE.
 #' @param ... # to be written
 #' @param nu # to be written
+#' @param v degrees of freedom in a Student's t-distribution.
 #'
 #' @name robustGARCH-summary
 #' @aliases summary.robustGARCH
