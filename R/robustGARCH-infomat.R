@@ -172,6 +172,8 @@
 
     FS[1,1] <- 1/(1-true_pars[3])
 
+    # it seems like k is used here as an index
+    # could any k was supposed to be the global one implemented before?
     for(k in 1:(T-1)){
       FS[2,1] <- FS[2,1] + true_pars[3]^(k-1) * (fit$data[T-k])^2
     }
