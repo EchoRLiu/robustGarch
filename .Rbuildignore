@@ -10,3 +10,4 @@
 ^.vscode/*
 ^MISC
 ^LICENSE\.md$
+^\.github$

@@ -34,3 +34,7 @@ Any future development will be released in the github page. A few key features w
  * More optimization choices
  * Extension to robust Garch(p, q)
  * Name changes for better collaboration
+
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/EchoRLiu/robustGarch/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/EchoRLiu/robustGarch/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
