@@ -6,7 +6,7 @@
 \alias{robustGarch-package}
 \title{robustGarch: Robust Garch(1,1) Model}
 \description{
-Estimation and methods of two Robust Garch(1,1) models
+Estimation and methods of two Robust Garch(1,1) models.
 }
 \seealso{
 Useful links:

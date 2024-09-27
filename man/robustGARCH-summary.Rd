@@ -8,12 +8,12 @@
 \alias{aef}
 \title{Summary for robustGARCH class}
 \usage{
-\method{summary}{robustGARCH}(fit, digits = 3)
+\method{summary}{robustGARCH}(object, digits = 3, ...)
 
-\method{print}{robustGARCH}(fit, digits = 3)
+\method{print}{robustGARCH}(x, digits = 3, ...)
 
 \method{plot}{robustGARCH}(
-  fit,
+  x,
   digits = 3,
   estimation_pos = "topleft",
   line_name_pos = "topright",
@@ -21,15 +21,20 @@
   pctReturn_ = TRUE,
   abs_ = TRUE,
   original_ = FALSE,
-  main_name = "Conditional Volatility (vs |pctReturns(\%)|)"
+  main_name = "Conditional Volatility (vs |pctReturns(\%)|)",
+  ...
 )
 
-aef(fit, v = 5)
+aef(fit, nu = 5)
 }
 \arguments{
-\item{fit}{A robustGARCH fit object of class \code{\link{robustGARCH}}}
+\item{object}{Same as fit, for summary.robustGARCH}
 
 \item{digits}{the number of digits for print and plot, default is 3.}
+
+\item{...}{# to be written}
+
+\item{x}{Same as fit, for plot.robustGARCH and print.robustGARCH}
 
 \item{estimation_pos}{string that determines the legend position that specifies gamma, alpha, beta estimations. Choice of "bottomright", "bottom", "bottomleft", "left", "topleft", "top", "topright", "right" and "center". Default is "topleft".}
 
@@ -44,6 +49,10 @@ aef(fit, v = 5)
 \item{original_}{a logical argument. If TRUE, the original return will be plotted. Default is FALSE}
 
 \item{main_name}{the title of the plot, default is "Conditional SD (vs returns)"}
+
+\item{fit}{A robustGARCH fit object of class \code{\link{robGarch}}}
+
+\item{nu}{# to be written}
 }
 \description{
 Summary for robustGARCH S3 class
@@ -51,7 +60,8 @@ Summary for robustGARCH S3 class
 \examples{
 
 data("gspc")
-fit <- robGarch(gspc, methods="BM", fixed_pars = c(0.8, 3.0), optimizer="Rsolnp", stdErr_method = "numDeriv")
+fit <- robGarch(gspc, methods="BM", fixed_pars = c(0.8, 3.0),
+                optimizer="Rsolnp", stdErr_method = "numDeriv")
 summary(fit)
 print(fit)
 plot(fit)

@@ -1,6 +1,5 @@
-#' @import xts
-#' @import zoo
-.plot.garchsim <- function(fit, digits = 3, estimation_pos = "topleft", line_name_pos = "topright", par_ = par(no.readonly = TRUE), pctReturn_ = TRUE, abs_ = TRUE, original_ = FALSE, main_name = "Conditional Volatility (vs |pctReturns(%)|)")
+.plot.garchsim <- function(fit, digits = 3, estimation_pos = "topleft", line_name_pos = "topright", 
+                           par_ = par(no.readonly = TRUE), pctReturn_ = TRUE, abs_ = TRUE, original_ = FALSE, main_name = "Conditional Volatility (vs |pctReturns(%)|)")
 {
 
   n <- length(fit$data) + 100
@@ -22,11 +21,11 @@
   #}
   #sigma2 <- sigma2[101:n]
 
-  returns <- zoo(fit$data)
-  sigma2 <- zoo(sqrt(fit$sigma), order.by = index(returns))
+  returns <- xts::xts(fit$data)
+  sigma2 <- xts::xts(sqrt(fit$sigma), order.by = zoo::index(returns))
 
   if(original_){
-    plot.zoo(returns, type = "l", xlab = "", ylab = "Return", main = "Returns")
+    zoo::plot.zoo(returns, type = "l", xlab = "", ylab = "Return", main = "Returns")
   }
 
   if(pctReturn_){
@@ -41,7 +40,8 @@
   }
 
   par_
-  plot.zoo(retAndVol, screens = "single", type = "l", xlab = "",ylab = "",main = main_name,lty = c("dotted","solid"),col = c("blue","black"), lwd = c(.8,1.5))
+  zoo::plot.zoo(retAndVol, screens = "single", type = "l", xlab = "",ylab = "",main = main_name,
+                lty = c("dotted","solid"),col = c("blue","black"), lwd = c(.8,1.5))
   exprss <- c(bquote(alpha[0]~'='~.(signif(a0, digits))),
               bquote(alpha[1]~'='~.(signif(a1, digits))),
               bquote(beta[1]~'='~.(signif(b1, digits))))

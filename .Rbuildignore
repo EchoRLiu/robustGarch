@@ -3,3 +3,10 @@
 ^todolist\.md
 ^doc$
 ^Meta$
+
+^Sandbox/*
+
+^.devcontainer/*
+^.vscode/*
+^MISC
+^LICENSE\.md$

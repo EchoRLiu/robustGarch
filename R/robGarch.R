@@ -56,8 +56,10 @@
 #' @rdname robustGARCH-robGarch
 #' @export
 # Garch(1,1) model fit function
-robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.8, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(trace=0), stdErr_method = c("numDeriv", "optim", "sandwich")){
-
+robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.8, 3.0), 
+                     optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, 
+                     optimizer_control = list(trace=0), stdErr_method = c("numDeriv", "optim", "sandwich")){
+  # TODO: xts data takes a long time
   if(!is.numeric(data) || length(data)==0)
     stop("Data must be a numeric vector of non-zero length")
 
@@ -100,6 +102,7 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
     solution <- fit$optimizer_result$par
     stop("use Rsolnp optimizer for now")
   }
+
   std_errors <- sqrt(diag(abs(solve(H)/length(data))))
   if(methods == "MLE"){
     standard_error <- c(std_errors[2:4], std_errors[6])
@@ -111,6 +114,7 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
   standard_error[1] <- standard_error[1] * (fit$fitted_pars[1] / solution[1])
   t_value <- fit$fitted_pars / standard_error
   p_value <- 2*(1-pnorm(abs(t_value)))
+  
   ######## Change calculation method to above. ###########
   #if(stdErr_method == "numDeriv")
   #{
@@ -173,7 +177,8 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
 
   structure(fit, class="robustGARCH")
 }
-#' @export
+
+
 robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.85, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich"), n = 2000, m = 100, rseed = 42){
 
   methods <- match.arg(methods)
@@ -181,7 +186,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
   stdErr_method <- match.arg(stdErr_method)
 
   par(mfrow=c(2,2))
-  spec <- ugarchspec(mean.model = list(armaOrder = c(0,0), include.mean = FALSE))
+  spec <- rugarch::ugarchspec(mean.model = list(armaOrder = c(0,0), include.mean = FALSE))
 
   if(methods == "MLE"){
     if(length(param)!=4){stop("the parameters for std distribution should be gamma, alpha, beta, shape")}
@@ -189,7 +194,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     names(fixed) <- c("gamma", "alpha", "beta", "shape")
     fspec <- spec
     setfixed(fspec) <- fixed
-    y <- ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
+    y <- rugarch::ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
     y. <- y@path$seriesSim
 
     qml_res <- matrix(0.0, nrow = m, ncol = 4)
@@ -221,7 +226,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     names(fixed) <- c("gamma", "alpha", "beta")
     fspec <- spec
     setfixed(fspec) <- fixed
-    y <- ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
+    y <- rugarch::ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
     y. <- y@path$seriesSim
 
     qml_res <- matrix(0.0, nrow = m, ncol = 3)
@@ -245,7 +250,8 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
 
   }
 }
-#' @export
+
+
 rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
 
   start_time <- Sys.time()
@@ -325,7 +331,8 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
        sigma=sigma,
        yt=Muestram)
 }
-#' @export
+
+
 nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control){
 
   suppressWarnings(rm(Muestrac, Muestram))
@@ -491,7 +498,8 @@ nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control){
     NA
   }
 }
-#' @export
+
+
 new_var <- function(x){
 
   n <- length(x)
@@ -514,7 +522,8 @@ new_var <- function(x){
 
   v
 }
-#' @export
+
+
 tau_sq <- function(x){
 
   s <- s_est(x)
@@ -523,7 +532,8 @@ tau_sq <- function(x){
 
   t
 }
-#' @export
+
+
 s_est <- function(x){
 
   b <- 1.625
@@ -581,7 +591,8 @@ s_est <- function(x){
 
   s
 }
-#' @export
+
+
 # A continous ... function.
 rho <- function(x){
 
@@ -605,7 +616,8 @@ rho <- function(x){
 
   ps
 }
-#' @export
+
+
 nfun <- function(x, shape = 3.0){
   # input here is w_t.
   b <- 4.3 #6.7428
@@ -625,7 +637,8 @@ nfun <- function(x, shape = 3.0){
 
   ps
 }
-#' @export
+
+
 sigmaCal <- function(pars, data){
 
   n <- prod(length(data))
@@ -643,7 +656,8 @@ sigmaCal <- function(pars, data){
 
   var
 }
-#' @export
+
+
 Fnue <- function(start_pars){
 
   y2 <- Muestram
@@ -684,7 +698,8 @@ Fnue <- function(start_pars){
 
   nml
 }
-#' @export
+
+
 freg <- function(x, a, b){
   # the rho function.
 
@@ -712,7 +727,8 @@ freg <- function(x, a, b){
 
   g
 }
-#' @export
+
+
 rk <- function(x, k, l){
 
   if(methods == "QML" || methods == "MLE" || methods == "M" || k == l){
