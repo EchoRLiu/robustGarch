@@ -53,6 +53,7 @@ aef(fit, nu = 5)
 \item{fit}{A robustGARCH fit object of class \code{\link{robGarch}}}
 
 \item{nu}{# to be written}
+\item{v}{degrees of freedom in a Student's t-distribution.}
 }
 \description{
 Summary for robustGARCH S3 class
