@@ -14,7 +14,8 @@ jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
 
-    name: check - ${{ matrix.config.os }} (${{ matrix.config.r }})
+    name: R-CMD-check-version
+    # ${{ matrix.config.os }} (${{ matrix.config.r }})
 
     strategy:
       fail-fast: false
