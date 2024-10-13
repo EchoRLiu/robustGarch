@@ -1,3 +1,5 @@
+#' @importFrom stats median pnorm density nlminb
+#' @importFrom graphics par
 #' @title Robust Estimates for GARCH(1,1) Model
 #'
 #' @name robGarch
@@ -59,9 +61,13 @@
 robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.8, 3.0), 
                      optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, 
                      optimizer_control = list(trace=0), stdErr_method = c("numDeriv", "optim", "sandwich")){
-  # TODO: xts data takes a long time
-  if(!is.numeric(data) || length(data)==0)
-    stop("Data must be a numeric vector of non-zero length")
+  
+  # if(!is.numeric(data) || length(data)==0)
+  #   stop("Data must be a numeric vector of non-zero length")
+
+  # the calculation will use data_, which only has the return data and without dates
+  # but we will keep data to retain the original dates
+  data_ = zoo::coredata(data) 
 
   methods = match.arg(methods)
   optimizer = match.arg(optimizer)
@@ -99,7 +105,7 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
     stop("use Rsolnp optimizer for now")
   }
 
-  std_errors <- sqrt(diag(abs(solve(H)/length(data))))
+  std_errors <- sqrt(diag(abs(solve(H)/length(data_))))
   if(methods == "MLE"){
     standard_error <- c(std_errors[2:4], std_errors[6])
     fit$observed_I <- -H[c(2,3,4,6), c(2,3,4,6)]
@@ -189,7 +195,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     fixed <- param
     names(fixed) <- c("gamma", "alpha", "beta", "shape")
     fspec <- spec
-    setfixed(fspec) <- fixed
+    rugarch::setfixed(fspec) <- fixed
     y <- rugarch::ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
     y. <- y@path$seriesSim
 
@@ -221,7 +227,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     fixed <- param
     names(fixed) <- c("gamma", "alpha", "beta")
     fspec <- spec
-    setfixed(fspec) <- fixed
+    rugarch::setfixed(fspec) <- fixed
     y <- rugarch::ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
     y. <- y@path$seriesSim
 
@@ -250,6 +256,10 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control, shared
 
   # unpack shared_vars
   methods <- shared_vars$methods
+
+  # for minimum code change, data_ and data naming are exchanged here
+  data_ = data # retain the dates and structure
+  data = zoo::coredata(data) # for calculation
 
   start_time <- Sys.time()
   # optimizer/optimizer_control
@@ -315,7 +325,7 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control, shared
 
   time_elapsed <- Sys.time() - start_time
 
-  list(data=data,
+  list(data=data_,
        methods = methods,
        optimizer=optimizer,
        optimizer_x0=res$x0,
