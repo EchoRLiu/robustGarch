@@ -14,8 +14,7 @@
 #' @param pctReturn_ a logical argument. IF TRUE, the plot function will plot the returns in percentage instead of original. Default is TRUE.
 #' @param abs_ a logical argument, when TRUE, the plot function will plot abs(returns) with conditional standard deviation instead of returns, default to TRUE.
 #' @param ... # to be written
-#' @param nu # to be written
-#' @param v degrees of freedom in a Student's t-distribution.
+#' @param nu degrees of freedom in a Student's t-distribution.
 #'
 #' @name robustGARCH-summary
 #' @aliases summary.robustGARCH
@@ -31,7 +30,6 @@
 #' summary(fit)
 #' print(fit)
 #' plot(fit)
-#' aef(fit)
 #' 
 #' @export
 summary.robustGARCH <- function(object, digits = 3, ...){
@@ -45,6 +43,8 @@ summary.robustGARCH <- function(object, digits = 3, ...){
 #    The \usage entries must correspond to syntactically valid R code.
 #    See chapter ‘Writing R documentation files’ in the ‘Writing R
 #    Extensions’ manual.
+  fit <- object
+
   res <- rbind(round(fit$fitted_pars, digits), round(fit$standard_error, digits), round(fit$t_value, digits), round(fit$p_value, digits))
   colnames(res) <- names(fit$fitted_pars)
   rownames(res) <- c("Estimates", "Std. Errors", "t-statistic", "p-value")
@@ -75,6 +75,8 @@ summary.robustGARCH <- function(object, digits = 3, ...){
 #' @export
 print.robustGARCH <- function(x, digits = 3, ...){
 
+  fit <- x
+
   res <- rbind(round(fit$fitted_pars, digits))
   colnames(res) <- names(fit$fitted_pars)
   rownames(res) <- c("Estimates (Std. Errors)")
@@ -96,12 +98,12 @@ print.robustGARCH <- function(x, digits = 3, ...){
 #' @export
 plot.robustGARCH <- function(x, digits = 3, estimation_pos = "topleft", line_name_pos = "topright", par_ = par(no.readonly = TRUE), pctReturn_ = TRUE, abs_ = TRUE, original_ = FALSE, main_name = "Conditional Volatility (vs |pctReturns(%)|)", ...){
 
+  fit <- x
   .plot.garchsim(fit, digits, estimation_pos, line_name_pos, par_, pctReturn_, abs_, original_, main_name)
 
 }
 
 #' @rdname robustGARCH-summary
-#' @export
 aef <- function(fit, nu=5){
 
   aTop <- .aValue(fit, TRUE, nu)
