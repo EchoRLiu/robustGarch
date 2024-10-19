@@ -1,4 +1,5 @@
-#' @export
+# import methods from other packages
+#' @importFrom stats integrate
 .aValue <- function(fit, top = FALSE, v=5){
   if(top){
     # Calculate a(Psi_0, g), the top value of AEF, where Psi_0 = rho_0'.
@@ -158,11 +159,13 @@
 
   g
 }
-#' @export
 .expFisherI <- function(fit, true_pars){
 
   # Big difference between expected and observed Fisher Information matrix.
-  T <- length(fit$data)
+
+  data_ = zoo::coredata(fit$data)
+
+  T <- length(data_)
 
   if(fit$methods == 'MLE'){
     # to be added.
@@ -175,17 +178,17 @@
     # it seems like k is used here as an index
     # could any k was supposed to be the global one implemented before?
     for(k in 1:(T-1)){
-      FS[2,1] <- FS[2,1] + true_pars[3]^(k-1) * (fit$data[T-k])^2
+      FS[2,1] <- FS[2,1] + true_pars[3]^(k-1) * (data_[T-k])^2
     }
 
     FS[3,1] <- true_pars[1]/(1-true_pars[3])^2
     for(k in 1:(T-2)){
-      FS[3,1] <- FS[3,1] + true_pars[2]*k*true_pars[3]^(k-1)*(fit$data[T-k-1])^2
+      FS[3,1] <- FS[3,1] + true_pars[2]*k*true_pars[3]^(k-1)*(data_[T-k-1])^2
     }
 
     ht <- true_pars[1]/(1-true_pars[3])
     for(k in 1:(T-1)){
-      ht <- ht + true_pars[2] * true_pars[3]^(k-1) * (fit$data[T-k])^2
+      ht <- ht + true_pars[2] * true_pars[3]^(k-1) * (data_[T-k])^2
     }
   }
 
