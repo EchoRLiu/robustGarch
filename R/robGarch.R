@@ -1,3 +1,5 @@
+#' @importFrom stats median pnorm density nlminb
+#' @importFrom graphics par
 #' @title Robust Estimates for GARCH(1,1) Model
 #'
 #' @name robGarch
@@ -59,37 +61,37 @@
 robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.8, 3.0), 
                      optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, 
                      optimizer_control = list(trace=0), stdErr_method = c("numDeriv", "optim", "sandwich")){
-  # TODO: xts data takes a long time
-  if(!is.numeric(data) || length(data)==0)
-    stop("Data must be a numeric vector of non-zero length")
+  
+  # if(!is.numeric(data) || length(data)==0)
+  #   stop("Data must be a numeric vector of non-zero length")
+
+  # the calculation will use data_, which only has the return data and without dates
+  # but we will keep data to retain the original dates
+  data_ = zoo::coredata(data) 
 
   methods = match.arg(methods)
   optimizer = match.arg(optimizer)
   stdErr_method = match.arg(stdErr_method)
 
-  # .pkg.env <- new.env(parent = emptyenv()) # create package local environment.
-  assign("methods", methods, envir = .GlobalEnv)
-  # .pkg.env$methods <- methods ## In recent version of R, .pkg.env can be a locked env.
+  # Create a list to hold shared variables
+  shared_vars <- list()
 
-  if(methods == "QML" || methods == "MLE"){
-    assign("div", 1.0, envir = .GlobalEnv)
-    # .pkg.env$div <- 1.0
-  }
-  else{
-    assign("div", fixed_pars[1], envir = .GlobalEnv)
-    # .pkg.env$div <- fixed_pars[1]
+  shared_vars$methods <- methods
+
+  if (methods == "QML" || methods == "MLE") {
+    shared_vars$div <- 1.0
+  } else {
+    shared_vars$div <- fixed_pars[1]
   }
 
-  if(methods == "BM"){
-    assign("k", fixed_pars[2], envir = .GlobalEnv)
-    # .pkg.env$k <- fixed_pars[2]
-  }
-  else{
-    assign("k", 3.0, envir = .GlobalEnv)
-    # .pkg.env$k <- 3.0
+  if (methods == "BM") {
+    shared_vars$k <- fixed_pars[2]
+  } else {
+    shared_vars$k <- 3.0
   }
 
-  fit <- rgFit_local(data, optimizer, optimizer_x0, optimizer_control)
+  # Pass shared_vars to rgFit_local
+  fit <- rgFit_local(data, optimizer, optimizer_x0, optimizer_control, shared_vars)
 
   # std_err calculation
   if(optimizer == "Rsolnp"){
@@ -103,7 +105,7 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
     stop("use Rsolnp optimizer for now")
   }
 
-  std_errors <- sqrt(diag(abs(solve(H)/length(data))))
+  std_errors <- sqrt(diag(abs(solve(H)/length(data_))))
   if(methods == "MLE"){
     standard_error <- c(std_errors[2:4], std_errors[6])
     fit$observed_I <- -H[c(2,3,4,6), c(2,3,4,6)]
@@ -193,7 +195,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     fixed <- param
     names(fixed) <- c("gamma", "alpha", "beta", "shape")
     fspec <- spec
-    setfixed(fspec) <- fixed
+    rugarch::setfixed(fspec) <- fixed
     y <- rugarch::ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
     y. <- y@path$seriesSim
 
@@ -225,7 +227,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     fixed <- param
     names(fixed) <- c("gamma", "alpha", "beta")
     fspec <- spec
-    setfixed(fspec) <- fixed
+    rugarch::setfixed(fspec) <- fixed
     y <- rugarch::ugarchpath(fspec, n.sim = n, m.sim = m, rseed = 42)
     y. <- y@path$seriesSim
 
@@ -250,15 +252,20 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
 
   }
 }
+rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control, shared_vars){
 
+  # unpack shared_vars
+  methods <- shared_vars$methods
 
-rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
+  # for minimum code change, data_ and data naming are exchanged here
+  data_ = data # retain the dates and structure
+  data = zoo::coredata(data) # for calculation
 
   start_time <- Sys.time()
   # optimizer/optimizer_control
 
   n <- length(data)
-  v_data <- new_var(data)
+  v_data <- new_var(data, shared_vars)
   data_normalized <- data/sqrt(v_data)
   data_normalized <- data_normalized-median(data_normalized)
   for(i in 1:n){
@@ -266,9 +273,9 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
       data_normalized[i] <- 10^(-10)
     }
   }
-  vini <- new_var(data_normalized)
+  vini <- new_var(data_normalized, shared_vars)
 
-  res <- nEst(data_normalized, vini, optimizer, optimizer_x0, optimizer_control)
+  res <- nEst(data_normalized, vini, optimizer, optimizer_x0, optimizer_control, shared_vars)
   optimizer_result <- res
     #if(optimizer == "fminsearch"){
       #stop("This feature is under active development, please use Rsolnp.")
@@ -314,11 +321,11 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
     } else{
       NA
     }
-  sigma <- sigmaCal(fitted_pars, data)
+  sigma <- sigmaCal(fitted_pars, data, shared_vars)
 
   time_elapsed <- Sys.time() - start_time
 
-  list(data=data,
+  list(data=data_,
        methods = methods,
        optimizer=optimizer,
        optimizer_x0=res$x0,
@@ -329,13 +336,12 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control){
        time_elapsed=time_elapsed,
        message=message,
        sigma=sigma,
-       yt=Muestram)
+       yt=res$Muestram)
 }
-
-
-nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control){
-
-  suppressWarnings(rm(Muestrac, Muestram))
+nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control, shared_vars){
+  # unpack the shared_vars
+  methods <- shared_vars$methods
+  k <- shared_vars$k
 
   if(methods == "MLE"){
     std <- TRUE
@@ -347,8 +353,8 @@ nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control){
   yc <- y[1:n]^2
   y2 <- log(yc)
 
-  assign("Muestrac", yc, envir = .GlobalEnv)
-  assign("Muestram", y2, envir = .GlobalEnv)
+  shared_vars$Muestrac <- yc
+  shared_vars$Muestram <- y2
 
   alfa0min <- 0.1
   alfa0max <- 1
@@ -391,10 +397,10 @@ nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control){
                 for(ki in c(k, 20)){
                   l <- ki+1
                   for(i in 2:n){
-                    var[i] <- alfa0+(alfa1*rk(yc[i-1]/var[i-1],ki,l)+beta1)*var[i-1]
+                    var[i] <- alfa0+(alfa1*rk(yc[i-1]/var[i-1],ki,l, shared_vars)+beta1)*var[i-1]
                   }
 
-                  nml <- mean(nfun(y2[2:n]-log(var[2:n]), shape))
+                  nml <- mean(nfun(y2[2:n]-log(var[2:n]), shared_vars, shape))
                   if(nml < ml){
                     flag <- 1
                     vi <- c(alfa0,alfa1,beta1,shape)
@@ -431,10 +437,10 @@ nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control){
               for(ki in c(k, 20)){
                 l <- ki+1
                 for(i in 2:n){
-                  var[i] <- alfa0+(alfa1*rk(yc[i-1]/var[i-1],ki,l)+beta1)*var[i-1]
+                  var[i] <- alfa0+(alfa1*rk(yc[i-1]/var[i-1],ki,l, shared_vars)+beta1)*var[i-1]
                 }
 
-                nml <- mean(nfun(y2[2:n]-log(var[2:n])))
+                nml <- mean(nfun(y2[2:n]-log(var[2:n]), shared_vars))
 
                 if(nml < ml){
                   flag <- 1
@@ -461,18 +467,19 @@ nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control){
 
     #stop("This feature is under development, please use Rsolnp instead.")
     res <- nloptr::nloptr(x0 = x0,
-                          eval_f = Fnue,
+                          eval_f = function(pars) Fnue(pars, shared_vars),
                           lb = lb,
                           ub = ub,
                           opts=optimizer_control)
     res$x0 <- x0
+    res$Muestram <- y2
 
     return(res)
 
   } else if (optimizer == "Rsolnp"){
 
     res <- Rsolnp::solnp(pars = x0,
-                         fun = Fnue,
+                         fun = function(pars) Fnue(pars, shared_vars),
                          LB = lb,
                          UB = ub,
                          ineqfun = function(vi){vi[2]+vi[3]},
@@ -480,17 +487,19 @@ nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control){
                          ineqUB = 1.0,
                          control = optimizer_control)
     res$x0 <- x0
+    res$Muestram <- y2
 
     return(res)
 
   } else if (optimizer == "nlminb"){
 
     res <- nlminb(start = x0,
-                  objective = Fnue,
+                  objective = function(pars) Fnue(pars, shared_vars),
                   control = optimizer_control,
                   lower = lb,
                   upper = ub)
     res$x0 <- x0
+    res$Muestram <- y2
 
     return(res)
 
@@ -498,14 +507,12 @@ nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control){
     NA
   }
 }
-
-
-new_var <- function(x){
+new_var <- function(x, shared_vars){
 
   n <- length(x)
-  tausq_x <- tau_sq(x)
+  tausq_x <- tau_sq(x, shared_vars)
   x_square <- x^2
-  tausq_xsquare <- tau_sq(x_square-1)
+  tausq_xsquare <- tau_sq(x_square-1, shared_vars)
 
   i <- 1
   v <- x[1]^2
@@ -522,19 +529,15 @@ new_var <- function(x){
 
   v
 }
+tau_sq <- function(x, shared_vars){
 
-
-tau_sq <- function(x){
-
-  s <- s_est(x)
-  r <- rho(x/s)
+  s <- s_est(x, shared_vars)
+  r <- rho(x/s, shared_vars)
   t <- mean(r)*s^2/0.4797
 
   t
 }
-
-
-s_est <- function(x){
+s_est <- function(x, shared_vars){
 
   b <- 1.625
   emed <- 0.675
@@ -544,11 +547,11 @@ s_est <- function(x){
 
   m <- median(abs(x))/emed
   x <- x/m
-  rho1 <- rho(x/0.405)
+  rho1 <- rho(x/0.405, shared_vars)
   a <- mean(rho1)/b
   v <- 1-a # Starting value
   si <- a # Starting value
-  rho1 <- rho(x/(0.405*si)) # Starting value
+  rho1 <- rho(x/(0.405*si), shared_vars) # Starting value
   a<- mean(rho1)/b # Starting value
   vi <- 1-a # Starting value
   AUX <- v * vi # Starting value
@@ -558,7 +561,7 @@ s_est <- function(x){
     s <- si
     v <- vi
     si <- a*s
-    rho1 <- rho(x/(0.405 * si))
+    rho1 <- rho(x/(0.405 * si), shared_vars)
     a <- mean(rho1)/b
     vi <- 1-a
     AUX <- v*vi
@@ -568,7 +571,7 @@ s_est <- function(x){
   nsec <- 0
   while(eps>0.005){
     ns <- (s+si)/2
-    rho1 <- rho(x/(0.405*ns))
+    rho1 <- rho(x/(0.405*ns), shared_vars)
     a <- mean(rho1)/b
     nv <- 1-a
     AUX <- nv * vi
@@ -591,10 +594,10 @@ s_est <- function(x){
 
   s
 }
+rho <- function(x, shared_vars){
 
-
-# A continous ... function.
-rho <- function(x){
+  # unpack shared_vars
+  methods <- shared_vars$methods
 
   if(methods == "QML" || methods == "MLE" || methods == "M"){
 
@@ -616,9 +619,11 @@ rho <- function(x){
 
   ps
 }
+nfun <- function(x, shared_vars, shape = 3.0){
 
+  # unpack shared_vars
+  methods <- shared_vars$methods
 
-nfun <- function(x, shape = 3.0){
   # input here is w_t.
   b <- 4.3 #6.7428
   b1 <- 4.0 #b-0.5
@@ -633,13 +638,14 @@ nfun <- function(x, shape = 3.0){
     x <- (exp(x)-x +log(2*pi))/2
   }
 
-  ps <- freg(x, b1, b)
+  ps <- freg(x, b1, b, shared_vars)
 
   ps
 }
+sigmaCal <- function(pars, data, shared_vars){
 
-
-sigmaCal <- function(pars, data){
+  # unpack the shared_vars
+  k <- shared_vars$k
 
   n <- prod(length(data))
 
@@ -650,18 +656,20 @@ sigmaCal <- function(pars, data){
     l <- k+1
     for(i in 2:n){
       # h_c(t) in the paper.
-      var[i]<-pars[1]+(pars[2]*rk(data[i-1]^2/var[i-1],k,l)+pars[3])*var[i-1]
+      var[i]<-pars[1]+(pars[2]*rk(data[i-1]^2/var[i-1],k,l, shared_vars)+pars[3])*var[i-1]
     }
   }
 
   var
 }
+Fnue <- function(start_pars, shared_vars){
 
+  # unpack the shared_vars
+  methods <- shared_vars$methods
+  k <- shared_vars$k
 
-Fnue <- function(start_pars){
-
-  y2 <- Muestram
-  yc <- Muestrac
+  y2 <- shared_vars$Muestram
+  yc <- shared_vars$Muestrac
 
   n <- prod(length(y2))
 
@@ -681,12 +689,12 @@ Fnue <- function(start_pars){
 
       l <- ki+1
       for(i in 2:n){
-        var[i]<-vi[1]+(vi[2]*rk(yc[i-1]/var[i-1],ki,l)+vi[3])*var[i-1]
+        var[i]<-vi[1]+(vi[2]*rk(yc[i-1]/var[i-1],ki,l, shared_vars)+vi[3])*var[i-1]
       }
       if(methods == "MLE"){
-        ml <- mean(nfun(y2[2:n]-log(var[2:n]), shape))
+        ml <- mean(nfun(y2[2:n]-log(var[2:n]), shared_vars, shape))
       } else{
-        ml <- mean(nfun(y2[2:n]-log(var[2:n])))
+        ml <- mean(nfun(y2[2:n]-log(var[2:n]), shared_vars))
       }
 
       if(is.nan(ml) || is.nan(nml)){
@@ -698,10 +706,12 @@ Fnue <- function(start_pars){
 
   nml
 }
-
-
-freg <- function(x, a, b){
+freg <- function(x, a, b, shared_vars){
   # the rho function.
+
+  # unpack shared_vars
+  methods <- shared_vars$methods
+  div <- shared_vars$div
 
   if(methods == "QML" || methods == "MLE" || a == b){
     # used to be return exp(w/div)-w/div, now correct it to be the following as stated in the paper.
@@ -727,22 +737,25 @@ freg <- function(x, a, b){
 
   g
 }
+rk <- function(x, ki, l, shared_vars){
 
+  # unpack shared_vars
+  methods <- shared_vars$methods
+  # k should not be used as a global variable as it has conflict with ki (previously k) in the function.
+  # k <- shared_vars$k
 
-rk <- function(x, k, l){
-
-  if(methods == "QML" || methods == "MLE" || methods == "M" || k == l){
+  if(methods == "QML" || methods == "MLE" || methods == "M" || ki == l){
 
     g <- x
 
   } else{
-    bot <- 2*k-2*l
+    bot <- 2*ki-2*l
     a <- 1/bot
     b <- -2*l/bot
-    c <- k^2/bot
+    c <- ki^2/bot
 
     u <- as.numeric(x>l)
-    v <- as.numeric(x<k)
+    v <- as.numeric(x<ki)
 
     g<- x*v + (1-u-v)*(a*x^2 + b*x + c) + u*(a*l^2+b*l+c)
   }

@@ -16,4 +16,5 @@
 #'
 #' @keywords datasets
 #' @source \url{https://finance.yahoo.com/quote/\%5EGSPC/history?period1=949363200&period2=1025222400&interval=1d&filter=history&frequency=1d}
+#' @importFrom xts xts
 "gspc"
