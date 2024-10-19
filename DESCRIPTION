@@ -23,4 +23,4 @@ Imports:
     xts
 VignetteBuilder: knitr
 Depends: 
-    R (>= 4.4.0)
+    R (>= 4.3.3)
