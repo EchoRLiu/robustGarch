@@ -12,7 +12,7 @@
 #'
 #' @param data a time series of log returns, need to be numeric value.
 #' @param methods robust M-Estimate method used for Garch(1,1) model, "M" and "BM", or non-robust M-Estimate method, "QML" and "MLE". Default is "BM".
-#' @param fixed_pars a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "M", the parameter should be c, which controls the modified loss function, user can use default c = .8; for "BM", the parameters should be c(c, k), where c is the same as in "M", user can use default c = 0.8,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.
+#' @param tuningPars a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "M", the parameter should be c, which controls the modified loss function, user can use default c = .8; for "BM", the parameters should be c(c, k), where c is the same as in "M", user can use default c = 0.8,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.
 #' @param optimizer optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".
 #' @param optimizer_x0 user-defined starting point for searching the optimum, c(x0_gamma, x0_alpha, x0_beta) or c(x0_gamma, x0_alpha, x0_beta, x0_shape) when the methods is "MLE". Default is "FALSE", where the starting point will be calculated instead of being user-defined.
 #' @param optimizer_control list of control arguments passed to the optimizer. Default is list(trace=0). If wanting to print out the optimizer result, use list() instead.
@@ -23,7 +23,7 @@
 #'     \item{data}{the log returns data object for the robustGARCH model to be fitted}
 #'     \item{data_name}{the name of data variable input used}
 #'     \item{methods}{the method called}
-#'     \item{fixed_pars}{named numeric vector of fixed parameters used}
+#'     \item{turingPars}{named numeric vector of fixed parameters used}
 #'     \item{optimizer}{the optimizer called}
 #'     \item{optimizer_x0}{user-defined or calculated starting point for searching the optimum}
 #'     \item{optimizer_control}{the list of control arguments passed to the optimizer}
@@ -52,22 +52,22 @@
 #'
 #'
 #' data("gspc")
-#' fit <- robGarch(gspc[1:604], methods="BM", fixed_pars = c(0.8, 3.0))
+#' fit <- robGarch(gspc[1:604], methods="BM", tuningPars = c(0.8, 3.0))
 #'
 #'
 #' @rdname robustGARCH-robGarch
 #' @export
 # Garch(1,1) model fit function
-robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.8, 3.0), 
-                     optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, 
+robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), turingPars = c(0.8, 3.0),
+                     optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE,
                      optimizer_control = list(trace=0), stdErr_method = c("numDeriv", "optim", "sandwich")){
-  
+
   # if(!is.numeric(data) || length(data)==0)
   #   stop("Data must be a numeric vector of non-zero length")
 
   # the calculation will use data_, which only has the return data and without dates
   # but we will keep data to retain the original dates
-  data_ = zoo::coredata(data) 
+  data_ = zoo::coredata(data)
 
   methods = match.arg(methods)
   optimizer = match.arg(optimizer)
@@ -81,11 +81,11 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
   if (methods == "QML" || methods == "MLE") {
     shared_vars$div <- 1.0
   } else {
-    shared_vars$div <- fixed_pars[1]
+    shared_vars$div <- tuningPars[1]
   }
 
   if (methods == "BM") {
-    shared_vars$k <- fixed_pars[2]
+    shared_vars$k <- tuningPars[2]
   } else {
     shared_vars$k <- 3.0
   }
@@ -116,7 +116,7 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
   standard_error[1] <- standard_error[1] * (fit$fitted_pars[1] / solution[1])
   t_value <- fit$fitted_pars / standard_error
   p_value <- 2*(1-pnorm(abs(t_value)))
-  
+
   ######## Change calculation method to above. ###########
   #if(stdErr_method == "numDeriv")
   #{
@@ -175,13 +175,13 @@ robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(
   fit$standard_error <- standard_error
   fit$t_value <- t_value
   fit$p_value <- p_value
-  fit$fixed_pars <- fixed_pars
+  fit$tuningPars <- tuningPars
 
   structure(fit, class="robustGARCH")
 }
 
 
-robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c("BM", "M", "QML", "MLE"), fixed_pars = c(0.85, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich"), n = 2000, m = 100, rseed = 42){
+robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c("BM", "M", "QML", "MLE"), tuningPars = c(0.85, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich"), n = 2000, m = 100, rseed = 42){
 
   methods <- match.arg(methods)
   optimizer <- match.arg(optimizer)
@@ -202,7 +202,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     qml_res <- matrix(0.0, nrow = m, ncol = 4)
     for( i in 1:m){
       y_ <- y.[((i-1)*n+1):(i*n)]
-      fit <- robGarch(y_, methods = methods, fixed_pars = fixed_pars, optimizer=optimizer, optimizer_x0 = optimizer_x0, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
+      fit <- robGarch(y_, methods = methods, tuningPars = tuningPars, optimizer=optimizer, optimizer_x0 = optimizer_x0, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
       qml_res[i,1:4] <- fit$fitted_pars
     }
 
@@ -234,7 +234,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     qml_res <- matrix(0.0, nrow = m, ncol = 3)
     for( i in 1:m){
       y_ <- y.[((i-1)*n+1):(i*n)]
-      fit <- robGarch(y_, methods = methods, fixed_pars = fixed_pars, optimizer=optimizer, optimizer_x0 = optimizer_x0, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
+      fit <- robGarch(y_, methods = methods, tuningPars = tuningPars, optimizer=optimizer, optimizer_x0 = optimizer_x0, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
       qml_res[i,1:3] <- fit$fitted_pars
     }
 
