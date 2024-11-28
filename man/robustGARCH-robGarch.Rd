@@ -7,7 +7,7 @@
 robGarch(
   data,
   methods = c("BM", "M", "QML", "MLE"),
-  fixed_pars = c(0.8, 3),
+  turingPars = c(0.8, 3),
   optimizer = c("Rsolnp", "nloptr", "nlminb"),
   optimizer_x0 = FALSE,
   optimizer_control = list(trace = 0),
@@ -15,26 +15,34 @@ robGarch(
 )
 }
 \arguments{
-\item{data}{a time series of log returns, need to be numeric value.}
+\item{data}{xts or numeric time series of returns.}
 
-\item{methods}{robust M-Estimate method used for Garch(1,1) model, "M" and "BM", or non-robust M-Estimate method, "QML" and "MLE". Default is "BM".}
+\item{optimizer}{character valued optimizer name, one of
+"Rsolnp", "nloptr", "nlminb", with default "Rsolnp".}
 
-\item{fixed_pars}{a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "M", the parameter should be c, which controls the modified loss function, user can use default c = .8; for "BM", the parameters should be c(c, k), where c is the same as in "M", user can use default c = 0.8,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.}
+\item{optimizer_control}{list of arguments passed optimizer. Default is list(trace=0). If wanting to print out the optimizer result, use list() instead.}
 
-\item{optimizer}{optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".}
+\item{fitMethod}{character valued name of fitting method,
+one of "BM", "M" "QML" or "MLE", with "BM" the default value.}
 
-\item{optimizer_x0}{user-defined starting point for searching the optimum, c(x0_gamma, x0_alpha, x0_beta) or c(x0_gamma, x0_alpha, x0_beta, x0_shape) when the methods is "MLE". Default is "FALSE", where the starting point will be calculated instead of being user-defined.}
+\item{tuningPars}{a numeric vector of two parameters that
+control fitting method robustness, with default c(0.8,3.0).
+to be kept fixed during optimization, and they are needed for parameter estimation. For "M", the parameter should be c, which controls the modified loss function, user can use default c = .8; for "BM", the parameters should be c(c, k), where c is the same as in "M", user can use default c = 0.8,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.}
 
-\item{optimizer_control}{list of control arguments passed to the optimizer. Default is list(trace=0). If wanting to print out the optimizer result, use list() instead.}
+\item{initialPars}{numeric user-defined initial parameters
+c(gamma0, alpha0, beta0) for use by optimizer.
+c(x0_gamma, x0_alpha, x0_beta) or c(x0_gamma, x0_alpha, x0_beta, x0_shape) when the methods is "MLE". Default is "FALSE", where the starting point will be calculated instead of being user-defined.}
 
-\item{stdErr_method}{method used to calculate standard error, one of "numDerive", "optim", "sandwich", default is "numDeriv" using hessian from numDeriv}
+\item{SE_method}{character valued name of standard error method,
+one of "numDerive", "optim", "sandwich", with default "numDeriv".
+ using hessian from numDeriv}
 }
 \value{
 A \code{robustGARCH} object(S3), the components of the object are:
     \item{data}{the log returns data object for the robustGARCH model to be fitted}
     \item{data_name}{the name of data variable input used}
     \item{methods}{the method called}
-    \item{fixed_pars}{named numeric vector of fixed parameters used}
+    \item{turingPars}{named numeric vector of fixed parameters used}
     \item{optimizer}{the optimizer called}
     \item{optimizer_x0}{user-defined or calculated starting point for searching the optimum}
     \item{optimizer_control}{the list of control arguments passed to the optimizer}
@@ -59,6 +67,16 @@ Methods for fitting a Garch(1,1) model with daily log return time series, using 
 returns a \code{robustGARCH} object
 }
 \details{
+The "BM" fit method achieves the best robustness by
+bounding the normal distribution log-likelihood, and the variance
+filter recursion with a Huber psi function.  The "M" method
+just does uses the first of those two bounding functionsm and
+is less robust.  "QML" is the "quasi-maximum likelihood" method
+that maximizes the normal innovations distribution log-likelihood
+function, and as such is not at all robust toward outliers.
+The "MLE" method maximizes the log-likelihood for an innovations
+t-distribution with unknown degrees of freedom (dof). ????
+
 The \code{robGarch} function fits a Garch(1, 1) model to a time series of log return data, using one of the two methods of robust extended M-Estimates with certain parameters specified by the user, with guidance and examples from the vignette. The user can also specify the optimizer used during optimization procesure, and the method used to calculate standard error for the fitted parameters.
 
 For details of the list of control arguments, please refer to \code{nloptr::nloptr}, \code{Rsolnp::solnp}, \code{nlminb}.
@@ -67,7 +85,7 @@ For details of the list of control arguments, please refer to \code{nloptr::nlop
 
 
 data("gspc")
-fit <- robGarch(gspc[1:604], methods="BM", fixed_pars = c(0.8, 3.0))
+fit <- robGarch(gspc[1:604], methods="BM", tuningPars = c(0.8, 3.0))
 
 
 }

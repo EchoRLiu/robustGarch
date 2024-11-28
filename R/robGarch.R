@@ -10,13 +10,32 @@
 #' (2) M-Estimates with bounds to the propagation of the effect of one outlier on the subsequent predictors of the conditional variances.
 #' returns a \code{robustGARCH} object
 #'
-#' @param data a time series of log returns, need to be numeric value.
-#' @param methods robust M-Estimate method used for Garch(1,1) model, "M" and "BM", or non-robust M-Estimate method, "QML" and "MLE". Default is "BM".
-#' @param tuningPars a named numeric vector of parameters to be kept fixed during optimization, and they are needed for parameter estimation. For "M", the parameter should be c, which controls the modified loss function, user can use default c = .8; for "BM", the parameters should be c(c, k), where c is the same as in "M", user can use default c = 0.8,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.
-#' @param optimizer optimizer used for optimization, one of "nloptr", "Rsolnp", "nlminb", default is "Rsolnp".
-#' @param optimizer_x0 user-defined starting point for searching the optimum, c(x0_gamma, x0_alpha, x0_beta) or c(x0_gamma, x0_alpha, x0_beta, x0_shape) when the methods is "MLE". Default is "FALSE", where the starting point will be calculated instead of being user-defined.
-#' @param optimizer_control list of control arguments passed to the optimizer. Default is list(trace=0). If wanting to print out the optimizer result, use list() instead.
-#' @param stdErr_method method used to calculate standard error, one of "numDerive", "optim", "sandwich", default is "numDeriv" using hessian from numDeriv
+#' @param data xts or numeric time series of returns.
+#' @param fitMethod character valued name of fitting method,
+#' one of "BM", "M" "QML" or "MLE", with "BM" the default value.
+#' @param tuningPars a numeric vector of two parameters that
+#' control fitting method robustness, with default c(0.8,3.0).
+#' to be kept fixed during optimization, and they are needed for parameter estimation. For "M", the parameter should be c, which controls the modified loss function, user can use default c = .8; for "BM", the parameters should be c(c, k), where c is the same as in "M", user can use default c = 0.8,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.
+#' @param optimizer character valued optimizer name, one of
+#' "Rsolnp", "nloptr", "nlminb", with default "Rsolnp".
+#' @param initialPars numeric user-defined initial parameters
+#' c(gamma0, alpha0, beta0) for use by optimizer.
+#' c(x0_gamma, x0_alpha, x0_beta) or c(x0_gamma, x0_alpha, x0_beta, x0_shape) when the methods is "MLE". Default is "FALSE", where the starting point will be calculated instead of being user-defined.
+#' @param optimizer_control list of arguments passed optimizer. Default is list(trace=0). If wanting to print out the optimizer result, use list() instead.
+#' @param SE_method character valued name of standard error method,
+#' one of "numDerive", "optim", "sandwich", with default "numDeriv".
+#'  using hessian from numDeriv
+#'
+#' @details The "BM" fit method achieves the best robustness by
+#' bounding the normal distribution log-likelihood, and the variance
+#' filter recursion with a Huber psi function.  The "M" method
+#' just does uses the first of those two bounding functionsm and
+#' is less robust.  "QML" is the "quasi-maximum likelihood" method
+#' that maximizes the normal innovations distribution log-likelihood
+#' function, and as such is not at all robust toward outliers.
+#' The "MLE" method maximizes the log-likelihood for an innovations
+#' t-distribution with unknown degrees of freedom (dof). ????
+#'
 #'
 #' @return
 #' A \code{robustGARCH} object(S3), the components of the object are:
