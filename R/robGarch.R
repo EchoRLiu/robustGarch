@@ -13,7 +13,7 @@
 #' @param data xts or numeric time series of returns.
 #' @param fitMethod character valued name of fitting method,
 #' one of "BM", "M" "QML" or "MLE", with "BM" the default value.
-#' @param tuningPars a numeric vector of two parameters that
+#' @param robtunePars a numeric vector c(cM,cFlt) of two parameters that
 #' control fitting method robustness, with default c(0.8,3.0).
 #' to be kept fixed during optimization, and they are needed for parameter estimation. For "M", the parameter should be c, which controls the modified loss function, user can use default c = .8; for "BM", the parameters should be c(c, k), where c is the same as in "M", user can use default c = 0.8,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.
 #' @param optimizer character valued optimizer name, one of
