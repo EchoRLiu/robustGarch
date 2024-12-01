@@ -2,7 +2,7 @@
 % Please edit documentation in R/robGarch.R
 \name{robGarch}
 \alias{robGarch}
-\title{Robust Estimates for GARCH(1,1) Model}
+\title{Robust GARCH(1,1) Model Estimated}
 \usage{
 robGarch(
   data,
@@ -15,67 +15,67 @@ robGarch(
 )
 }
 \arguments{
-\item{data}{xts or numeric time series of returns.}
+\item{data}{an xts object}
 
 \item{optimizer}{character valued optimizer name, one of
 "Rsolnp", "nloptr", "nlminb", with default "Rsolnp".}
 
-\item{optimizer_control}{list of arguments passed optimizer. Default is list(trace=0). If wanting to print out the optimizer result, use list() instead.}
-
 \item{fitMethod}{character valued name of fitting method,
-one of "BM", "M" "QML" or "MLE", with "BM" the default value.}
+one of "BM", "M" "QML" or "tMLE", with "BM" the default value.}
 
-\item{tuningPars}{a numeric vector of two parameters that
-control fitting method robustness, with default c(0.8,3.0).
-to be kept fixed during optimization, and they are needed for parameter estimation. For "M", the parameter should be c, which controls the modified loss function, user can use default c = .8; for "BM", the parameters should be c(c, k), where c is the same as in "M", user can use default c = 0.8,  and k (k > 0) is to control the robustness, the smaller k is, the more robust the method would be, user can use default k = 3.}
+\item{robtunePars}{a numeric vector c(cM,cFlt) that controls
+the extent of fitMethod robustness, with default c(0.8,3.0).}
 
 \item{initialPars}{numeric user-defined initial parameters
-c(gamma0, alpha0, beta0) for use by optimizer.
-c(x0_gamma, x0_alpha, x0_beta) or c(x0_gamma, x0_alpha, x0_beta, x0_shape) when the methods is "MLE". Default is "FALSE", where the starting point will be calculated instead of being user-defined.}
+c(gamma0, alpha0, beta0) for use by optimizer, with default
+values c(0.0005, 0.2, 0.7).}
 
-\item{SE_method}{character valued name of standard error method,
-one of "numDerive", "optim", "sandwich", with default "numDeriv".
+\item{optControl}{list of arguments passed to optimizer, with
+default \code{list(trace=0)}.}
+
+\item{SEmethod}{character valued name of standard error method,
+one of "numDeriv", "optim", "sandwich", with default "numDeriv".
  using hessian from numDeriv}
 }
 \value{
 A \code{robustGARCH} object(S3), the components of the object are:
-    \item{data}{the log returns data object for the robustGARCH model to be fitted}
-    \item{data_name}{the name of data variable input used}
-    \item{methods}{the method called}
-    \item{turingPars}{named numeric vector of fixed parameters used}
-    \item{optimizer}{the optimizer called}
-    \item{optimizer_x0}{user-defined or calculated starting point for searching the optimum}
-    \item{optimizer_control}{the list of control arguments passed to the optimizer}
-    \item{optimizer_result}{output of the called optimizer}
-    \item{stdErr_method}{the method called to calculate standard error}
-    \item{QML}{logical argument controlling the non-robustness of the fitting method}
-    \item{fitted_pars}{Garch(1,1) parameter estimations output of the called method}
-    \item{sigma}{the time series of the conditional standard deviation}
-    \item{yt}{the time series of log(data^2)}
-    \item{observed_I}{observed information matrix}
-    \item{objective}{the optimal likihood value obtained by the optimizer}
-    \item{time_elapsed}{the time used for the optimization routine}
-    \item{message}{the message of the convergence status produced by the called solver}
-    \item{standard_error}{standard erros of the fitted parameters using the method called}
-    \item{t_value}{t-values of gamma, alpha, beta, shape as well for methods "MLE"}
-    \item{p_value}{p-values of gamma, alpha, beta, shape as well for methods "MLE"}
+    \item{data}{the input xts object}
+    \item{fitMethod}{the the fitMethod specified}
+    \item{robtunePars}{the robtunePars specified}
+    \item{optimizer}{the optimizer type specified}
+    \item{initialPars}{the initialPars specified}
+    \item{optControl}{the list of control values specified}
+    \item{optOutput}{a list of the optimizer output values returned}
+    \item{SEmethod}{the specidied of calculating standard errors}
+    \item{coefEstimates}{computed parameter estimates}
+    \item{sigma}{conditional standard deviation xts class time series}
+    \item{observedInfomat}{observed information matrix}
+    \item{objective}{the optimizer minimized objective function value}
+    \item{message}{optimizer convergence satus message}
 }
 \description{
-Methods for fitting a Garch(1,1) model with daily log return time series, using two methods of robust extended M-Estimates:
-(1) maximizing modified likelihood function;
-(2) M-Estimates with bounds to the propagation of the effect of one outlier on the subsequent predictors of the conditional variances.
-returns a \code{robustGARCH} object
+Computes "BM" robust Garch(1,1) model parameter
+estimate by using a bounded objective function and a bounded
+conditional variance recursion.  Alternatively, it computes:
+(1) "M" estimates by using only the bounded objective function,
+(2) "QML" estimates based on a typically incorrect assumption
+of normally distributed innovations, (3) "t-MLE" estimates based
+on an assumption of an innovations t-distributed MLE with unknown
+location, scale,and degrees of freedom parameters.
+CHECK IF (3) IS CORRECT.
 }
 \details{
-The "BM" fit method achieves the best robustness by
-bounding the normal distribution log-likelihood, and the variance
-filter recursion with a Huber psi function.  The "M" method
-just does uses the first of those two bounding functionsm and
-is less robust.  "QML" is the "quasi-maximum likelihood" method
-that maximizes the normal innovations distribution log-likelihood
-function, and as such is not at all robust toward outliers.
-The "MLE" method maximizes the log-likelihood for an innovations
-t-distribution with unknown degrees of freedom (dof). ????
+The "BM" fit method delivers the highest robustness by
+using a half-Huber psi function to bound the normal distribution
+log-likelihood, and using a Huber psi function to prevent the
+propagation of influential outliers in the variance recursion.
+The "M" method is obtained by dropping the BM bounding of the
+variance recursion, and is therefore less robust toward outliers.
+
+Echo or Dan, please provide details for optControl.
+
+The SEmethod default "numDeriv" is based on the Hessian from the
+optimization.
 
 The \code{robGarch} function fits a Garch(1, 1) model to a time series of log return data, using one of the two methods of robust extended M-Estimates with certain parameters specified by the user, with guidance and examples from the vignette. The user can also specify the optimizer used during optimization procesure, and the method used to calculate standard error for the fitted parameters.
 
