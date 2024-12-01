@@ -1,6 +1,6 @@
 #' @importFrom stats median pnorm density nlminb
 #' @importFrom graphics par
-#' @title Robust GARCH(1,1) Model Estimated
+#' @title Robust GARCH(1,1) Model Estimation
 #'
 #' @name robGarch
 #'
@@ -14,6 +14,10 @@
 #' location, scale,and degrees of freedom parameters.
 #' CHECK IF (3) IS CORRECT.
 #'
+#' @references Muler, N. and Yohai, V. (2008). Robust estimates
+#' for GARCH models. Journal of Statistical Planning and Inference,
+#' 138, 2918-2940.
+#'
 #' @param data an xts object
 #' @param fitMethod character valued name of fitting method,
 #' one of "BM", "M" "QML" or "tMLE", with "BM" the default value.
@@ -23,12 +27,11 @@
 #' "Rsolnp", "nloptr", "nlminb", with default "Rsolnp".
 #' @param initialPars numeric user-defined initial parameters
 #' c(gamma0, alpha0, beta0) for use by optimizer, with default
-#' values c(0.0005, 0.2, 0.7).
+#' values c(0.0005, 0.15, 0.75).
 #' @param optControl list of arguments passed to optimizer, with
 #' default \code{list(trace=0)}.
 #' @param SEmethod character valued name of standard error method,
 #' one of "numDeriv", "optim", "sandwich", with default "numDeriv".
-#'  using hessian from numDeriv
 #'
 #' @details The "BM" fit method delivers the highest robustness by
 #' using a half-Huber psi function to bound the normal distribution
@@ -37,47 +40,42 @@
 #' The "M" method is obtained by dropping the BM bounding of the
 #' variance recursion, and is therefore less robust toward outliers.
 #'
-#' Echo or Dan, please provide details for optControl.
-#'
+#' ECHO OR DAN, PLEASE PROVIDE DETAILS FOR optControl.
+#' For details of the list of control arguments, please refer to
+#' \code{nloptr::nloptr}, \code{Rsolnp::solnp}, \code{nlminb}.
 #' The SEmethod default "numDeriv" is based on the Hessian from the
 #' optimization.
 #'
 #' @return
-#' A \code{robustGARCH} object(S3), the components of the object are:
-#'     \item{data}{the input xts object}
-#'     \item{fitMethod}{the the fitMethod specified}
-#'     \item{robtunePars}{the robtunePars specified}
-#'     \item{optimizer}{the optimizer type specified}
-#'     \item{initialPars}{the initialPars specified}
-#'     \item{optControl}{the list of control values specified}
-#'     \item{optOutput}{a list of the optimizer output values returned}
-#'     \item{SEmethod}{the specidied of calculating standard errors}
-#'     \item{coefEstimates}{computed parameter estimates}
-#'     \item{sigma}{conditional standard deviation xts class time series}
-#'     \item{observedInfomat}{observed information matrix}
-#'     \item{objective}{the optimizer minimized objective function value}
-#'     \item{message}{optimizer convergence satus message}
-#'
-#' @details
-#' The \code{robGarch} function fits a Garch(1, 1) model to a time series of log return data, using one of the two methods of robust extended M-Estimates with certain parameters specified by the user, with guidance and examples from the vignette. The user can also specify the optimizer used during optimization procesure, and the method used to calculate standard error for the fitted parameters.
-#'
-#' For details of the list of control arguments, please refer to \code{nloptr::nloptr}, \code{Rsolnp::solnp}, \code{nlminb}.
-#'
-#' @references Muler, Nora & Yohai, Victor. (2008). Robust estimates for GARCH models. Journal of Statistical Planning and Inference. 138. 2918-2940.
-#'
-#' @examples
-#'
-#'
-#' data("gspc")
-#' fit <- robGarch(gspc[1:604], methods="BM", tuningPars = c(0.8, 3.0))
-#'
+#' A list object of class \dQuote{robustGarch} with components:
+#' \item{data}{the input xts object}
+#' \item{fitMethod}{the the fitMethod specified}
+#' \item{robtunePars}{the robtunePars specified}
+#' \item{initialPars}{the initialPars specified}
+#' \item{optChoice}{the optimizer specified}
+#' \item{coefEstimates}{computed parameter estimates}
+#' \item{sigma}{conditional standard deviation xts class time series}
+#' \item{SEmethod}{the specidied of calculating standard errors}
+#' \item{observedInfoMat}{observed information matrix}
+#' \item{optDetails}{a list containing the optimizer specified,
+#' the control values specified, and the optimizer minimized
+#' objective, and convergence status message}
 #'
 #' @rdname robustGARCH-robGarch
 #' @export
-# Garch(1,1) model fit function
-robGarch <- function(data, methods = c("BM", "M", "QML", "MLE"), turingPars = c(0.8, 3.0),
-                     optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE,
-                     optimizer_control = list(trace=0), stdErr_method = c("numDeriv", "optim", "sandwich")){
+#'
+#' @examples
+#' data("gspc")
+#' fit <- robGarch(gspc[1:604], fitMethod = "BM")
+#' summary(fit)
+#'
+robGarch <- function(data, fitMethod = c("BM", "M", "QML", "MLE"),
+                     tuningPars = c(0.8, 3.0),
+                     optChoice = c("Rsolnp", "nloptr", "nlminb"),
+                     initialPars = c(0.0005, 0.15, 0.75),
+                     SEmethod = c("numDeriv", "optim", "sandwich"),
+                     optimizer = list(trace=0))
+  {
 
   # if(!is.numeric(data) || length(data)==0)
   #   stop("Data must be a numeric vector of non-zero length")
