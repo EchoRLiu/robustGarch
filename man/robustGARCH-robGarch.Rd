@@ -11,7 +11,7 @@ robGarch(
   optChoice = c("Rsolnp", "nloptr", "nlminb"),
   initialPars = c(5e-04, 0.15, 0.75),
   SEmethod = c("numDeriv", "optim", "sandwich"),
-  optimizer = list(trace = 0)
+  optControl = list(trace = 0)
 )
 }
 \arguments{
@@ -20,21 +20,21 @@ robGarch(
 \item{fitMethod}{character valued name of fitting method,
 one of "BM", "M" "QML" or "tMLE", with "BM" the default value.}
 
+\item{optChoice}{character valued optChoice name, one of
+"Rsolnp", "nloptr", "nlminb", with default "Rsolnp".}
+
 \item{initialPars}{numeric user-defined initial parameters
-c(gamma0, alpha0, beta0) for use by optimizer, with default
+c(gamma0, alpha0, beta0) for use by optChoice, with default
 values c(0.0005, 0.15, 0.75).}
 
 \item{SEmethod}{character valued name of standard error method,
 one of "numDeriv", "optim", "sandwich", with default "numDeriv".}
 
-\item{optimizer}{character valued optimizer name, one of
-"Rsolnp", "nloptr", "nlminb", with default "Rsolnp".}
+\item{optControl}{list of arguments passed to optChoice, with
+default \code{list(trace=0)}.}
 
 \item{robtunePars}{a numeric vector c(cM,cFlt) that controls
 the extent of fitMethod robustness, with default c(0.8,3.0).}
-
-\item{optControl}{list of arguments passed to optimizer, with
-default \code{list(trace=0)}.}
 }
 \value{
 A list object of class \dQuote{robustGarch} with components:
@@ -42,13 +42,13 @@ A list object of class \dQuote{robustGarch} with components:
 \item{fitMethod}{the the fitMethod specified}
 \item{robtunePars}{the robtunePars specified}
 \item{initialPars}{the initialPars specified}
-\item{optChoice}{the optimizer specified}
+\item{optChoice}{the optChoice specified}
 \item{coefEstimates}{computed parameter estimates}
 \item{sigma}{conditional standard deviation xts class time series}
 \item{SEmethod}{the specidied of calculating standard errors}
 \item{observedInfoMat}{observed information matrix}
-\item{optDetails}{a list containing the optimizer specified,
-the control values specified, and the optimizer minimized
+\item{optDetails}{a list containing the optChoice specified,
+the control values specified, and the optChoice minimized
 objective, and convergence status message}
 }
 \description{

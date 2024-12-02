@@ -23,12 +23,12 @@
 #' one of "BM", "M" "QML" or "tMLE", with "BM" the default value.
 #' @param robtunePars a numeric vector c(cM,cFlt) that controls
 #' the extent of fitMethod robustness, with default c(0.8,3.0).
-#' @param optimizer character valued optimizer name, one of
+#' @param optChoice character valued optChoice name, one of
 #' "Rsolnp", "nloptr", "nlminb", with default "Rsolnp".
 #' @param initialPars numeric user-defined initial parameters
-#' c(gamma0, alpha0, beta0) for use by optimizer, with default
+#' c(gamma0, alpha0, beta0) for use by optChoice, with default
 #' values c(0.0005, 0.15, 0.75).
-#' @param optControl list of arguments passed to optimizer, with
+#' @param optControl list of arguments passed to optChoice, with
 #' default \code{list(trace=0)}.
 #' @param SEmethod character valued name of standard error method,
 #' one of "numDeriv", "optim", "sandwich", with default "numDeriv".
@@ -52,13 +52,13 @@
 #' \item{fitMethod}{the the fitMethod specified}
 #' \item{robtunePars}{the robtunePars specified}
 #' \item{initialPars}{the initialPars specified}
-#' \item{optChoice}{the optimizer specified}
+#' \item{optChoice}{the optChoice specified}
 #' \item{coefEstimates}{computed parameter estimates}
 #' \item{sigma}{conditional standard deviation xts class time series}
 #' \item{SEmethod}{the specidied of calculating standard errors}
 #' \item{observedInfoMat}{observed information matrix}
-#' \item{optDetails}{a list containing the optimizer specified,
-#' the control values specified, and the optimizer minimized
+#' \item{optDetails}{a list containing the optChoice specified,
+#' the control values specified, and the optChoice minimized
 #' objective, and convergence status message}
 #'
 #' @rdname robustGARCH-robGarch
@@ -69,12 +69,13 @@
 #' fit <- robGarch(gspc[1:604], fitMethod = "BM")
 #' summary(fit)
 #'
-robGarch <- function(data, fitMethod = c("BM", "M", "QML", "MLE"),
+robGarch <- function(data,
+                     fitMethod = c("BM", "M", "QML", "MLE"),
                      tuningPars = c(0.8, 3.0),
                      optChoice = c("Rsolnp", "nloptr", "nlminb"),
                      initialPars = c(0.0005, 0.15, 0.75),
                      SEmethod = c("numDeriv", "optim", "sandwich"),
-                     optimizer = list(trace=0))
+                     optControl = list(trace=0))
   {
 
   # if(!is.numeric(data) || length(data)==0)
@@ -84,44 +85,44 @@ robGarch <- function(data, fitMethod = c("BM", "M", "QML", "MLE"),
   # but we will keep data to retain the original dates
   data_ = zoo::coredata(data)
 
-  methods = match.arg(methods)
-  optimizer = match.arg(optimizer)
-  stdErr_method = match.arg(stdErr_method)
+  fitMethod = match.arg(fitMethod)
+  optChoice = match.arg(optChoice)
+  SEMethod = match.arg(SEMethod)
 
   # Create a list to hold shared variables
   shared_vars <- list()
 
-  shared_vars$methods <- methods
+  shared_vars$fitMethod <- fitMethod
 
-  if (methods == "QML" || methods == "MLE") {
+  if (fitMethod == "QML" || fitMethod == "MLE") {
     shared_vars$div <- 1.0
   } else {
     shared_vars$div <- tuningPars[1]
   }
 
-  if (methods == "BM") {
+  if (fitMethod == "BM") {
     shared_vars$k <- tuningPars[2]
   } else {
     shared_vars$k <- 3.0
   }
 
   # Pass shared_vars to rgFit_local
-  fit <- rgFit_local(data, optimizer, optimizer_x0, optimizer_control, shared_vars)
+  fit <- rgFit_local(data, optChoice, optChoice_x0, optChoice_control, shared_vars)
 
   # std_err calculation
-  if(optimizer == "Rsolnp"){
-    solution <- fit$optimizer_result$pars
-    H <- fit$optimizer_result$hessian #[2:5, 2:5] for norm or [2:6, 2:6] for std.
-  } else if(optimizer == "nloptr"){
-    solution <- fit$optimizer_result$solution
-    stop("use Rsolnp optimizer for now")
-  } else if(optimizer == "nlminb"){
-    solution <- fit$optimizer_result$par
-    stop("use Rsolnp optimizer for now")
+  if(optChoice == "Rsolnp"){
+    solution <- fit$optChoice_result$pars
+    H <- fit$optChoice_result$hessian #[2:5, 2:5] for norm or [2:6, 2:6] for std.
+  } else if(optChoice == "nloptr"){
+    solution <- fit$optChoice_result$solution
+    stop("use Rsolnp optChoice for now")
+  } else if(optChoice == "nlminb"){
+    solution <- fit$optChoice_result$par
+    stop("use Rsolnp optChoice for now")
   }
 
   std_errors <- sqrt(diag(abs(solve(H)/length(data_))))
-  if(methods == "MLE"){
+  if(fitMethod == "MLE"){
     standard_error <- c(std_errors[2:4], std_errors[6])
     fit$observed_I <- -H[c(2,3,4,6), c(2,3,4,6)]
   } else{
@@ -133,25 +134,25 @@ robGarch <- function(data, fitMethod = c("BM", "M", "QML", "MLE"),
   p_value <- 2*(1-pnorm(abs(t_value)))
 
   ######## Change calculation method to above. ###########
-  #if(stdErr_method == "numDeriv")
+  #if(SEMethod == "numDeriv")
   #{
   #  stop("under development.")
-  #  if(optimizer == "Rsolnp"){
-  #    solution <- fit$optimizer_result$pars
-  #  } else if(optimizer == "nloptr"){
-  #    solution <- fit$optimizer_result$solution
-  #  } else if(optimizer == "nlminb"){
-  #    solution <- fit$optimizer_result$par
+  #  if(optChoice == "Rsolnp"){
+  #    solution <- fit$optChoice_result$pars
+  #  } else if(optChoice == "nloptr"){
+  #    solution <- fit$optChoice_result$solution
+  #  } else if(optChoice == "nlminb"){
+  #    solution <- fit$optChoice_result$par
   #  }
   #  H <- numDeriv::hessian(Fnue, x = solution)/length(data)
   #  standard_error <- sqrt(diag(abs(solve(H)/length(data))))[1:3]
   #  t_value <- solution[1:3] / standard_error
   #  p_value <- 2*(1-pnorm(abs(t_value)))
   #}
-  #if(stdErr_method == "optim")
+  #if(SEMethod == "optim")
   #{
   #  stop("under development")
-  #  H <- optim(par = fit$optimizer_result$pars, fn = Fnue,
+  #  H <- optim(par = fit$optChoice_result$pars, fn = Fnue,
   #             method="L-BFGS-B",
   #             lower=c(-1, -1, -1, 0),
   #             upper=c(1, 1, 1, 2),
@@ -160,12 +161,12 @@ robGarch <- function(data, fitMethod = c("BM", "M", "QML", "MLE"),
   #  t_value <- fit$fitted_pars / standard_error
   #  p_value <- 2*(1-pnorm(abs(t_value)))
   #}
-  #if(stdErr_method == "sandwich")
+  #if(SEMethod == "sandwich")
   #{
   #  stop("under development")
-  #  Scores <- matrix(numDeriv::grad(Fnue, x = fit$optimizer_result$pars), nrow = 1)
+  #  Scores <- matrix(numDeriv::grad(Fnue, x = fit$optChoice_result$pars), nrow = 1)
   #  V <- (t(Scores) %*% Scores)/length(data)
-  #  H <- optim(par = fit$optimizer_result$pars, fn = Fnue,
+  #  H <- optim(par = fit$optChoice_result$pars, fn = Fnue,
   #             method="L-BFGS-B",
   #             hessian=TRUE,
   #             control=list(maxit=1))$hessian/length(data)
@@ -176,7 +177,7 @@ robGarch <- function(data, fitMethod = c("BM", "M", "QML", "MLE"),
   #}
   ##########################################
 
-  if(methods == "MLE"){
+  if(fitMethod == "MLE"){
     names(standard_error) <- c("gamma", "alpha", "beta", "shape")
     names(t_value) <- c("gamma", "alpha", "beta", "shape")
     names(p_value) <- c("gamma", "alpha", "beta", "shape")
@@ -196,16 +197,16 @@ robGarch <- function(data, fitMethod = c("BM", "M", "QML", "MLE"),
 }
 
 
-robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c("BM", "M", "QML", "MLE"), tuningPars = c(0.85, 3.0), optimizer = c("Rsolnp", "nloptr", "nlminb"), optimizer_x0 = FALSE, optimizer_control = list(), stdErr_method = c("numDeriv", "optim", "sandwich"), n = 2000, m = 100, rseed = 42){
+robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), fitMethod = c("BM", "M", "QML", "MLE"), tuningPars = c(0.85, 3.0), optChoice = c("Rsolnp", "nloptr", "nlminb"), optChoice_x0 = FALSE, optChoice_control = list(), SEMethod = c("numDeriv", "optim", "sandwich"), n = 2000, m = 100, rseed = 42){
 
-  methods <- match.arg(methods)
-  optimizer <- match.arg(optimizer)
-  stdErr_method <- match.arg(stdErr_method)
+  fitMethod <- match.arg(fitMethod)
+  optChoice <- match.arg(optChoice)
+  SEMethod <- match.arg(SEMethod)
 
   par(mfrow=c(2,2))
   spec <- rugarch::ugarchspec(mean.model = list(armaOrder = c(0,0), include.mean = FALSE))
 
-  if(methods == "MLE"){
+  if(fitMethod == "MLE"){
     if(length(param)!=4){stop("the parameters for std distribution should be gamma, alpha, beta, shape")}
     fixed <- param
     names(fixed) <- c("gamma", "alpha", "beta", "shape")
@@ -217,7 +218,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     qml_res <- matrix(0.0, nrow = m, ncol = 4)
     for( i in 1:m){
       y_ <- y.[((i-1)*n+1):(i*n)]
-      fit <- robGarch(y_, methods = methods, tuningPars = tuningPars, optimizer=optimizer, optimizer_x0 = optimizer_x0, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
+      fit <- robGarch(y_, fitMethod = fitMethod, tuningPars = tuningPars, optChoice=optChoice, optChoice_x0 = optChoice_x0, optChoice_control = optChoice_control, SEMethod = SEMethod)
       qml_res[i,1:4] <- fit$fitted_pars
     }
 
@@ -249,7 +250,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
     qml_res <- matrix(0.0, nrow = m, ncol = 3)
     for( i in 1:m){
       y_ <- y.[((i-1)*n+1):(i*n)]
-      fit <- robGarch(y_, methods = methods, tuningPars = tuningPars, optimizer=optimizer, optimizer_x0 = optimizer_x0, optimizer_control = optimizer_control, stdErr_method = stdErr_method)
+      fit <- robGarch(y_, fitMethod = fitMethod, tuningPars = tuningPars, optChoice=optChoice, optChoice_x0 = optChoice_x0, optChoice_control = optChoice_control, SEMethod = SEMethod)
       qml_res[i,1:3] <- fit$fitted_pars
     }
 
@@ -267,17 +268,17 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), methods = c(
 
   }
 }
-rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control, shared_vars){
+rgFit_local <- function(data, optChoice, optChoice_x0, optChoice_control, shared_vars){
 
   # unpack shared_vars
-  methods <- shared_vars$methods
+  fitMethod <- shared_vars$fitMethod
 
   # for minimum code change, data_ and data naming are exchanged here
   data_ = data # retain the dates and structure
   data = zoo::coredata(data) # for calculation
 
   start_time <- Sys.time()
-  # optimizer/optimizer_control
+  # optChoice/optChoice_control
 
   n <- length(data)
   v_data <- new_var(data, shared_vars)
@@ -290,9 +291,9 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control, shared
   }
   vini <- new_var(data_normalized, shared_vars)
 
-  res <- nEst(data_normalized, vini, optimizer, optimizer_x0, optimizer_control, shared_vars)
-  optimizer_result <- res
-    #if(optimizer == "fminsearch"){
+  res <- nEst(data_normalized, vini, optChoice, optChoice_x0, optChoice_control, shared_vars)
+  optChoice_result <- res
+    #if(optChoice == "fminsearch"){
       #stop("This feature is under active development, please use Rsolnp.")
       #fitted_pars <- res$fmin[1:3]
       #fitted_pars[1] <- fitted_pars[1]*v_data
@@ -300,8 +301,8 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control, shared
       #objective <- res$xopt
       #message <- NULL
     #} else
-    if(optimizer == "Rsolnp"){
-      if(methods == "MLE"){
+    if(optChoice == "Rsolnp"){
+      if(fitMethod == "MLE"){
         fitted_pars <- c(res$pars[1:3], res$pars[5])
         names(fitted_pars) <- c("gamma", "alpha", "beta", "shape")
       } else{
@@ -311,8 +312,8 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control, shared
       fitted_pars[1] <- fitted_pars[1]*v_data
       objective <- res$values[length(res$values)]
       message <- res$convergence
-    } else if (optimizer == "nloptr"){
-      if(methods == "MLE"){
+    } else if (optChoice == "nloptr"){
+      if(fitMethod == "MLE"){
         fitted_pars <- c(res$solution[1:3], res$solution[5])
         names(fitted_pars) <- c("gamma", "alpha", "beta", "shape")
       } else{
@@ -322,8 +323,8 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control, shared
       fitted_pars[1] <- fitted_pars[1]*v_data
       objective <- res$objective
       message <- res$message
-    } else if (optimizer == "nlminb"){
-      if(methods == "MLE"){
+    } else if (optChoice == "nlminb"){
+      if(fitMethod == "MLE"){
         fitted_pars <- c(res$par[1:3], res$par[5])
         names(fitted_pars) <- c("gamma", "alpha", "beta", "shape")
       } else{
@@ -341,11 +342,11 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control, shared
   time_elapsed <- Sys.time() - start_time
 
   list(data=data_,
-       methods = methods,
-       optimizer=optimizer,
-       optimizer_x0=res$x0,
-       optimizer_control=optimizer_control,
-       optimizer_result=optimizer_result,
+       fitMethod = fitMethod,
+       optChoice=optChoice,
+       optChoice_x0=res$x0,
+       optChoice_control=optChoice_control,
+       optChoice_result=optChoice_result,
        fitted_pars = fitted_pars,
        objective=objective,
        time_elapsed=time_elapsed,
@@ -353,12 +354,12 @@ rgFit_local <- function(data, optimizer, optimizer_x0, optimizer_control, shared
        sigma=sigma,
        yt=res$Muestram)
 }
-nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control, shared_vars){
+nEst <- function(y, vini, optChoice, optChoice_x0, optChoice_control, shared_vars){
   # unpack the shared_vars
-  methods <- shared_vars$methods
+  fitMethod <- shared_vars$fitMethod
   k <- shared_vars$k
 
-  if(methods == "MLE"){
+  if(fitMethod == "MLE"){
     std <- TRUE
   } else{
     std <- FALSE
@@ -387,8 +388,8 @@ nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control, shared_var
   lmbeta1 <- (beta1max-beta1min)/nbeta1
   if(std){
 
-    if(length(optimizer_x0) > 1){
-      x0 <- c(optimizer_x0[1:3], vini, optimizer_x0[4])
+    if(length(optChoice_x0) > 1){
+      x0 <- c(optChoice_x0[1:3], vini, optChoice_x0[4])
     } else{
       shapemin <- 3.0 # 1.0
       shapemax <- 31.
@@ -435,8 +436,8 @@ nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control, shared_var
     ub <- c( 1.0, 1., 1., Inf, Inf)
   } else{
 
-    if(length(optimizer_x0) > 1){
-      x0 <- c(optimizer_x0[1:3], vini)
+    if(length(optChoice_x0) > 1){
+      x0 <- c(optChoice_x0[1:3], vini)
     } else{
       for(nj in 0:nalfa1){
         alfa1 <- alfa1min+nj*lmalfa1
@@ -478,20 +479,20 @@ nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control, shared_var
   # print(x0)
   ### SHOULD BE DELETED ###
 
-  if (optimizer == "nloptr"){
+  if (optChoice == "nloptr"){
 
     #stop("This feature is under development, please use Rsolnp instead.")
     res <- nloptr::nloptr(x0 = x0,
                           eval_f = function(pars) Fnue(pars, shared_vars),
                           lb = lb,
                           ub = ub,
-                          opts=optimizer_control)
+                          opts=optChoice_control)
     res$x0 <- x0
     res$Muestram <- y2
 
     return(res)
 
-  } else if (optimizer == "Rsolnp"){
+  } else if (optChoice == "Rsolnp"){
 
     res <- Rsolnp::solnp(pars = x0,
                          fun = function(pars) Fnue(pars, shared_vars),
@@ -500,17 +501,17 @@ nEst <- function(y, vini, optimizer, optimizer_x0, optimizer_control, shared_var
                          ineqfun = function(vi){vi[2]+vi[3]},
                          ineqLB = 0.0,
                          ineqUB = 1.0,
-                         control = optimizer_control)
+                         control = optChoice_control)
     res$x0 <- x0
     res$Muestram <- y2
 
     return(res)
 
-  } else if (optimizer == "nlminb"){
+  } else if (optChoice == "nlminb"){
 
     res <- nlminb(start = x0,
                   objective = function(pars) Fnue(pars, shared_vars),
-                  control = optimizer_control,
+                  control = optChoice_control,
                   lower = lb,
                   upper = ub)
     res$x0 <- x0
@@ -612,9 +613,9 @@ s_est <- function(x, shared_vars){
 rho <- function(x, shared_vars){
 
   # unpack shared_vars
-  methods <- shared_vars$methods
+  fitMethod <- shared_vars$fitMethod
 
-  if(methods == "QML" || methods == "MLE" || methods == "M"){
+  if(fitMethod == "QML" || fitMethod == "MLE" || fitMethod == "M"){
 
     ps <- x^2/2
 
@@ -637,13 +638,13 @@ rho <- function(x, shared_vars){
 nfun <- function(x, shared_vars, shape = 3.0){
 
   # unpack shared_vars
-  methods <- shared_vars$methods
+  fitMethod <- shared_vars$fitMethod
 
   # input here is w_t.
   b <- 4.3 #6.7428
   b1 <- 4.0 #b-0.5
 
-  if(methods == "MLE"){
+  if(fitMethod == "MLE"){
     # this is rho assuming z_t is std(shape).
     # this changes to MLE instead of QML.
     #x <- -log(gamma((shape+1)/2)/(sqrt((shape)*pi)*gamma(shape/2))) - x/2 + (shape+1)/2 *log(1+exp(x)/(shape))
@@ -680,7 +681,7 @@ sigmaCal <- function(pars, data, shared_vars){
 Fnue <- function(start_pars, shared_vars){
 
   # unpack the shared_vars
-  methods <- shared_vars$methods
+  fitMethod <- shared_vars$fitMethod
   k <- shared_vars$k
 
   y2 <- shared_vars$Muestram
@@ -690,7 +691,7 @@ Fnue <- function(start_pars, shared_vars){
 
   vi <- start_pars[1:3]
   vini <- start_pars[4]
-  if(methods == "MLE"){
+  if(fitMethod == "MLE"){
     shape <- start_pars[5]
   }
 
@@ -706,7 +707,7 @@ Fnue <- function(start_pars, shared_vars){
       for(i in 2:n){
         var[i]<-vi[1]+(vi[2]*rk(yc[i-1]/var[i-1],ki,l, shared_vars)+vi[3])*var[i-1]
       }
-      if(methods == "MLE"){
+      if(fitMethod == "MLE"){
         ml <- mean(nfun(y2[2:n]-log(var[2:n]), shared_vars, shape))
       } else{
         ml <- mean(nfun(y2[2:n]-log(var[2:n]), shared_vars))
@@ -725,10 +726,10 @@ freg <- function(x, a, b, shared_vars){
   # the rho function.
 
   # unpack shared_vars
-  methods <- shared_vars$methods
+  fitMethod <- shared_vars$fitMethod
   div <- shared_vars$div
 
-  if(methods == "QML" || methods == "MLE" || a == b){
+  if(fitMethod == "QML" || fitMethod == "MLE" || a == b){
     # used to be return exp(w/div)-w/div, now correct it to be the following as stated in the paper.
     g <- x
 
@@ -755,11 +756,11 @@ freg <- function(x, a, b, shared_vars){
 rk <- function(x, ki, l, shared_vars){
 
   # unpack shared_vars
-  methods <- shared_vars$methods
+  fitMethod <- shared_vars$fitMethod
   # k should not be used as a global variable as it has conflict with ki (previously k) in the function.
   # k <- shared_vars$k
 
-  if(methods == "QML" || methods == "MLE" || methods == "M" || ki == l){
+  if(fitMethod == "QML" || fitMethod == "MLE" || fitMethod == "M" || ki == l){
 
     g <- x
 
