@@ -21,7 +21,7 @@
 #' @param data an xts object
 #' @param fitMethod character valued name of fitting method,
 #' one of "BM", "M" "QML" or "tMLE", with "BM" the default value.
-#' @param robtunePars a numeric vector c(cM,cFlt) that controls
+#' @param robTunePars a numeric vector c(cM,cFlt) that controls
 #' the extent of fitMethod robustness, with default c(0.8,3.0).
 #' @param optChoice character valued optChoice name, one of
 #' "Rsolnp", "nloptr", "nlminb", with default "Rsolnp".
@@ -71,7 +71,7 @@
 #'
 robGarch <- function(data,
                      fitMethod = c("BM", "M", "QML", "MLE"),
-                     tuningPars = c(0.8, 3.0),
+                     robTunePars = c(0.8, 3.0),
                      optChoice = c("Rsolnp", "nloptr", "nlminb"),
                      initialPars = c(0.0005, 0.15, 0.75),
                      SEmethod = c("numDeriv", "optim", "sandwich"),
@@ -87,7 +87,8 @@ robGarch <- function(data,
 
   fitMethod = match.arg(fitMethod)
   optChoice = match.arg(optChoice)
-  SEMethod = match.arg(SEMethod)
+  SEmethod = match.arg(SEmethod)
+  print(SEmethod)
 
   # Create a list to hold shared variables
   shared_vars <- list()
@@ -97,17 +98,17 @@ robGarch <- function(data,
   if (fitMethod == "QML" || fitMethod == "MLE") {
     shared_vars$div <- 1.0
   } else {
-    shared_vars$div <- tuningPars[1]
+    shared_vars$div <- robTunePars[1]
   }
 
   if (fitMethod == "BM") {
-    shared_vars$k <- tuningPars[2]
+    shared_vars$k <- robTunePars[2]
   } else {
     shared_vars$k <- 3.0
   }
 
   # Pass shared_vars to rgFit_local
-  fit <- rgFit_local(data, optChoice, optChoice_x0, optChoice_control, shared_vars)
+  fit <- rgFit_local(data, optChoice, initialPars, optControl, shared_vars)
 
   # std_err calculation
   if(optChoice == "Rsolnp"){
@@ -134,7 +135,7 @@ robGarch <- function(data,
   p_value <- 2*(1-pnorm(abs(t_value)))
 
   ######## Change calculation method to above. ###########
-  #if(SEMethod == "numDeriv")
+  #if(SEmethod == "numDeriv")
   #{
   #  stop("under development.")
   #  if(optChoice == "Rsolnp"){
@@ -149,7 +150,7 @@ robGarch <- function(data,
   #  t_value <- solution[1:3] / standard_error
   #  p_value <- 2*(1-pnorm(abs(t_value)))
   #}
-  #if(SEMethod == "optim")
+  #if(SEmethod == "optim")
   #{
   #  stop("under development")
   #  H <- optim(par = fit$optChoice_result$pars, fn = Fnue,
@@ -161,7 +162,7 @@ robGarch <- function(data,
   #  t_value <- fit$fitted_pars / standard_error
   #  p_value <- 2*(1-pnorm(abs(t_value)))
   #}
-  #if(SEMethod == "sandwich")
+  #if(SEmethod == "sandwich")
   #{
   #  stop("under development")
   #  Scores <- matrix(numDeriv::grad(Fnue, x = fit$optChoice_result$pars), nrow = 1)
@@ -191,17 +192,28 @@ robGarch <- function(data,
   fit$standard_error <- standard_error
   fit$t_value <- t_value
   fit$p_value <- p_value
-  fit$tuningPars <- tuningPars
+  fit$robTunePars <- robTunePars
+  fit$fitMethod <- fitMethod
 
   structure(fit, class="robustGARCH")
 }
 
 
-robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), fitMethod = c("BM", "M", "QML", "MLE"), tuningPars = c(0.85, 3.0), optChoice = c("Rsolnp", "nloptr", "nlminb"), optChoice_x0 = FALSE, optChoice_control = list(), SEMethod = c("numDeriv", "optim", "sandwich"), n = 2000, m = 100, rseed = 42){
+robGarchDistribution <- function(
+  param = c(8.76e-04, 0.135, 0.686),
+  fitMethod = c("BM", "M", "QML", "MLE"),
+  robTunePars = c(0.85, 3.0),
+  optChoice = c("Rsolnp", "nloptr", "nlminb"),
+  initialPars = FALSE,
+  optControl = list(),
+  SEmethod = c("numDeriv", "optim", "sandwich"),
+  n = 2000,
+  m = 100,
+  rseed = 42) {
 
   fitMethod <- match.arg(fitMethod)
   optChoice <- match.arg(optChoice)
-  SEMethod <- match.arg(SEMethod)
+  SEmethod <- match.arg(SEmethod)
 
   par(mfrow=c(2,2))
   spec <- rugarch::ugarchspec(mean.model = list(armaOrder = c(0,0), include.mean = FALSE))
@@ -218,7 +230,15 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), fitMethod = 
     qml_res <- matrix(0.0, nrow = m, ncol = 4)
     for( i in 1:m){
       y_ <- y.[((i-1)*n+1):(i*n)]
-      fit <- robGarch(y_, fitMethod = fitMethod, tuningPars = tuningPars, optChoice=optChoice, optChoice_x0 = optChoice_x0, optChoice_control = optChoice_control, SEMethod = SEMethod)
+      fit <- robGarch(
+        y_,
+        fitMethod = fitMethod,
+        robTunePars = robTunePars,
+        optChoice = optChoice,
+        initialPars = initialPars,
+        optControl = optControl,
+        SEmethod = SEmethod
+      )
       qml_res[i,1:4] <- fit$fitted_pars
     }
 
@@ -250,7 +270,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), fitMethod = 
     qml_res <- matrix(0.0, nrow = m, ncol = 3)
     for( i in 1:m){
       y_ <- y.[((i-1)*n+1):(i*n)]
-      fit <- robGarch(y_, fitMethod = fitMethod, tuningPars = tuningPars, optChoice=optChoice, optChoice_x0 = optChoice_x0, optChoice_control = optChoice_control, SEMethod = SEMethod)
+      fit <- robGarch(y_, fitMethod = fitMethod, robTunePars = robTunePars, optChoice=optChoice, initialPars = initialPars, optControl = optControl, SEmethod = SEmethod)
       qml_res[i,1:3] <- fit$fitted_pars
     }
 
@@ -268,7 +288,7 @@ robGarchDistribution <- function(param = c(8.76e-04, 0.135, 0.686), fitMethod = 
 
   }
 }
-rgFit_local <- function(data, optChoice, optChoice_x0, optChoice_control, shared_vars){
+rgFit_local <- function(data, optChoice, initialPars, optControl, shared_vars){
 
   # unpack shared_vars
   fitMethod <- shared_vars$fitMethod
@@ -278,7 +298,7 @@ rgFit_local <- function(data, optChoice, optChoice_x0, optChoice_control, shared
   data = zoo::coredata(data) # for calculation
 
   start_time <- Sys.time()
-  # optChoice/optChoice_control
+  # optChoice/optControl
 
   n <- length(data)
   v_data <- new_var(data, shared_vars)
@@ -291,7 +311,7 @@ rgFit_local <- function(data, optChoice, optChoice_x0, optChoice_control, shared
   }
   vini <- new_var(data_normalized, shared_vars)
 
-  res <- nEst(data_normalized, vini, optChoice, optChoice_x0, optChoice_control, shared_vars)
+  res <- nEst(data_normalized, vini, optChoice, initialPars, optControl, shared_vars)
   optChoice_result <- res
     #if(optChoice == "fminsearch"){
       #stop("This feature is under active development, please use Rsolnp.")
@@ -344,8 +364,8 @@ rgFit_local <- function(data, optChoice, optChoice_x0, optChoice_control, shared
   list(data=data_,
        fitMethod = fitMethod,
        optChoice=optChoice,
-       optChoice_x0=res$x0,
-       optChoice_control=optChoice_control,
+       initialPars=res$x0,
+       optControl=optControl,
        optChoice_result=optChoice_result,
        fitted_pars = fitted_pars,
        objective=objective,
@@ -354,7 +374,7 @@ rgFit_local <- function(data, optChoice, optChoice_x0, optChoice_control, shared
        sigma=sigma,
        yt=res$Muestram)
 }
-nEst <- function(y, vini, optChoice, optChoice_x0, optChoice_control, shared_vars){
+nEst <- function(y, vini, optChoice, initialPars, optControl, shared_vars){
   # unpack the shared_vars
   fitMethod <- shared_vars$fitMethod
   k <- shared_vars$k
@@ -388,8 +408,8 @@ nEst <- function(y, vini, optChoice, optChoice_x0, optChoice_control, shared_var
   lmbeta1 <- (beta1max-beta1min)/nbeta1
   if(std){
 
-    if(length(optChoice_x0) > 1){
-      x0 <- c(optChoice_x0[1:3], vini, optChoice_x0[4])
+    if(length(initialPars) > 1){
+      x0 <- c(initialPars[1:3], vini, initialPars[4])
     } else{
       shapemin <- 3.0 # 1.0
       shapemax <- 31.
@@ -436,8 +456,8 @@ nEst <- function(y, vini, optChoice, optChoice_x0, optChoice_control, shared_var
     ub <- c( 1.0, 1., 1., Inf, Inf)
   } else{
 
-    if(length(optChoice_x0) > 1){
-      x0 <- c(optChoice_x0[1:3], vini)
+    if(length(initialPars) > 1){
+      x0 <- c(initialPars[1:3], vini)
     } else{
       for(nj in 0:nalfa1){
         alfa1 <- alfa1min+nj*lmalfa1
@@ -486,7 +506,7 @@ nEst <- function(y, vini, optChoice, optChoice_x0, optChoice_control, shared_var
                           eval_f = function(pars) Fnue(pars, shared_vars),
                           lb = lb,
                           ub = ub,
-                          opts=optChoice_control)
+                          opts=optControl)
     res$x0 <- x0
     res$Muestram <- y2
 
@@ -501,7 +521,7 @@ nEst <- function(y, vini, optChoice, optChoice_x0, optChoice_control, shared_var
                          ineqfun = function(vi){vi[2]+vi[3]},
                          ineqLB = 0.0,
                          ineqUB = 1.0,
-                         control = optChoice_control)
+                         control = optControl)
     res$x0 <- x0
     res$Muestram <- y2
 
@@ -511,7 +531,7 @@ nEst <- function(y, vini, optChoice, optChoice_x0, optChoice_control, shared_var
 
     res <- nlminb(start = x0,
                   objective = function(pars) Fnue(pars, shared_vars),
-                  control = optChoice_control,
+                  control = optControl,
                   lower = lb,
                   upper = ub)
     res$x0 <- x0

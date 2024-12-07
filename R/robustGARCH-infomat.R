@@ -23,7 +23,7 @@
     #bottomFunc <- function(w){.density.grad(w) * .psi(w)}
     #a <- integrate(topFunc, -50.0, 50.0)$value / (integrate(bottomFunc, -50.0, 50.0)$value)^2
 
-    if(fit$methods == "QML"){
+    if(fit$fitMethod == "QML"){
       func_1 <- function(w_t){
         res_1 <- (.psi_0(w_t))^2 *.density(w_t, "norm")
 
@@ -36,14 +36,14 @@
       }
 
       a <- integrate(func_1, -50,50)$value /(integrate(func_2, -50,50)$value)^2
-    } else if(fit$methods == "MLE"){
+    } else if(fit$fitMethod == "MLE"){
       func_1 <- function(w_t){
-        res_1 <- (.psi(w_t, methods = "QML", dist = "std", v=v))^2 *.density(w_t, "norm")
+        res_1 <- (.psi(w_t, fitMethod = "QML", dist = "std", v=v))^2 *.density(w_t, "norm")
 
         res_1
       }
       func_2 <- function(w_t){
-        res_2 <-  .psi_p(w_t, methods = "QML", dist = "std", v=v)*.density(w_t, "norm")
+        res_2 <-  .psi_p(w_t, fitMethod = "QML", dist = "std", v=v)*.density(w_t, "norm")
 
         res_2
       }
@@ -51,12 +51,12 @@
       a <- integrate(func_1, -50,50)$value /(integrate(func_2, -50,50)$value)^2
     } else{
       func_1 <- function(w_t){
-        res_1 <- (.psi(w_t, div_=fit$fixed_pars[1],methods=fit$methods))^2 *.density(w_t, "norm")
+        res_1 <- (.psi(w_t, div_=fit$robTunePars[1],fitMethod=fit$fitMethod))^2 *.density(w_t, "norm")
 
         res_1
       }
       func_2 <- function(w_t){
-        res_2 <- .psi_p(w_t, div_=fit$fixed_pars[1], methods=fit$methods) *.density(w_t, "norm")
+        res_2 <- .psi_p(w_t, div_=fit$robTunePars[1], fitMethod=fit$fitMethod) *.density(w_t, "norm")
 
         res_2
       }
@@ -67,11 +67,11 @@
 
   a
 }
-.psi <- function(w, div_=.8, methods, dist="norm", v=5){
+.psi <- function(w, div_=.8, fitMethod, dist="norm", v=5){
 
-  if(methods=="QML"){
+  if(fitMethod=="QML"){
     p <- .psi_0(w)
-  } else if(methods=="MLE"){
+  } else if(fitMethod=="MLE"){
     p <- -1/2 + (v+1) /(2 *(1 +(v-2)*exp(-w)))
   } else{
 
@@ -97,11 +97,11 @@
   p
 }
 # psi'(w_t), derivative of psi(w_t).
-.psi_p <- function(w, div_=.8, methods, dist="norm", v=5){
+.psi_p <- function(w, div_=.8, fitMethod, dist="norm", v=5){
 
-  if(methods=="QML"){
+  if(fitMethod=="QML"){
     p_p <- exp(w)/2
-  } else if(methods=="MLE"){
+  } else if(fitMethod=="MLE"){
     p_p <- ((v+1) *(v-2) *exp(-w)) /(2 *(1 +(v-2)*exp(-w))^2)
   } else{
     # psi' = (m'(-log(g_0(w))/div) *(- g_0'(w) / g_0(w)) )'
@@ -167,7 +167,7 @@
 
   T <- length(data_)
 
-  if(fit$methods == 'MLE'){
+  if(fit$fitMethod == 'MLE'){
     # to be added.
   } else{
 

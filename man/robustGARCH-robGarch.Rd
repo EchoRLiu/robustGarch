@@ -7,7 +7,7 @@
 robGarch(
   data,
   fitMethod = c("BM", "M", "QML", "MLE"),
-  tuningPars = c(0.8, 3),
+  robTunePars = c(0.8, 3),
   optChoice = c("Rsolnp", "nloptr", "nlminb"),
   initialPars = c(5e-04, 0.15, 0.75),
   SEmethod = c("numDeriv", "optim", "sandwich"),
@@ -19,6 +19,9 @@ robGarch(
 
 \item{fitMethod}{character valued name of fitting method,
 one of "BM", "M" "QML" or "tMLE", with "BM" the default value.}
+
+\item{robTunePars}{a numeric vector c(cM,cFlt) that controls
+the extent of fitMethod robustness, with default c(0.8,3.0).}
 
 \item{optChoice}{character valued optChoice name, one of
 "Rsolnp", "nloptr", "nlminb", with default "Rsolnp".}
@@ -32,9 +35,6 @@ one of "numDeriv", "optim", "sandwich", with default "numDeriv".}
 
 \item{optControl}{list of arguments passed to optChoice, with
 default \code{list(trace=0)}.}
-
-\item{robtunePars}{a numeric vector c(cM,cFlt) that controls
-the extent of fitMethod robustness, with default c(0.8,3.0).}
 }
 \value{
 A list object of class \dQuote{robustGarch} with components:
