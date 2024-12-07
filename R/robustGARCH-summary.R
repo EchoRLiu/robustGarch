@@ -75,14 +75,14 @@ summary.robustGARCH <- function(object, digits = 3, ...){
     else if (p < 0.1) "."
     else ""
   })
-  res <- rbind(round(fitted_pars, digits),
+  coefficients <- rbind(round(fitted_pars, digits),
                round(fit$standard_error, digits),
                round(fit$t_value, digits),
-               round(fit$p_value, digits),
-               significance)
-  colnames(res) <- names(fitted_pars)
-  rownames(res) <- c("Estimate", "Std.Error", "t-statistic", "p-value", "")
-  res = t(res)
+               round(fit$p_value, digits))
+  colnames(coefficients) <- names(fitted_pars)
+  rownames(coefficients) <- c("Estimate", "Std.Error", "t-statistic", "p-value")
+  coefficients = t(coefficients)
+  res = cbind(coefficients, significance)
   cat("\n")
   cat("Result:")
   cat("\n")
@@ -119,6 +119,16 @@ summary.robustGARCH <- function(object, digits = 3, ...){
   cat("\n")
   cat(conv_str)
   cat("\n")
+
+  # summary object
+  converged = ifelse(fit$message == 0, TRUE, FALSE) # I'm not sure if this is true
+  summary_list = list(
+    method = method,
+    coefficients = coefficients,
+    loglikelihood = fit$objective,
+    converged = converged
+  )
+  invisible(summary_list)
 }
 
 #' @rdname robustGARCH-summary
