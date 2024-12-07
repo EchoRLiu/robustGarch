@@ -1,4 +1,3 @@
-# import methods from other packages
 #' @importFrom stats integrate
 .aValue <- function(fit, top = FALSE, v=5){
   if(top){

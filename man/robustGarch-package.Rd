@@ -16,4 +16,14 @@ Useful links:
 }
 
 }
+\author{
+\strong{Maintainer}: Echo Liu \email{yliu49@uw.edu} [copyright holder]
+
+Authors:
+\itemize{
+  \item Daniel Xia \email{dxia94@gmail.com}
+  \item R. Douglas Martin \email{dougPCRA@gmail.com}
+}
+
+}
 \keyword{internal}
