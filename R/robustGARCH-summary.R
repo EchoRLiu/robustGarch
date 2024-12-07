@@ -1,6 +1,15 @@
 #' @title Summary for robustGARCH class
 #'
+#' @name robustGARCH-summary
+#' @aliases summary.robustGARCH
+#' @aliases print.robustGARCH
+#' @aliases plot.robustGARCH
+#' @aliases coef.robustGARCH
+#' @aliases aef
+#'
 #' @description Summary for robustGARCH S3 class
+#'
+#' @importFrom stats coef
 #'
 #' @param fit A robustGARCH fit object of class \code{\link{robGarch}}
 #' @param x Same as fit, for plot.robustGARCH and print.robustGARCH
@@ -16,12 +25,6 @@
 #' @param ... # to be written
 #' @param nu degrees of freedom in a Student's t-distribution.
 #'
-#' @name robustGARCH-summary
-#' @aliases summary.robustGARCH
-#' @aliases print.robustGARCH
-#' @aliases plot.robustGARCH
-#' @aliases aef
-#'
 #' @examples
 #'
 #' data("gspc")
@@ -30,19 +33,20 @@
 #' summary(fit)
 #' print(fit)
 #' plot(fit)
-#' 
+#' coef(fit)
+#'
 #' @export
 summary.robustGARCH <- function(object, digits = 3, ...){
-# summary.robustGARCH <- function(fit, digits = 3){
+  # summary.robustGARCH <- function(fit, digits = 3){
 
-# notes on why the name change
-# Undocumented arguments in Rd file 'robustGARCH-summary.Rd'
-#      ‘object’
-# Functions with \usage entries need to have the appropriate \alias
-#    entries, and all their arguments documented.
-#    The \usage entries must correspond to syntactically valid R code.
-#    See chapter ‘Writing R documentation files’ in the ‘Writing R
-#    Extensions’ manual.
+  # notes on why the name change
+  # Undocumented arguments in Rd file 'robustGARCH-summary.Rd'
+  #      ‘object’
+  # Functions with \usage entries need to have the appropriate \alias
+  #    entries, and all their arguments documented.
+  #    The \usage entries must correspond to syntactically valid R code.
+  #    See chapter ‘Writing R documentation files’ in the ‘Writing R
+  #    Extensions’ manual.
   fit <- object
   method = fit$methods
   fixed_pars = fit$fixed_pars
@@ -70,15 +74,15 @@ summary.robustGARCH <- function(object, digits = 3, ...){
   significance = sapply(fit$p_value, function(p) {
     if (is.na(p)) ""
     else if (p < 0.001) "***"
-    else if (p < 0.01) "**" 
+    else if (p < 0.01) "**"
     else if (p < 0.05) "*"
     else if (p < 0.1) "."
     else ""
   })
   coefficients <- rbind(round(fitted_pars, digits),
-               round(fit$standard_error, digits),
-               round(fit$t_value, digits),
-               round(fit$p_value, digits))
+                        round(fit$standard_error, digits),
+                        round(fit$t_value, digits),
+                        round(fit$p_value, digits))
   colnames(coefficients) <- names(fitted_pars)
   rownames(coefficients) <- c("Estimate", "Std.Error", "t-statistic", "p-value")
   coefficients = t(coefficients)
@@ -89,7 +93,7 @@ summary.robustGARCH <- function(object, digits = 3, ...){
   print.default(format(res, digits = digits), print.gap = 2L, quote = FALSE)
   cat("---")
   cat("\n")
-  cat("Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1")
+  cat("Signif. codes:  0 '***'' 0.001 '**'' 0.01 '*' 0.05 '.' 0.1 '' 1")
   cat("\n")
 
   # initial estimate
@@ -104,7 +108,7 @@ summary.robustGARCH <- function(object, digits = 3, ...){
   cat("Initial parameter estimates:")
   cat("\n")
   print.default(format(initial_estimate, digits = digits), print.gap = 2L, quote = FALSE)
-  
+
   # optimization
   ll_str = paste0("Log-likelihood: ", format(fit$objective, digits=6))
   opt_str = paste0("Optimizer: ", fit$optimizer)
@@ -158,8 +162,8 @@ plot.robustGARCH <- function(x, digits = 3, estimation_pos = "topleft", line_nam
 
 #' @rdname robustGarch-summary
 #' @export
-coef.robustGARCH = function(x) {
-  x$fitted_pars
+coef.robustGARCH = function(object, ...) {
+  object$fitted_pars
 }
 
 #' @rdname robustGARCH-summary
