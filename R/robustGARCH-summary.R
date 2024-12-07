@@ -75,13 +75,16 @@ summary.robustGARCH <- function(object, digits = 3, ...){
 #' @export
 print.robustGARCH <- function(x, digits = 3, ...) {
 
+  fit = x
   cat("\n")
-  cat("Model: ", fit$methods, "\n")
+  cat("Model: ", fit$methods)
   cat("\n")
-  cat("Coefficients:\n")
-  print.default(format(coef(x), digits = digits), print.gap = 2L, quote = FALSE)
+  cat("\n")
+  cat("Coefficients:")
+  cat("\n")
+  print.default(format(coef(fit), digits = digits), print.gap = 2L, quote = FALSE)
 
-  invisible(x)
+  invisible(fit)
 }
 
 #' @rdname robustGARCH-summary
