@@ -48,16 +48,16 @@ summary.robustGARCH <- function(object, digits = 3, ...){
   #    See chapter ‘Writing R documentation files’ in the ‘Writing R
   #    Extensions’ manual.
   fit <- object
-  method = fit$methods
-  fixed_pars = fit$fixed_pars
+  method = fit$fitMethod
+  robTunePars = fit$robTunePars
   fitted_pars = fit$fitted_pars
 
   # model spec
   model_str = paste0("Model: ", method, ", ")
   if (method == "BM") {
-    pars_str = paste0("div = ", fixed_pars[1], ", k = ", fixed_pars[2])
+    pars_str = paste0("div = ", robTunePars[1], ", k = ", robTunePars[2])
   } else if (method == "M") {
-    pars_str = paste0("div = ", fixed_pars[1])
+    pars_str = paste0("div = ", robTunePars[1])
   }
   data_str = paste0("Data: ", fit$data_name)
   obs_str = paste0("Observations: ", length(fit$data))
@@ -102,7 +102,7 @@ summary.robustGARCH <- function(object, digits = 3, ...){
   } else {
     idx_pars = 1:3
   }
-  initial_estimate = c(fit$optimizer_x0[idx_pars])
+  initial_estimate = c(fit$initialPars[idx_pars])
   names(initial_estimate) = names(fitted_pars)
   cat("\n")
   cat("Initial parameter estimates:")
@@ -111,7 +111,7 @@ summary.robustGARCH <- function(object, digits = 3, ...){
 
   # optimization
   ll_str = paste0("Log-likelihood: ", format(fit$objective, digits=6))
-  opt_str = paste0("Optimizer: ", fit$optimizer)
+  opt_str = paste0("Optimizer: ", fit$optChoice)
   time_str = paste0("Time elapsed: ", format(fit$time_elapsed, digits=6))
   conv_str = paste0("Convergence Message: ", fit$message)
   cat("\n")
@@ -141,7 +141,7 @@ print.robustGARCH <- function(x, digits = 3, ...) {
 
   fit = x
   cat("\n")
-  cat("Model: ", fit$methods)
+  cat("Model: ", fit$fitMethod)
   cat("\n")
   cat("\n")
   cat("Coefficients:")
