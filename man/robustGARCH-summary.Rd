@@ -60,8 +60,8 @@ Summary for robustGARCH S3 class
 \examples{
 
 data("gspc")
-fit <- robGarch(gspc, methods="BM", fixed_pars = c(0.8, 3.0),
-                optimizer="Rsolnp", stdErr_method = "numDeriv")
+fit <- robGarch(gspc, fitMethod="BM", robTunePars = c(0.8, 3.0),
+                optChoice="Rsolnp", SEmethod = "numDeriv")
 summary(fit)
 print(fit)
 plot(fit)

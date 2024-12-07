@@ -8,7 +8,7 @@
   a0 <- fit$fitted_pars["gamma"]
   a1 <- fit$fitted_pars["alpha"]
   b1 <- fit$fitted_pars["beta"]
-  method <- fit$methods
+  fitMethod <- fit$fitMethod
 
   #set.seed(seed)
   #z <- rnorm(n)
@@ -50,15 +50,15 @@
   exprss <- c(bquote(alpha[0]~'='~.(signif(a0, digits))),
               bquote(alpha[1]~'='~.(signif(a1, digits))),
               bquote(beta[1]~'='~.(signif(b1, digits))))
-  if(fit$methods == "MLE"){
+  if(fit$fitMethod == "MLE"){
     exprss <- c(exprss, bquote(v~'='~.(signif(fit$fitted_pars["shape"], digits))))
-  } #else if(method == "BM"){
+  } #else if(fitMethod == "BM"){
     #exprss <- c(exprss,
-    #            bquote(div~'='~.(signif(fit$fixed_pars[1], digits))),
-    #            bquote(c~'='~.(signif(fit$fixed_pars[2], digits))))
-  #} else if(method == "M"){
+    #            bquote(div~'='~.(signif(fit$robTunePars[1], digits))),
+    #            bquote(c~'='~.(signif(fit$robTunePars[2], digits))))
+  #} else if(fitMethod == "M"){
     #exprss <- c(exprss,
-    #            bquote(div~'='~.(signif(fit$fixed_pars[1], digits))))
+    #            bquote(div~'='~.(signif(fit$robTunePars[1], digits))))
   #}
   legend(estimation_pos, bty = "n",
          legend=as.expression(exprss))

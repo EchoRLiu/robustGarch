@@ -25,8 +25,8 @@
 #' @examples
 #'
 #' data("gspc")
-#' fit <- robGarch(gspc, methods="BM", fixed_pars = c(0.8, 3.0),
-#'                 optimizer="Rsolnp", stdErr_method = "numDeriv")
+#' fit <- robGarch(gspc, fitMethod="BM", robTunePars = c(0.8, 3.0),
+#'                 optChoice="Rsolnp", SEmethod = "numDeriv")
 #' summary(fit)
 #' print(fit)
 #' plot(fit)
@@ -49,23 +49,23 @@ summary.robustGARCH <- function(object, digits = 3, ...){
   colnames(res) <- names(fit$fitted_pars)
   rownames(res) <- c("Estimates", "Std. Errors", "t-statistic", "p-value")
 
-  cat("Model: ", fit$methods, " ")
-  if (fit$methods == "BM"){
-    cat("with div = ", fit$fixed_pars[1], ", k = ", fit$fixed_pars[2])
+  cat("Model: ", fit$fitMethod, " ")
+  if (fit$fitMethod == "BM"){
+    cat("with div = ", fit$robTunePars[1], ", k = ", fit$robTunePars[2])
   }
-  if (fit$methods == "M"){
-    cat("with div = ", fit$fixed_pars[1])
+  if (fit$fitMethod == "M"){
+    cat("with div = ", fit$robTunePars[1])
   }
   cat("\nData: ", fit$data_name, "\n")
   cat("Observations: ", length(fit$data), "\n")
   cat("\nResult:\n")
   print(res)
   cat("\nLog-likelihood: ", fit$objective)
-  cat("\n\nOptimizer: ", fit$optimizer)
-  if (fit$methods == "MLE"){
-    cat("\nInitial parameter estimates: ", fit$optimizer_x0[1:3], fit$optimizer_x0[5])
+  cat("\n\nOptimizer: ", fit$optChoice)
+  if (fit$fitMethod == "MLE"){
+    cat("\nInitial parameter estimates: ", fit$initialPars[1:3], fit$initialPars[5])
   } else{
-    cat("\nInitial parameter estimates: ", fit$optimizer_x0[1:3])
+    cat("\nInitial parameter estimates: ", fit$initialPars[1:3])
   }
   cat("\nTime elapsed: ", fit$time_elapsed)
   cat("\nConvergence Message: ", fit$message)
@@ -84,11 +84,11 @@ print.robustGARCH <- function(x, digits = 3, ...){
   res[1,1] <- gsub("  ","",paste(res[1,1],'( ', round(fit$standard_error[1], digits), ' )'))
   res[1,2] <- gsub("  ","",paste(res[1,2],'( ', round(fit$standard_error[2], digits), ' )'))
   res[1,3] <- gsub("  ","",paste(res[1,3],'( ', round(fit$standard_error[3], digits), ' )'))
-  if (fit$methods == "MLE"){
+  if (fit$fitMethod == "MLE"){
     res[1,4] <- gsub("  ","",paste(res[1,4],'( ', round(fit$standard_error[4], digits), ' )'))
   }
 
-  cat("Model: ", fit$methods, "\n")
+  cat("Model: ", fit$fitMethod, "\n")
   cat("Data: ", fit$data_name, "\n")
   cat("Result:\n")
   noquote(res)
