@@ -160,10 +160,12 @@ plot.robustGARCH <- function(x, digits = 3, estimation_pos = "topleft", line_nam
 
 }
 
-#' @rdname robustGarch-summary
+#' @rdname robustGARCH-summary
 #' @export
 coef.robustGARCH = function(object, ...) {
+
   object$fitted_pars
+
 }
 
 #' @rdname robustGARCH-summary

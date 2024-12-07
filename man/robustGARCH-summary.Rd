@@ -26,6 +26,8 @@
   ...
 )
 
+\method{coef}{robustGARCH}(object, ...)
+
 aef(fit, nu = 5)
 }
 \arguments{
