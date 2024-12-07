@@ -44,31 +44,81 @@ summary.robustGARCH <- function(object, digits = 3, ...){
 #    See chapter ‘Writing R documentation files’ in the ‘Writing R
 #    Extensions’ manual.
   fit <- object
+  method = fit$methods
+  fixed_pars = fit$fixed_pars
+  fitted_pars = fit$fitted_pars
 
-  res <- rbind(round(fit$fitted_pars, digits), round(fit$standard_error, digits), round(fit$t_value, digits), round(fit$p_value, digits))
-  colnames(res) <- names(fit$fitted_pars)
-  rownames(res) <- c("Estimates", "Std. Errors", "t-statistic", "p-value")
+  # model spec
+  model_str = paste0("Model: ", method, ", ")
+  if (method == "BM") {
+    pars_str = paste0("div = ", fixed_pars[1], ", k = ", fixed_pars[2])
+  } else if (method == "M") {
+    pars_str = paste0("div = ", fixed_pars[1])
+  }
+  data_str = paste0("Data: ", fit$data_name)
+  obs_str = paste0("Observations: ", length(fit$data))
+  cat("\n")
+  cat(model_str)
+  cat(pars_str)
+  cat("\n")
+  cat(data_str)
+  cat("\n")
+  cat(obs_str)
+  cat("\n")
 
-  cat("Model: ", fit$fitMethod, " ")
-  if (fit$fitMethod == "BM"){
-    cat("with div = ", fit$robTunePars[1], ", k = ", fit$robTunePars[2])
+  # fit result
+  significance = sapply(fit$p_value, function(p) {
+    if (is.na(p)) ""
+    else if (p < 0.001) "***"
+    else if (p < 0.01) "**" 
+    else if (p < 0.05) "*"
+    else if (p < 0.1) "."
+    else ""
+  })
+  res <- rbind(round(fitted_pars, digits),
+               round(fit$standard_error, digits),
+               round(fit$t_value, digits),
+               round(fit$p_value, digits),
+               significance)
+  colnames(res) <- names(fitted_pars)
+  rownames(res) <- c("Estimate", "Std.Error", "t-statistic", "p-value", "")
+  res = t(res)
+  cat("\n")
+  cat("Result:")
+  cat("\n")
+  print.default(format(res, digits = digits), print.gap = 2L, quote = FALSE)
+  cat("---")
+  cat("\n")
+  cat("Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1")
+  cat("\n")
+
+  # initial estimate
+  if(method == "MLE") {
+    idx_pars = c(1,2,3,5)
+  } else {
+    idx_pars = 1:3
   }
-  if (fit$fitMethod == "M"){
-    cat("with div = ", fit$robTunePars[1])
-  }
-  cat("\nData: ", fit$data_name, "\n")
-  cat("Observations: ", length(fit$data), "\n")
-  cat("\nResult:\n")
-  print(res)
-  cat("\nLog-likelihood: ", fit$objective)
-  cat("\n\nOptimizer: ", fit$optChoice)
-  if (fit$fitMethod == "MLE"){
-    cat("\nInitial parameter estimates: ", fit$initialPars[1:3], fit$initialPars[5])
-  } else{
-    cat("\nInitial parameter estimates: ", fit$initialPars[1:3])
-  }
-  cat("\nTime elapsed: ", fit$time_elapsed)
-  cat("\nConvergence Message: ", fit$message)
+  initial_estimate = c(fit$optimizer_x0[idx_pars])
+  names(initial_estimate) = names(fitted_pars)
+  cat("\n")
+  cat("Initial parameter estimates:")
+  cat("\n")
+  print.default(format(initial_estimate, digits = digits), print.gap = 2L, quote = FALSE)
+  
+  # optimization
+  ll_str = paste0("Log-likelihood: ", format(fit$objective, digits=6))
+  opt_str = paste0("Optimizer: ", fit$optimizer)
+  time_str = paste0("Time elapsed: ", format(fit$time_elapsed, digits=6))
+  conv_str = paste0("Convergence Message: ", fit$message)
+  cat("\n")
+  cat(ll_str)
+  cat("\n")
+  cat(opt_str)
+  cat("\n")
+  cat(time_str)
+  cat("\n")
+  cat(conv_str)
+  cat("\n")
 }
 
 #' @rdname robustGARCH-summary
