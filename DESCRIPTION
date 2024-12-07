@@ -2,6 +2,10 @@ Package: robustGarch
 Type: Package
 Title: Robust Garch(1,1) Model 
 Version: 0.4.0
+Authors@R: c(
+    person("Echo", "Liu", email = "yliu49@uw.edu", role = c("aut", "cre", "cph")),
+    person("Daniel", "Xia", email = "dxia94@gmail.com", role = "aut"),
+    person("R. Douglas", "Martin", email = "dougPCRA@gmail.com", role = "aut"))
 Description: Estimation and methods of two Robust Garch(1,1) models.
 License: MIT + file LICENSE
 Encoding: UTF-8
