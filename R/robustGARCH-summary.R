@@ -73,25 +73,15 @@ summary.robustGARCH <- function(object, digits = 3, ...){
 
 #' @rdname robustGARCH-summary
 #' @export
-print.robustGARCH <- function(x, digits = 3, ...){
+print.robustGARCH <- function(x, digits = 3, ...) {
 
-  fit <- x
+  cat("\n")
+  cat("Model: ", fit$methods, "\n")
+  cat("\n")
+  cat("Coefficients:\n")
+  print.default(format(coef(x), digits = digits), print.gap = 2L, quote = FALSE)
 
-  res <- rbind(round(fit$fitted_pars, digits))
-  colnames(res) <- names(fit$fitted_pars)
-  rownames(res) <- c("Estimates (Std. Errors)")
-
-  res[1,1] <- gsub("  ","",paste(res[1,1],'( ', round(fit$standard_error[1], digits), ' )'))
-  res[1,2] <- gsub("  ","",paste(res[1,2],'( ', round(fit$standard_error[2], digits), ' )'))
-  res[1,3] <- gsub("  ","",paste(res[1,3],'( ', round(fit$standard_error[3], digits), ' )'))
-  if (fit$fitMethod == "MLE"){
-    res[1,4] <- gsub("  ","",paste(res[1,4],'( ', round(fit$standard_error[4], digits), ' )'))
-  }
-
-  cat("Model: ", fit$fitMethod, "\n")
-  cat("Data: ", fit$data_name, "\n")
-  cat("Result:\n")
-  noquote(res)
+  invisible(x)
 }
 
 #' @rdname robustGARCH-summary
