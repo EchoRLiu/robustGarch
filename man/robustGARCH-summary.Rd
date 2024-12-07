@@ -5,6 +5,7 @@
 \alias{summary.robustGARCH}
 \alias{print.robustGARCH}
 \alias{plot.robustGARCH}
+\alias{coef.robustGARCH}
 \alias{aef}
 \title{Summary for robustGARCH class}
 \usage{
@@ -24,6 +25,8 @@
   main_name = "Conditional Volatility (vs |pctReturns(\%)|)",
   ...
 )
+
+\method{coef}{robustGARCH}(object, ...)
 
 aef(fit, nu = 5)
 }
@@ -65,5 +68,6 @@ fit <- robGarch(gspc, fitMethod="BM", robTunePars = c(0.8, 3.0),
 summary(fit)
 print(fit)
 plot(fit)
+coef(fit)
 
 }
