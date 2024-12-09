@@ -77,8 +77,8 @@ The SEmethod default "numDeriv" is based on the Hessian from the
 optimization.
 }
 \examples{
-data("gspc")
-fit <- robGarch(gspc[1:604], fitMethod = "BM")
+data(SP500MY)
+fit <- robGarch(SP500MY[1:604], fitMethod = "BM")
 summary(fit)
 
 }
