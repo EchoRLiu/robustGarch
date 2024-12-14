@@ -97,7 +97,7 @@ summary.robustGARCH <- function(object, digits = 3, ...){
   cat("\n")
 
   # initial estimate
-  if(method == "MLE") {
+  if(method == "tMLE") {
     idx_pars = c(1,2,3,5)
   } else {
     idx_pars = 1:3

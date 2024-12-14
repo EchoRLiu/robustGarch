@@ -36,7 +36,7 @@
       }
 
       a <- integrate(func_1, -50,50)$value /(integrate(func_2, -50,50)$value)^2
-    } else if(fit$fitMethod == "MLE"){
+    } else if(fit$fitMethod == "tMLE"){
       func_1 <- function(w_t){
         res_1 <- (.psi(w_t, fitMethod = "QML", dist = "std", v=v))^2 *.density(w_t, "norm")
 
@@ -71,7 +71,7 @@
 
   if(fitMethod=="QML"){
     p <- .psi_0(w)
-  } else if(fitMethod=="MLE"){
+  } else if(fitMethod=="tMLE"){
     p <- -1/2 + (v+1) /(2 *(1 +(v-2)*exp(-w)))
   } else{
 
@@ -101,7 +101,7 @@
 
   if(fitMethod=="QML"){
     p_p <- exp(w)/2
-  } else if(fitMethod=="MLE"){
+  } else if(fitMethod=="tMLE"){
     p_p <- ((v+1) *(v-2) *exp(-w)) /(2 *(1 +(v-2)*exp(-w))^2)
   } else{
     # psi' = (m'(-log(g_0(w))/div) *(- g_0'(w) / g_0(w)) )'
@@ -167,7 +167,7 @@
 
   T <- length(data_)
 
-  if(fit$fitMethod == 'MLE'){
+  if(fit$fitMethod == 'tMLE'){
     # to be added.
   } else{
 

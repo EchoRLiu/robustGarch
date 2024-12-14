@@ -50,7 +50,7 @@
   exprss <- c(bquote(alpha[0]~'='~.(signif(a0, digits))),
               bquote(alpha[1]~'='~.(signif(a1, digits))),
               bquote(beta[1]~'='~.(signif(b1, digits))))
-  if(fit$fitMethod == "MLE"){
+  if(fit$fitMethod == "tMLE"){
     exprss <- c(exprss, bquote(v~'='~.(signif(fit$fitted_pars["shape"], digits))))
   } #else if(fitMethod == "BM"){
     #exprss <- c(exprss,
