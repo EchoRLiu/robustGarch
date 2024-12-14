@@ -128,6 +128,7 @@ summary.robustGARCH <- function(object, digits = 3, ...){
   converged = ifelse(fit$message == 0, TRUE, FALSE) # I'm not sure if this is true
   summary_list = list(
     method = method,
+    iGARCH = fit$iGARCH,
     coefficients = coefficients,
     loglikelihood = fit$objective,
     converged = converged
@@ -141,7 +142,7 @@ print.robustGARCH <- function(x, digits = 3, ...) {
 
   fit = x
   cat("\n")
-  cat("Model: ", fit$fitMethod)
+  cat("Model: ", fit$fitMethod, ", with iGARCH = ", fit$iGARCH)
   cat("\n")
   cat("\n")
   cat("Coefficients:")
