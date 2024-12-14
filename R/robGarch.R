@@ -9,7 +9,7 @@
 #' conditional variance recursion.  Alternatively, it computes:
 #' (1) "M" estimates by using only the bounded objective function,
 #' (2) "QML" estimates based on a typically incorrect assumption
-#' of normally distributed innovations, (3) "t-MLE" estimates based
+#' of normally distributed innovations, (3) "tMLE" estimates based
 #' on an assumption of an innovations t-distributed MLE with unknown
 #' location, scale,and degrees of freedom parameters.
 #' CHECK IF (3) IS CORRECT.
@@ -73,7 +73,7 @@
 #' summary(fit)
 #'
 robGarch <- function(data,
-                     fitMethod = c("BM", "M", "QML", "MLE"),
+                     fitMethod = c("BM", "M", "QML", "tMLE"),
                      iGARCH = FALSE,
                      robTunePars = c(0.8, 3.0),
                      optChoice = c("Rsolnp", "nloptr", "nlminb"),
@@ -100,7 +100,7 @@ robGarch <- function(data,
   shared_vars$fitMethod <- fitMethod
   shared_vars$iGARCH <- iGARCH
 
-  if (fitMethod == "QML" || fitMethod == "MLE") {
+  if (fitMethod == "QML" || fitMethod == "tMLE") {
     shared_vars$div <- 1.0
   } else {
     shared_vars$div <- robTunePars[1]
@@ -128,7 +128,7 @@ robGarch <- function(data,
   }
 
   std_errors <- sqrt(diag(abs(solve(H)/length(data_))))
-  if(fitMethod == "MLE"){
+  if(fitMethod == "tMLE"){
     standard_error <- c(std_errors[2:4], std_errors[6])
     fit$observed_I <- -H[c(2,3,4,6), c(2,3,4,6)]
   } else{
@@ -183,7 +183,7 @@ robGarch <- function(data,
   #}
   ##########################################
 
-  if(fitMethod == "MLE"){
+  if(fitMethod == "tMLE"){
     names(standard_error) <- c("gamma", "alpha", "beta", "shape")
     names(t_value) <- c("gamma", "alpha", "beta", "shape")
     names(p_value) <- c("gamma", "alpha", "beta", "shape")
@@ -207,7 +207,7 @@ robGarch <- function(data,
 
 robGarchDistribution <- function(
   param = c(8.76e-04, 0.135, 0.686),
-  fitMethod = c("BM", "M", "QML", "MLE"),
+  fitMethod = c("BM", "M", "QML", "tMLE"),
   iGARCH = FALSE,
   robTunePars = c(0.85, 3.0),
   optChoice = c("Rsolnp", "nloptr", "nlminb"),
@@ -225,7 +225,7 @@ robGarchDistribution <- function(
   par(mfrow=c(2,2))
   spec <- rugarch::ugarchspec(mean.model = list(armaOrder = c(0,0), include.mean = FALSE))
 
-  if(fitMethod == "MLE"){
+  if(fitMethod == "tMLE"){
     if(length(param)!=4){stop("the parameters for std distribution should be gamma, alpha, beta, shape")}
     fixed <- param
     names(fixed) <- c("gamma", "alpha", "beta", "shape")
@@ -338,7 +338,7 @@ rgFit_local <- function(data, optChoice, initialPars, optControl, shared_vars){
       #message <- NULL
     #} else
     if(optChoice == "Rsolnp"){
-      if(fitMethod == "MLE"){
+      if(fitMethod == "tMLE"){
         fitted_pars <- c(res$pars[1:3], res$pars[5])
         names(fitted_pars) <- c("gamma", "alpha", "beta", "shape")
       } else{
@@ -349,7 +349,7 @@ rgFit_local <- function(data, optChoice, initialPars, optControl, shared_vars){
       objective <- res$values[length(res$values)]
       message <- res$convergence
     } else if (optChoice == "nloptr"){
-      if(fitMethod == "MLE"){
+      if(fitMethod == "tMLE"){
         fitted_pars <- c(res$solution[1:3], res$solution[5])
         names(fitted_pars) <- c("gamma", "alpha", "beta", "shape")
       } else{
@@ -360,7 +360,7 @@ rgFit_local <- function(data, optChoice, initialPars, optControl, shared_vars){
       objective <- res$objective
       message <- res$message
     } else if (optChoice == "nlminb"){
-      if(fitMethod == "MLE"){
+      if(fitMethod == "tMLE"){
         fitted_pars <- c(res$par[1:3], res$par[5])
         names(fitted_pars) <- c("gamma", "alpha", "beta", "shape")
       } else{
@@ -396,7 +396,7 @@ nEst <- function(y, vini, optChoice, initialPars, optControl, shared_vars){
   fitMethod <- shared_vars$fitMethod
   k <- shared_vars$k
 
-  if(fitMethod == "MLE"){
+  if(fitMethod == "tMLE"){
     std <- TRUE
   } else{
     std <- FALSE
@@ -680,7 +680,7 @@ rho <- function(x, shared_vars){
   # unpack shared_vars
   fitMethod <- shared_vars$fitMethod
 
-  if(fitMethod == "QML" || fitMethod == "MLE" || fitMethod == "M"){
+  if(fitMethod == "QML" || fitMethod == "tMLE" || fitMethod == "M"){
 
     ps <- x^2/2
 
@@ -709,9 +709,9 @@ nfun <- function(x, shared_vars, shape = 3.0){
   b <- 4.3 #6.7428
   b1 <- 4.0 #b-0.5
 
-  if(fitMethod == "MLE"){
+  if(fitMethod == "tMLE"){
     # this is rho assuming z_t is std(shape).
-    # this changes to MLE instead of QML.
+    # this changes to tMLE instead of QML.
     #x <- -log(gamma((shape+1)/2)/(sqrt((shape)*pi)*gamma(shape/2))) - x/2 + (shape+1)/2 *log(1+exp(x)/(shape))
     x <- -log(gamma((shape+1)/2)/(sqrt(shape-2)*gamma(shape/2))) - x/2 + (shape+1)/2 *log(1+exp(x)/(shape-2))
   } else{
@@ -756,7 +756,7 @@ Fnue <- function(start_pars, shared_vars){
 
   vi <- start_pars[1:3]
   vini <- start_pars[4]
-  if(fitMethod == "MLE"){
+  if(fitMethod == "tMLE"){
     shape <- start_pars[5]
   }
 
@@ -772,7 +772,7 @@ Fnue <- function(start_pars, shared_vars){
       for(i in 2:n){
         var[i]<-vi[1]+(vi[2]*rk(yc[i-1]/var[i-1],ki,l, shared_vars)+vi[3])*var[i-1]
       }
-      if(fitMethod == "MLE"){
+      if(fitMethod == "tMLE"){
         ml <- mean(nfun(y2[2:n]-log(var[2:n]), shared_vars, shape))
       } else{
         ml <- mean(nfun(y2[2:n]-log(var[2:n]), shared_vars))
@@ -794,7 +794,7 @@ freg <- function(x, a, b, shared_vars){
   fitMethod <- shared_vars$fitMethod
   div <- shared_vars$div
 
-  if(fitMethod == "QML" || fitMethod == "MLE" || a == b){
+  if(fitMethod == "QML" || fitMethod == "tMLE" || a == b){
     # used to be return exp(w/div)-w/div, now correct it to be the following as stated in the paper.
     g <- x
 
@@ -825,7 +825,7 @@ rk <- function(x, ki, l, shared_vars){
   # k should not be used as a global variable as it has conflict with ki (previously k) in the function.
   # k <- shared_vars$k
 
-  if(fitMethod == "QML" || fitMethod == "MLE" || fitMethod == "M" || ki == l){
+  if(fitMethod == "QML" || fitMethod == "tMLE" || fitMethod == "M" || ki == l){
 
     g <- x
 
