@@ -21,6 +21,8 @@
 #' @param data an xts object
 #' @param fitMethod character valued name of fitting method,
 #' one of "BM", "M" "QML" or "tMLE", with "BM" the default value.
+#' @param iGARCH logical flag for fitting an integrated GARCH model,
+#' with default FALSE.
 #' @param robTunePars a numeric vector c(cM,cFlt) that controls
 #' the extent of fitMethod robustness, with default c(0.8,3.0).
 #' @param optChoice character valued optChoice name, one of
@@ -49,7 +51,8 @@
 #' @return
 #' A list object of class \dQuote{robustGarch} with components:
 #' \item{data}{the input xts object}
-#' \item{fitMethod}{the the fitMethod specified}
+#' \item{fitMethod}{the fitMethod specified}
+#' \item{iGARCH}{the iGARCH flag specified}
 #' \item{robtunePars}{the robtunePars specified}
 #' \item{initialPars}{the initialPars specified}
 #' \item{optChoice}{the optChoice specified}
@@ -71,6 +74,7 @@
 #'
 robGarch <- function(data,
                      fitMethod = c("BM", "M", "QML", "MLE"),
+                     iGARCH = FALSE,
                      robTunePars = c(0.8, 3.0),
                      optChoice = c("Rsolnp", "nloptr", "nlminb"),
                      initialPars = c(0.0005, 0.15, 0.75),
@@ -94,6 +98,7 @@ robGarch <- function(data,
   shared_vars <- list()
 
   shared_vars$fitMethod <- fitMethod
+  shared_vars$iGARCH <- iGARCH
 
   if (fitMethod == "QML" || fitMethod == "MLE") {
     shared_vars$div <- 1.0
@@ -194,6 +199,7 @@ robGarch <- function(data,
   fit$p_value <- p_value
   fit$robTunePars <- robTunePars
   fit$fitMethod <- fitMethod
+  fit$iGARCH <- iGARCH
 
   structure(fit, class="robustGARCH")
 }
@@ -202,6 +208,7 @@ robGarch <- function(data,
 robGarchDistribution <- function(
   param = c(8.76e-04, 0.135, 0.686),
   fitMethod = c("BM", "M", "QML", "MLE"),
+  iGARCH = FALSE,
   robTunePars = c(0.85, 3.0),
   optChoice = c("Rsolnp", "nloptr", "nlminb"),
   initialPars = FALSE,
@@ -233,6 +240,7 @@ robGarchDistribution <- function(
       fit <- robGarch(
         y_,
         fitMethod = fitMethod,
+        iGARCH = iGARCH,
         robTunePars = robTunePars,
         optChoice = optChoice,
         initialPars = initialPars,
@@ -270,7 +278,15 @@ robGarchDistribution <- function(
     qml_res <- matrix(0.0, nrow = m, ncol = 3)
     for( i in 1:m){
       y_ <- y.[((i-1)*n+1):(i*n)]
-      fit <- robGarch(y_, fitMethod = fitMethod, robTunePars = robTunePars, optChoice=optChoice, initialPars = initialPars, optControl = optControl, SEmethod = SEmethod)
+      fit <- robGarch(
+        y_,
+        fitMethod = fitMethod,
+        iGARCH = iGARCH,
+        robTunePars = robTunePars,
+        optChoice=optChoice,
+        initialPars = initialPars,
+        optControl = optControl,
+        SEmethod = SEmethod)
       qml_res[i,1:3] <- fit$fitted_pars
     }
 
@@ -363,6 +379,7 @@ rgFit_local <- function(data, optChoice, initialPars, optControl, shared_vars){
 
   list(data=data_,
        fitMethod = fitMethod,
+       iGARCH = shared_vars$iGARCH,
        optChoice=optChoice,
        initialPars=res$x0,
        optControl=optControl,
@@ -464,24 +481,50 @@ nEst <- function(y, vini, optChoice, initialPars, optControl, shared_vars){
         for(nk in 0:nbeta1){
           beta1 <- beta1min+nk*lmbeta1
 
-          if(alfa1+beta1 <1 ){
-            for(ni in 0:nalfa0){
-              alfa0 <- alfa0min+ni*lmalfa0
+          # TODO: maybe need to add that iGARCH flag should only be used for QML and not other methods.
+          if(shared_vars$iGARCH){
+            if(alfa1+beta1 ==1){
+              for(ni in 0:nalfa0){
+                alfa0 <- alfa0min+ni*lmalfa0
 
-              var <- rep(0.0, n)
-              var[1] <- vini
-              for(ki in c(k, 20)){
-                l <- ki+1
-                for(i in 2:n){
-                  var[i] <- alfa0+(alfa1*rk(yc[i-1]/var[i-1],ki,l, shared_vars)+beta1)*var[i-1]
+                var <- rep(0.0, n)
+                var[1] <- vini
+                for(ki in c(k, 20)){
+                  l <- ki+1
+                  for(i in 2:n){
+                    var[i] <- alfa0+(alfa1*rk(yc[i-1]/var[i-1],ki,l, shared_vars)+beta1)*var[i-1]
+                  }
+
+                  nml <- mean(nfun(y2[2:n]-log(var[2:n]), shared_vars))
+
+                  if(nml < ml){
+                    flag <- 1
+                    vi <- c(alfa0,alfa1,beta1)
+                    ml <- nml
+                  }
                 }
+              }
+            }
+          } else{
+            if(alfa1+beta1 <1 ){
+              for(ni in 0:nalfa0){
+                alfa0 <- alfa0min+ni*lmalfa0
 
-                nml <- mean(nfun(y2[2:n]-log(var[2:n]), shared_vars))
+                var <- rep(0.0, n)
+                var[1] <- vini
+                for(ki in c(k, 20)){
+                  l <- ki+1
+                  for(i in 2:n){
+                    var[i] <- alfa0+(alfa1*rk(yc[i-1]/var[i-1],ki,l, shared_vars)+beta1)*var[i-1]
+                  }
 
-                if(nml < ml){
-                  flag <- 1
-                  vi <- c(alfa0,alfa1,beta1)
-                  ml <- nml
+                  nml <- mean(nfun(y2[2:n]-log(var[2:n]), shared_vars))
+
+                  if(nml < ml){
+                    flag <- 1
+                    vi <- c(alfa0,alfa1,beta1)
+                    ml <- nml
+                  }
                 }
               }
             }
@@ -502,6 +545,7 @@ nEst <- function(y, vini, optChoice, initialPars, optControl, shared_vars){
   if (optChoice == "nloptr"){
 
     #stop("This feature is under development, please use Rsolnp instead.")
+    # TODO: this needs to be fixed, because this is not forcing the inequality constraint.
     res <- nloptr::nloptr(x0 = x0,
                           eval_f = function(pars) Fnue(pars, shared_vars),
                           lb = lb,
@@ -519,7 +563,7 @@ nEst <- function(y, vini, optChoice, initialPars, optControl, shared_vars){
                          LB = lb,
                          UB = ub,
                          ineqfun = function(vi){vi[2]+vi[3]},
-                         ineqLB = 0.0,
+                         ineqLB = if (shared_vars$iGARCH) 1.0 else 0.0,
                          ineqUB = 1.0,
                          control = optControl)
     res$x0 <- x0
@@ -529,6 +573,7 @@ nEst <- function(y, vini, optChoice, initialPars, optControl, shared_vars){
 
   } else if (optChoice == "nlminb"){
 
+    # TODO: this needs to be fixed, because this is not forcing the inequality constraint.
     res <- nlminb(start = x0,
                   objective = function(pars) Fnue(pars, shared_vars),
                   control = optControl,
