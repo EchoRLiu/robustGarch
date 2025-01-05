@@ -1,10 +1,12 @@
 Package: robustGarch
 Type: Package
 Title: Robust Garch(1,1) Model 
-Version: 0.3.1
-Author: Echo Liu
-Maintainer: Echo Liu <yliu49@uw.edu>, Dan Xia <DanSummer94@gmail.com>
-Description: Estimation and methods of two Robust Garch(1,1) models.
+Version: 0.4.0
+Authors@R: c(
+    person("Echo", "Liu", email = "yuhong.echo.liu@gmail.com", role = c("aut", "cre")),
+    person("Daniel", "Xia", email = "dxia94@gmail.com", role = "aut"),
+    person("R. Douglas", "Martin", email = "dougPCRA@gmail.com", role = "aut"))
+Description: A method for modeling robust GARCH (1,1) processes, providing robustness toward additive outliers instead of innovation outliers. This work is based on the methodology described by Muler and Yohai in 2008.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

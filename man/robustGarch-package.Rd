@@ -6,13 +6,23 @@
 \alias{robustGarch-package}
 \title{robustGarch: Robust Garch(1,1) Model}
 \description{
-Estimation and methods of two Robust Garch(1,1) models.
+A method for modeling robust GARCH (1,1) processes, providing robustness toward additive outliers instead of innovation outliers. This work is based on the methodology described by Muler and Yohai in 2008.
 }
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://github.com/EchoRLiu/robustGarch}
   \item Report bugs at \url{https://github.com/EchoRLiu/robustGarch/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Echo Liu \email{yuhong.echo.liu@gmail.com}
+
+Authors:
+\itemize{
+  \item Daniel Xia \email{dxia94@gmail.com}
+  \item R. Douglas Martin \email{dougPCRA@gmail.com}
 }
 
 }

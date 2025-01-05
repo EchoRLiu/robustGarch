@@ -88,7 +88,6 @@ robGarch <- function(data,
   fitMethod = match.arg(fitMethod)
   optChoice = match.arg(optChoice)
   SEmethod = match.arg(SEmethod)
-  print(SEmethod)
 
   # Create a list to hold shared variables
   shared_vars <- list()
