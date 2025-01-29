@@ -65,8 +65,8 @@
 #' @export
 #'
 #' @examples
-#' data("gspc")
-#' fit <- robGarch(gspc[1:604], fitMethod = "BM")
+#' data(SP500MY)
+#' fit <- robGarch(SP500MY[1:604], fitMethod = "BM")
 #' summary(fit)
 #'
 robGarch <- function(data,
