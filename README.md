@@ -16,10 +16,20 @@ library(robustGarch)
 This is a basic example which shows you how to fit your daily return time series data into robust Garch(1,1) model.
 
 ```r
-data(gspc)
-fit <- robGarch(gspc, methods = "BM", fixed_pars = c(0.8, 3.0), optimizer="Rsolnp", stdErr_method = "numDeriv")
-summary(fit)
-plot(fit)
+if (requireNamespace("PCRA", quietly = TRUE)) {
+  library(robustGarch)
+  
+  ret <- PCRA::retOFG
+  ret <- ret$RET
+  
+  (robFitBM <- robGarch(ret, fitMethod = "BM"))
+  
+  sum(robFitBM$fitted_pars[2:3])
+  summary(robFitBM)
+  plot(robFitBM)
+} else {
+  message("PCRA package is not installed. Please install it with install.packages('PCRA') if you want to run this example or use other dataset to replace ret.")
+}
 ```
 
 For more examples and explanation, please refer to the  [robustGarch-Vignette](https://github.com/EchoRLiu/robustGarch/blob/master/vignettes/robustGarch_Vignette.pdf).

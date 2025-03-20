@@ -1,7 +1,7 @@
 Package: robustGarch
 Type: Package
 Title: Robust Garch(1,1) Model 
-Version: 0.4.0
+Version: 0.4.1
 Authors@R: c(
     person("Echo", "Liu", email = "yuhong.echo.liu@gmail.com", role = c("aut", "cre")),
     person("Daniel", "Xia", email = "dxia94@gmail.com", role = "aut"),
@@ -16,7 +16,8 @@ RoxygenNote: 7.3.2
 Suggests:
     knitr,
     rmarkdown,
-    testthat
+    testthat,
+    PCRA
 Imports:
     Rsolnp,
     nloptr,

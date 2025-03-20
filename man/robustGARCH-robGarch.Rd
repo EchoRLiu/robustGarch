@@ -77,9 +77,13 @@ The SEmethod default "numDeriv" is based on the Hessian from the
 optimization.
 }
 \examples{
-data("gspc")
-fit <- robGarch(gspc[1:604], fitMethod = "BM")
-summary(fit)
+if (requireNamespace("PCRA", quietly = TRUE)) {
+  ret <- PCRA::retOFG
+  ret <- ret$RET
+  (robFitBM <- robGarch(ret, fitMethod = "BM"))
+  sum(robFitBM$fitted_pars[2:3])
+  summary(robFitBM)
+}
 
 }
 \references{

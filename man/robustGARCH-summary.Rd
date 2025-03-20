@@ -61,13 +61,21 @@ aef(fit, nu = 5)
 Summary for robustGARCH S3 class
 }
 \examples{
-
-data("gspc")
-fit <- robGarch(gspc, fitMethod="BM", robTunePars = c(0.8, 3.0),
-                optChoice="Rsolnp", SEmethod = "numDeriv")
-summary(fit)
-print(fit)
-plot(fit)
-coef(fit)
+if (requireNamespace("PCRA", quietly = TRUE)) {
+  library(robustGarch)
+  
+  ret <- PCRA::retOFG
+  ret <- ret$RET
+  
+  (robFitBM <- robGarch(ret, fitMethod = "BM"))
+  
+  sum(robFitBM$fitted_pars[2:3])
+  summary(robFitBM)
+  print(robFitBM)
+  plot(robFitBM)
+  coef(robFitBM)
+} else {
+  message("PCRA package is not installed. Install it with install.packages('PCRA') to run this example.")
+}
 
 }
