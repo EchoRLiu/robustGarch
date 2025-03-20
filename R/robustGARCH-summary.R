@@ -40,7 +40,7 @@
 #'   plot(robFitBM)
 #'   coef(robFitBM)
 #' } else {
-#'   message("PCRA package is not installed. Install it with install.packages('PCRA') to run this example.")
+#'   message("Run install.packages('PCRA') to run this example.")
 #' }
 #'
 #' @export
