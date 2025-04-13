@@ -57,8 +57,15 @@ aef(fit, nu = 5)
 
 \item{nu}{degrees of freedom in a Student's t-distribution.}
 }
+\value{
+A list of class \code{"summary.robustGARCH"} containing:
+\item{method}{The fitting method used (e.g., "BM", "M", "QML", or "MLE").}
+\item{coefficients}{Named vector of parameter estimates.}
+\item{loglikelihood}{The value of the objective function at convergence.}
+\item{converged}{Logical; indicates whether the optimizer converged successfully.}
+}
 \description{
-Summary for robustGARCH S3 class
+Summarizes the results of a robust GARCH(1,1) model fit by extracting key model components.
 }
 \examples{
 if (requireNamespace("PCRA", quietly = TRUE)) {

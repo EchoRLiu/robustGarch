@@ -7,7 +7,7 @@
 #' @aliases coef.robustGARCH
 #' @aliases aef
 #'
-#' @description Summary for robustGARCH S3 class
+#' @description Summarizes the results of a robust GARCH(1,1) model fit by extracting key model components.
 #'
 #' @importFrom stats coef
 #'
@@ -24,6 +24,12 @@
 #' @param abs_ a logical argument, when TRUE, the plot function will plot abs(returns) with conditional standard deviation instead of returns, default to TRUE.
 #' @param ... # to be written
 #' @param nu degrees of freedom in a Student's t-distribution.
+#'
+#' @return A list of class \code{"summary.robustGARCH"} containing:
+#' \item{method}{The fitting method used (e.g., "BM", "M", "QML", or "MLE").}
+#' \item{coefficients}{Named vector of parameter estimates.}
+#' \item{loglikelihood}{The value of the objective function at convergence.}
+#' \item{converged}{Logical; indicates whether the optimizer converged successfully.}
 #'
 #' @examples
 #' if (requireNamespace("PCRA", quietly = TRUE)) {
