@@ -218,7 +218,13 @@ robGarchDistribution <- function(
   optChoice <- match.arg(optChoice)
   SEmethod <- match.arg(SEmethod)
 
-  par(mfrow=c(2,2))
+  # Save current graphics parameters and ensure they are restored
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
+
+  # Set 2x2 plotting layout
+  par(mfrow = c(2, 2))
+  
   spec <- rugarch::ugarchspec(mean.model = list(armaOrder = c(0,0), include.mean = FALSE))
 
   if(fitMethod == "MLE"){
