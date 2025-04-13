@@ -26,14 +26,22 @@
 #' @param nu degrees of freedom in a Student's t-distribution.
 #'
 #' @examples
-#'
-#' data("gspc")
-#' fit <- robGarch(gspc, fitMethod="BM", robTunePars = c(0.8, 3.0),
-#'                 optChoice="Rsolnp", SEmethod = "numDeriv")
-#' summary(fit)
-#' print(fit)
-#' plot(fit)
-#' coef(fit)
+#' if (requireNamespace("PCRA", quietly = TRUE)) {
+#'   library(robustGarch)
+#'   
+#'   ret <- PCRA::retOFG
+#'   ret <- ret$RET
+#'   
+#'   (robFitBM <- robGarch(ret, fitMethod = "BM"))
+#'   
+#'   sum(robFitBM$fitted_pars[2:3])
+#'   summary(robFitBM)
+#'   print(robFitBM)
+#'   plot(robFitBM)
+#'   coef(robFitBM)
+#' } else {
+#'   message("Run install.packages('PCRA') to run this example.")
+#' }
 #'
 #' @export
 summary.robustGARCH <- function(object, digits = 3, ...){
