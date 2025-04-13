@@ -6,7 +6,7 @@ Authors@R: c(
     person("Echo", "Liu", email = "yuhong.echo.liu@gmail.com", role = c("aut", "cre")),
     person("Daniel", "Xia", email = "dxia94@gmail.com", role = "aut"),
     person("R. Douglas", "Martin", email = "dougPCRA@gmail.com", role = "aut"))
-Description: A method for modeling robust GARCH (1,1) processes, providing robustness toward additive outliers instead of innovation outliers. This work is based on the methodology described by Muler and Yohai in 2008.
+Description: A method for modeling robust generalized autoregressive conditional heteroskedasticity (Garch) (1,1) processes, providing robustness toward additive outliers instead of innovation outliers. This work is based on the methodology described by Muler and Yohai (2008) <https://doi.org/10.1016/j.jspi.2007.11.003>.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
